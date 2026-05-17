@@ -246,7 +246,152 @@ const DICT: Record<string, Definition> = {
   "achoppe":         { etym: "Du vieux français chopper, buter", defOrig: "Rencontre un obstacle, bute sur une difficulté.", defSimple: "Trébuche, se retrouve bloqué par une difficulté. La théorie achoppe sur des exemples = elle ne fonctionne pas pour certains cas." },
   "ressemblances de famille":{ etym: "Du latin similitudo + familia", defOrig: "Similitudes partielles entre membres d'un groupe, sans propriété commune à tous.", defSimple: "Des points communs partiels entre choses, comme dans une famille où tout le monde se ressemble un peu mais différemment." },
   "entrecroises":    { etym: "De entrecroiser, croiser plusieurs fois", defOrig: "Qui se croisent en de nombreux points, formant un réseau.", defSimple: "Qui se croisent et se mélangent. Des similitudes entrecroisées = des points communs qui se recoupent." },
-};
+
+// ── MOTS MANQUANTS À AJOUTER AVANT LE }; FINAL ────────────
+
+  // Ciel bleu
+  "lèves":           { etym: "Du latin levare, soulever", defOrig: "Action de diriger vers le haut.", defSimple: "Bouger vers le haut. Lever les yeux = regarder vers le haut." },
+  "violet":          { etym: "Du latin viola, violette", defOrig: "Couleur obtenue par mélange de bleu et de rouge.", defSimple: "Une couleur sombre, mélange de bleu et de rouge. Comme les violettes ou les aubergines." },
+  "horizon":         { etym: "Du grec horizein, limiter", defOrig: "Ligne imaginaire où le ciel et la terre semblent se rejoindre.", defSimple: "La ligne au loin où le ciel touche la terre ou la mer." },
+  "sépare":          { etym: "Du latin separare, mettre à part", defOrig: "Divise en parties distinctes.", defSimple: "Diviser. Séparer les couleurs = les mettre chacune de son côté." },
+
+  // Chats
+  "gorge":           { etym: "Du latin gurges, gouffre", defOrig: "Partie interne du cou, par où passent l'air et les aliments.", defSimple: "La partie de ton cou à l'intérieur. Quand tu as mal à la gorge, c'est là que ça fait mal." },
+  "signe":           { etym: "Du latin signum, marque", defOrig: "Indice, manifestation qui révèle quelque chose.", defSimple: "Une indication. Un signe de bonheur = quelque chose qui montre qu'on est heureux." },
+
+
+  // Arc-en-ciel
+  "rebondissent":    { etym: "De re + bondir", defOrig: "Repartent après avoir heurté une surface.", defSimple: "Repartent après avoir touché quelque chose. Comme une balle qui rebondit sur le sol." },
+  "dépend":          { etym: "Du latin dependere, être suspendu", defOrig: "Est conditionné par, varie en fonction de.", defSimple: "Change selon quelque chose. Ça dépend du temps = ça change selon la météo." },
+  "déplace":         { etym: "Du latin dis + placer", defOrig: "Change de position, bouge d'un endroit à un autre.", defSimple: "Bouger d'un endroit à un autre." },
+
+  // Bâillement
+  "invention":       { etym: "Du latin inventio, découverte", defOrig: "Création d'une chose nouvelle, découverte originale.", defSimple: "Quelque chose de nouveau créé par quelqu'un. Le téléphone est une invention." },
+  "produire":        { etym: "Du latin producere, faire avancer", defOrig: "Créer, fabriquer, faire exister quelque chose.", defSimple: "Faire quelque chose, créer. Une usine produit des voitures." },
+
+  // Feuilles automne
+  "spectacle":       { etym: "Du latin spectaculum, ce qu'on regarde", defOrig: "Ce qui attire le regard, vision remarquable.", defSimple: "Quelque chose de beau ou d'impressionnant à regarder." },
+  "renaître":        { etym: "Du latin renasci, naître à nouveau", defOrig: "Naître de nouveau, reprendre vie après une période de mort apparente.", defSimple: "Recommencer à vivre. Au printemps, les arbres renaissent après l'hiver." },
+
+  // Peau ridée
+  "abîmés":          { etym: "Du latin abyssus, gouffre", defOrig: "Endommagés, détériorés, qui ne fonctionnent plus bien.", defSimple: "Cassés ou endommagés. Des nerfs abîmés = des nerfs qui ne fonctionnent plus bien." },
+  "preuve":          { etym: "Du latin proba, épreuve", defOrig: "Élément qui établit la vérité d'un fait.", defSimple: "Quelque chose qui montre que c'est vrai." },
+
+  // Larmes
+  "irrite":          { etym: "Du latin irritare, exciter", defOrig: "Provoque une sensation de brûlure ou d'inconfort.", defSimple: "Fait mal ou brûle légèrement. La fumée irrite les yeux." },
+  "éliminer":        { etym: "Du latin eliminare, mettre hors du seuil", defOrig: "Faire disparaître, supprimer, expulser.", defSimple: "Faire partir quelque chose. Éliminer les déchets = les faire sortir du corps." },
+  "ressentir":       { etym: "Du latin re + sentire", defOrig: "Éprouver une sensation, une émotion.", defSimple: "Sentir quelque chose à l'intérieur. Ressentir de la joie = sentir qu'on est heureux." },
+
+  // Rêves
+  "trier":           { etym: "Du latin tritare, broyer", defOrig: "Classer, séparer selon des critères.", defSimple: "Mettre de l'ordre en séparant les choses. Trier ses affaires = garder ce qui est utile." },
+  "résoudre":        { etym: "Du latin resolvere, délier", defOrig: "Trouver la solution à un problème.", defSimple: "Trouver la réponse à un problème." },
+  
+
+  // Musique frissons
+  "libère":          { etym: "Du latin liberare, rendre libre", defOrig: "Laisse aller, met en circulation.", defSimple: "Laisser sortir quelque chose. Le cerveau libère de la dopamine = il en envoie." },
+  "inattendu":       { etym: "Du latin in + attendere", defOrig: "Qui n'était pas prévu, qui surprend.", defSimple: "Qu'on n'attendait pas. Une surprise inattendue = quelque chose qui arrive sans qu'on s'y attende." },
+
+  // Mer salée
+  "dissolvent":      { etym: "Du latin dissolvere, délier", defOrig: "Décomposent et intègrent dans un liquide.", defSimple: "Se mélangent dans l'eau pour disparaître. Le sucre se dissout dans l'eau." },
+  "bloqué":          { etym: "Du néerlandais blok, obstacle", defOrig: "Retenu, empêché de sortir ou d'avancer.", defSimple: "Coincé, qui ne peut pas passer. Le sel est bloqué dans la mer = il ne peut pas en sortir." },
+  "emportées":       { etym: "De emporter, prendre avec soi", defOrig: "Transportées, amenées d'un endroit à un autre.", defSimple: "Transportées par quelque chose. Les feuilles emportées par le vent." },
+
+  // Miroir
+  "obsédés":         { etym: "Du latin obsidere, assiéger", defOrig: "Occupés constamment par une idée fixe.", defSimple: "Qui ne pensent qu'à une seule chose." },
+
+  // Chocolat
+  "consommons":      { etym: "Du latin consummare, achever", defOrig: "Utilisons, mangeons ou buvons habituellement.", defSimple: "Mangeons ou utilisons. On consomme du chocolat = on en mange." },
+  "cacao":           { etym: "De l'espagnol cacao, emprunté aux Mayas", defOrig: "Graine du cacaoyer, utilisée pour fabriquer le chocolat.", defSimple: "La graine d'un arbre tropical qui sert à faire le chocolat." },
+ 
+
+  // Sommeil
+  "passif":          { etym: "Du latin passivus, qui subit", defOrig: "Qui subit sans agir, sans réagir activement.", defSimple: "Qui ne fait rien, qui attend. Le contraire d'actif." },
+  "maintenance":     { etym: "Du latin manutenere, tenir en main", defOrig: "Ensemble des opérations permettant de maintenir en bon état.", defSimple: "L'entretien pour que quelque chose continue à bien fonctionner." },
+
+  // Tour Eiffel
+  "indispensable":   { etym: "Du latin in + dispensare", defOrig: "Dont on ne peut pas se passer, absolument nécessaire.", defSimple: "Dont on a absolument besoin. L'eau est indispensable à la vie." },
+  "intellectuels":   { etym: "Du latin intellectus, intelligence", defOrig: "Personnes dont l'activité principale est la réflexion.", defSimple: "Des gens qui travaillent avec leur cerveau : philosophes, écrivains, scientifiques." },
+
+  // ADN
+  "chercheurs":      { etym: "De chercher, du latin circare", defOrig: "Personnes qui font de la recherche scientifique.", defSimple: "Des scientifiques qui cherchent à découvrir de nouvelles choses." },
+  "insu":            { etym: "Du latin inscitus, ignorant", defOrig: "Sans que la personne concernée le sache.", defSimple: "Sans que quelqu'un le sache. À son insu = sans qu'il soit au courant." },
+  "récompensée":     { etym: "Du latin recompensare, compenser", defOrig: "Qui a reçu une récompense pour ses mérites.", defSimple: "Qui a reçu un prix pour son travail." },
+
+  // Newton
+  "formelle":        { etym: "Du latin formalis, relatif à la forme", defOrig: "Qui concerne la forme logique, les règles strictes.", defSimple: "Qui suit des règles strictes et précises. La logique formelle = les mathématiques." },
+
+  // Café
+  "contaminer":      { etym: "Du latin contaminare, souiller", defOrig: "Rendre impur, transmettre une maladie ou une pollution.", defSimple: "Rendre quelque chose dangereux. L'eau contaminée = rendue dangereuse par des microbes." },
+  "révolution":      { etym: "Du latin revolutio, retour en arrière", defOrig: "Changement radical et profond dans un domaine.", defSimple: "Un grand changement qui transforme tout. La révolution française a tout changé." },
+
+  // Renaissance
+  "universel":       { etym: "Du latin universalis, qui concerne tout", defOrig: "Qui s'étend à tout ou à tous, sans exception.", defSimple: "Pour tout le monde et partout. Un génie universel = quelqu'un qui est fort dans tout." },
+  "réconciliation":  { etym: "Du latin reconciliare, réunir", defOrig: "Action de remettre en bonne entente des éléments opposés.", defSimple: "Faire la paix entre deux choses qui s'opposaient." },
+  
+
+  // Abysses
+  "fosses":          { etym: "Du latin fossa, creusé", defOrig: "Dépressions très profondes au fond des océans.", defSimple: "Des trous très très profonds au fond de la mer." },
+  "prospèrent":      { etym: "Du latin prosperare, réussir", defOrig: "Vivent et se développent avec succès.", defSimple: "Vivent et se développent bien. Des plantes qui prospèrent = qui poussent très bien." },
+  "résister":        { etym: "Du latin resistere, s'arrêter contre", defOrig: "Tenir bon face à quelque chose, ne pas céder.", defSimple: "Ne pas abandonner face à quelque chose de difficile." },
+
+  // IA
+  "surpassèrent":    { etym: "Du latin super + passare", defOrig: "Dépassèrent, furent meilleurs que.", defSimple: "Furent meilleurs que. Les machines ont surpassé les humains aux échecs." },
+  "composé":         { etym: "Du latin compositus, assemblé", defOrig: "Créé en assemblant plusieurs éléments.", defSimple: "Fait de plusieurs parties assemblées." },
+
+  // Microbes
+  "allergie":        { etym: "Du grec allos (autre) + ergon (réaction)", defOrig: "Réaction excessive du système immunitaire à une substance.", defSimple: "Quand ton corps réagit trop fort à quelque chose d'inoffensif. Allergie aux chats = éternuer près des chats." },
+  "secondaires":     { etym: "Du latin secundarius, de second rang", defOrig: "Qui viennent en plus, comme conséquence d'autre chose.", defSimple: "Les effets secondaires d'un médicament = les effets non voulus." },
+
+  // Mémoire émotionnelle
+  "photographique":  { etym: "Du grec photos (lumière) + graphein (écrire)", defOrig: "Avec une précision comparable à une photographie.", defSimple: "Aussi précis qu'une photo. Mémoire photographique = se souvenir exactement de tout." },
+  "deuil":           { etym: "Du latin dolium, douleur", defOrig: "Période de tristesse après la perte d'un être cher.", defSimple: "La tristesse qu'on ressent quand quelqu'un qu'on aime est mort." },
+
+  // Stoïcisme
+  "boussole":        { etym: "De l'italien bussola, petite boîte", defOrig: "Instrument indiquant le nord ; au figuré, guide moral.", defSimple: "Un outil qui indique le nord. Au sens figuré : ce qui guide nos choix dans la vie." },
+  "sérénité":        { etym: "Du latin serenitas, calme", defOrig: "État de calme paisible, de tranquillité d'esprit.", defSimple: "Un calme profond et paisible. Rester calme quoi qu'il arrive." },
+  "revendiquent":    { etym: "Du latin re + vindicare, réclamer", defOrig: "Affirment publiquement quelque chose comme leur appartenant.", defSimple: "Affirment fièrement quelque chose. Ils revendiquent cette philosophie = ils disent fièrement qu'ils la suivent." },
+
+  // Métaphores
+  "infrastructure":  { etym: "Du latin infra (dessous) + structura", defOrig: "Ensemble des éléments de base sur lesquels repose un système.", defSimple: "Ce qui est à la base et supporte tout le reste. Les routes sont l'infrastructure d'un pays." },
+  "automatiques":    { etym: "Du grec automatos, qui agit de lui-même", defOrig: "Qui se produisent sans intervention consciente.", defSimple: "Qui se font seuls, sans qu'on y pense. Respirer est automatique." },
+  "interlocuteurs":  { etym: "Du latin inter + loqui, parler entre", defOrig: "Personnes qui participent à une conversation.", defSimple: "Les gens avec qui on parle. Dans une discussion, les interlocuteurs = ceux qui parlent." },
+  "s'envenimée":     { etym: "Du latin venenum, poison", defOrig: "Est devenue plus grave, plus hostile.", defSimple: "Est devenue de plus en plus mauvaise. Une situation qui s'envenime = qui se dégrade." },
+
+  // Temps subjectif
+  "contracte":       { etym: "Du latin contrahere, resserrer", defOrig: "Réduit, comprime, rend plus court.", defSimple: "Rend plus court. Le temps se contracte quand on s'amuse = passe vite." },
+  "horloges":        { etym: "Du grec horologion, qui dit l'heure", defOrig: "Instruments servant à mesurer et indiquer le temps.", defSimple: "Des appareils qui indiquent l'heure. Les montres sont des horloges." },
+  "étonnement":      { etym: "De étonner, du latin ex + tonare", defOrig: "Surprise mêlée d'admiration face à quelque chose d'inattendu.", defSimple: "La surprise qu'on ressent face à quelque chose d'impressionnant." },
+
+  // Identité numérique
+  "cartographient":  { etym: "Du latin charta (carte) + graphein (écrire)", defOrig: "Représentent sous forme de carte, répertorient.", defSimple: "Font une carte de. Cartographier nos relations = répertorier toutes nos connexions." },
+  "aspirations":     { etym: "Du latin aspirare, souffler vers", defOrig: "Désirs profonds, ambitions, ce vers quoi on tend.", defSimple: "Ce qu'on espère atteindre dans la vie. Devenir médecin peut être une aspiration." },
+  "vertigineux":     { etym: "Du latin vertigo, tournoiement", defOrig: "Qui donne le vertige, d'une ampleur impressionnante.", defSimple: "Qui donne le tournis tellement c'est grand. Une question vertigineuse = qui donne le vertige." },
+
+  // Conscience
+  "fonctionnelle":   { etym: "Du latin functio, accomplissement", defOrig: "Relative aux fonctions, à ce qui marche pratiquement.", defSimple: "Qui fonctionne et sert à quelque chose. Une explication fonctionnelle = qui explique comment ça marche." },
+
+  // Libre arbitre
+  "antérieure":      { etym: "Du latin anterior, qui est devant", defOrig: "Qui précède dans le temps, qui vient avant.", defSimple: "Qui vient avant. Une décision antérieure = une décision prise avant." },
+  "fragile":         { etym: "Du latin fragilis, qui se casse facilement", defOrig: "Qui peut facilement être brisé ou mis en défaut.", defSimple: "Qui peut s'effondrer facilement. Une théorie fragile = qu'on peut facilement contredire." },
+ 
+
+  // Bonheur
+  "millénaires":     { etym: "Du latin millenarius, de mille ans", defOrig: "Qui ont des milliers d'années.", defSimple: "Vieux de plusieurs milliers d'années. Une tradition millénaire = qui existe depuis longtemps." },
+  "intuitions":      { etym: "Du latin intuitio, regard intérieur", defOrig: "Connaissances immédiates sans raisonnement apparent.", defSimple: "Des sentiments qui viennent sans réfléchir. Mon intuition me dit que c'est faux = je le sens." },
+  "maximiser":       { etym: "Du latin maximus, le plus grand", defOrig: "Porter à son maximum.", defSimple: "Rendre le plus grand possible. Maximiser ses profits = gagner le plus d'argent possible." },
+
+  // Art définition
+  "urinoir":         { etym: "Du latin urina, urine", defOrig: "Dispositif sanitaire ; ici l'oeuvre provocatrice de Duchamp.", defSimple: "Un objet de salle de bain que Duchamp a présenté comme une oeuvre d'art pour provoquer." },
+  "circulaire":      { etym: "Du latin circularis, en cercle", defOrig: "Qui tourne en rond, qui revient à son point de départ.", defSimple: "Qui tourne en rond sans vraiment expliquer. Un raisonnement circulaire = qui utilise sa conclusion pour se justifier." },
+  "aptitude":        { etym: "Du latin aptitudo, convenance", defOrig: "Capacité naturelle à faire quelque chose.", defSimple: "La capacité à faire quelque chose. Aptitude au sport = être naturellement doué." },
+
+  // Langage pensée
+  "empiriques":      { etym: "Du grec empeiria, expérience", defOrig: "Fondés sur l'observation et l'expérience concrète.", defSimple: "Basés sur ce qu'on observe vraiment. Des recherches empiriques = basées sur des expériences réelles." },
+  "marginalisée":    { etym: "Du latin marginalis, de la marge", defOrig: "Mise à l'écart, reléguée en périphérie.", defSimple: "Mise de côté, ignorée. Une idée marginalisée = que personne ne prenait au sérieux." },
+  "automatismes":    { etym: "Du grec automatos, qui agit seul", defOrig: "Comportements devenus automatiques par habitude.", defSimple: "Des actions qu'on fait sans y penser. Conduire est devenu un automatisme." },
+  "découper":        { etym: "De couper en morceaux", defOrig: "Diviser en parties distinctes.", defSimple: "Couper en morceaux ou catégories. Découper la réalité = diviser le monde en catégories." },
+
+  };
 
 function normalize(str: string): string {
   return str

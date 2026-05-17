@@ -3,6 +3,8 @@ import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
 import styles from "./Sidebar.module.css";
+import { useSearchParams } from "next/navigation";
+import type { Story } from "@/lib/stories";
 
 export default function Sidebar() {
   const [loading, setLoading] = useState(false);
@@ -10,6 +12,12 @@ export default function Sidebar() {
   const [ready, setReady]     = useState(false);
   const supabase = createClient();
   const router   = useRouter();
+
+  const searchParams = useSearchParams();
+  const level = (searchParams.get("level") as Story["level"]) ?? "Lecteur";
+  const levelEmoji: Record<Story["level"], string> = {
+  "Curieux": "🌱", "Lecteur": "📖", "Érudit": "🎓",
+};
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -57,7 +65,9 @@ export default function Sidebar() {
             </div>
             <div className={styles.statRow}>
               <span className={styles.statLabel}>Niveau actuel</span>
-              <span className={`${styles.statVal} ${styles.gold}`}>Lecteur</span>
+              <span className={`${styles.statVal} ${styles.gold}`}>
+                {levelEmoji[level]} {level}
+              </span>
             </div>
           </div>
         </>
