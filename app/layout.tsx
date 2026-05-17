@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Playfair_Display, DM_Sans } from "next/font/google";
 import Nav from "@/components/Nav";
+import Footer from "@/components/Footer";
 import "./globals.css";
 
 const playfair = Playfair_Display({
@@ -45,6 +46,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className={`${playfair.variable} ${dmSans.variable}`}>
         <Nav />
         {children}
+        <Footer />
       </body>
     </html>
   );
