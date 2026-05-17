@@ -1,0 +1,110 @@
+.page {
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  padding: 100px 24px 60px;
+  background: var(--bg);
+}
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 48px 40px;
+  width: 100%;
+  max-width: 640px;
+  height: fit-content;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 24px;
+}
+
+.logo {
+  font-family: var(--font-playfair), serif;
+  font-size: 2rem;
+  font-weight: 900;
+  color: var(--accent);
+}
+.logo span { color: var(--text); font-weight: 400; font-style: italic; }
+
+.title {
+  font-family: var(--font-playfair), serif;
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: var(--text);
+  text-align: center;
+}
+
+.story {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  text-align: left;
+  width: 100%;
+}
+.story p {
+  font-size: 0.95rem;
+  line-height: 1.8;
+  color: var(--text-muted);
+}
+.story strong { color: var(--text); }
+
+.values {
+  display: flex;
+  gap: 12px;
+  width: 100%;
+  margin: 8px 0;
+}
+
+.value {
+  flex: 1;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 16px 12px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.valueIcon { font-size: 1.5rem; }
+.valueName { font-size: 0.85rem; font-weight: 700; color: var(--text); }
+.valueDesc { font-size: 0.75rem; color: var(--text-dim); line-height: 1.5; }
+
+.contact {
+  text-align: center;
+  padding: 20px;
+  background: rgba(232,201,122,0.06);
+  border: 1px solid rgba(232,201,122,0.2);
+  border-radius: 14px;
+  width: 100%;
+}
+.contact p { font-size: 0.9rem; color: var(--text-muted); margin-bottom: 12px; }
+
+.contactBtn {
+  display: inline-block;
+  padding: 10px 24px;
+  border-radius: 50px;
+  background: var(--accent);
+  color: var(--bg);
+  font-weight: 700;
+  font-size: 0.88rem;
+  text-decoration: none;
+  transition: all 0.2s;
+}
+.contactBtn:hover { background: var(--accent2); }
+
+.back {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  text-decoration: none;
+  transition: color 0.2s;
+}
+.back:hover { color: var(--text); }
+
+@media (max-width: 680px) {
+  .card { padding: 28px 20px; }
+  .values { flex-direction: column; }
+}

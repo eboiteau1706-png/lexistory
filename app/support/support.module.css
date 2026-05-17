@@ -1,0 +1,105 @@
+.page {
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  padding: 100px 24px 60px;
+  background: var(--bg);
+}
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 40px;
+  width: 100%;
+  max-width: 640px;
+  height: fit-content;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.title {
+  font-family: var(--font-playfair), serif;
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: var(--accent);
+}
+
+.subtitle {
+  font-size: 0.92rem;
+  color: var(--text-muted);
+  line-height: 1.6;
+  margin-top: -12px;
+}
+
+.faqs { display: flex; flex-direction: column; gap: 10px; }
+.faqTitle { font-size: 0.72rem; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; color: var(--text-dim); margin-bottom: 4px; }
+
+.faq {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.faqQ { font-size: 0.88rem; font-weight: 600; color: var(--text); }
+.faqA { font-size: 0.83rem; color: var(--text-muted); line-height: 1.55; }
+
+.form { display: flex; flex-direction: column; gap: 10px; }
+.formTitle { font-size: 0.72rem; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; color: var(--text-dim); }
+
+.row { display: flex; gap: 10px; }
+.row .input { flex: 1; }
+
+.input, .textarea {
+  width: 100%;
+  padding: 11px 14px;
+  border-radius: 10px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  color: var(--text);
+  font-family: inherit;
+  font-size: 0.9rem;
+  outline: none;
+  transition: border-color 0.2s;
+  resize: none;
+}
+.input:focus, .textarea:focus { border-color: var(--accent); }
+.input::placeholder, .textarea::placeholder { color: var(--text-dim); }
+
+.btn {
+  padding: 12px;
+  border-radius: 10px;
+  background: var(--accent);
+  color: var(--bg);
+  font-family: inherit;
+  font-size: 0.9rem;
+  font-weight: 700;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.btn:hover:not(:disabled) { background: var(--accent2); }
+.btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.sent {
+  text-align: center;
+  padding: 20px;
+  background: rgba(109,186,138,0.08);
+  border: 1px solid rgba(109,186,138,0.2);
+  border-radius: 12px;
+  color: var(--green);
+  font-size: 0.9rem;
+  line-height: 1.6;
+}
+
+.back { font-size: 0.85rem; color: var(--text-muted); text-decoration: none; transition: color 0.2s; }
+.back:hover { color: var(--text); }
+
+@media (max-width: 680px) {
+  .card { padding: 24px 20px; }
+  .row { flex-direction: column; }
+}
