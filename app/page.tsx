@@ -1,18 +1,17 @@
-import Nav from "@/components/Nav";
 import StoryCard from "@/components/StoryCard";
 import Sidebar from "@/components/Sidebar";
 import LevelSelector from "@/components/LevelSelector";
 import { STORIES } from "@/lib/stories";
 import type { Story } from "@/lib/stories";
 
-export default function Home({
+export default async function Home({
   searchParams,
 }: {
-  searchParams: { level?: string };
+  searchParams: Promise<{ level?: string }>;
 }) {
-  const level = (searchParams.level as Story["level"]) ?? "Lecteur";
+  const params = await searchParams;
+  const level = (params.level as Story["level"]) ?? "Lecteur";
 
-  // Trouve l'histoire du niveau demandé
   const story =
     [...STORIES].reverse().find((s) => s.level === level) ??
     STORIES[STORIES.length - 1];
@@ -27,9 +26,7 @@ export default function Home({
   return (
     <main className="main">
       <p className="date-label">{date}</p>
-
       <LevelSelector current={level} />
-
       <div className="layout">
         <StoryCard story={story} />
         <Sidebar />
