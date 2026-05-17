@@ -503,10 +503,19 @@ export const STORIES: Story[] = [
 ];
 
 export function getTodayStory(level: Story["level"] = "Lecteur"): Story {
-  const today = new Date().toISOString().split("T")[0];
-  const story = STORIES.find((s) => s.date === today && s.level === level);
-  const fallback = [...STORIES].reverse().find((s) => s.level === level);
-  return story ?? fallback ?? STORIES[STORIES.length - 1];
+  // Filtrer les histoires du niveau demandé
+  const levelStories = STORIES.filter((s) => s.level === level);
+  
+  // Calculer le jour depuis une date de référence fixe
+  const reference = new Date("2026-05-17");
+  const today = new Date();
+  const diffDays = Math.floor(
+    (today.getTime() - reference.getTime()) / (1000 * 60 * 60 * 24)
+  );
+  
+  // Rotation automatique : jour 0 = première histoire, jour 1 = deuxième, etc.
+  const index = diffDays % levelStories.length;
+  return levelStories[index];
 }
 
 export function getStoryBySlug(slug: string): Story | undefined {
