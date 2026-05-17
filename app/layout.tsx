@@ -17,8 +17,26 @@ const dmSans = DM_Sans({
 });
 
 export const metadata: Metadata = {
-  title: "LexiStory — Apprends en lisant",
-  description: "Une histoire par jour pour enrichir ton vocabulaire",
+  title: "LexiStory — Apprends le français en lisant",
+  description: "Une histoire courte par jour pour enrichir ton vocabulaire en français. Clique sur n'importe quel mot pour voir sa définition. Gratuit, sans pub.",
+  keywords: ["vocabulaire français", "apprendre le français", "histoire du jour", "définition", "lexique", "enrichir vocabulaire"],
+  openGraph: {
+    title: "LexiStory — Apprends le français en lisant",
+    description: "Une histoire courte par jour pour enrichir ton vocabulaire. Clique sur n'importe quel mot pour voir sa définition.",
+    url: "https://lexistory-tawny.vercel.app",
+    siteName: "LexiStory",
+    locale: "fr_FR",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "LexiStory — Apprends le français en lisant",
+    description: "Une histoire courte par jour pour enrichir ton vocabulaire en français.",
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

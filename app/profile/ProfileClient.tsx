@@ -1,4 +1,5 @@
 "use client";
+import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
 import type { User } from "@supabase/supabase-js";
@@ -7,6 +8,41 @@ import styles from "./profile.module.css";
 export default function ProfileClient({ user }: { user: User }) {
   const supabase = createClient();
   const router   = useRouter();
+
+  const [username, setUsername]   = useState("");
+  const [editing, setEditing]     = useState(false);
+  const [newUsername, setNewUsername] = useState("");
+  const [saving, setSaving]       = useState(false);
+  const [error, setError]         = useState("");
+
+  // Charge le pseudo depuis Supabase
+  useEffect(() => {
+    supabase
+      .from("profiles")
+      .select("username")
+      .eq("id", user.id)
+      .single()
+      .then(({ data }) => {
+        if (data?.username) setUsername(data.username);
+      });
+  }, []);
+
+  async function handleSaveUsername() {
+    if (!newUsername.trim()) return;
+    setSaving(true);
+    setError("");
+    const { error } = await supabase
+      .from("profiles")
+      .upsert({ id: user.id, username: newUsername.trim() });
+    setSaving(false);
+    if (error) {
+      setError(error.message.includes("unique") ? "Ce pseudo est déjà pris !" : "Erreur, réessaie.");
+    } else {
+      setUsername(newUsername.trim());
+      setEditing(false);
+      setNewUsername("");
+    }
+  }
 
   async function handleLogout() {
     await supabase.auth.signOut();
@@ -20,17 +56,49 @@ export default function ProfileClient({ user }: { user: User }) {
     if (data.url) window.location.href = data.url;
   }
 
-  const initial = user.email?.[0]?.toUpperCase() ?? "?";
+  const displayName = username || user.email?.[0]?.toUpperCase() || "?";
+  const initial     = (username?.[0] || user.email?.[0] || "?").toUpperCase();
 
   return (
     <div className={styles.page}>
       <div className={styles.card}>
 
         <div className={styles.avatar}>{initial}</div>
-        <div className={styles.email}>{user.email}</div>
+
+        {/* Pseudo ou email */}
+        {editing ? (
+          <div className={styles.editWrap}>
+            <input
+              className={styles.input}
+              placeholder="Choisis un pseudo..."
+              value={newUsername}
+              onChange={e => setNewUsername(e.target.value)}
+              onKeyDown={e => e.key === "Enter" && handleSaveUsername()}
+              autoFocus
+              maxLength={20}
+            />
+            {error && <p className={styles.error}>{error}</p>}
+            <div className={styles.editBtns}>
+              <button className={styles.btnCancel} onClick={() => { setEditing(false); setError(""); }}>
+                Annuler
+              </button>
+              <button className={styles.btnSave} onClick={handleSaveUsername} disabled={saving}>
+                {saving ? "Sauvegarde..." : "Valider"}
+              </button>
+            </div>
+          </div>
+        ) : (
+          <div className={styles.nameWrap}>
+            <div className={styles.displayName}>{username || "Pas encore de pseudo"}</div>
+            <button className={styles.editBtn} onClick={() => { setEditing(true); setNewUsername(username); }}>
+              ✏️ {username ? "Changer" : "Choisir un pseudo"}
+            </button>
+          </div>
+        )}
+
         <div className={styles.since}>
           Membre depuis le {new Date(user.created_at).toLocaleDateString("fr-FR", {
-            day: "numeric", month: "long", year: "numeric"
+            day: "numeric", month: "long", year: "numeric",
           })}
         </div>
 
