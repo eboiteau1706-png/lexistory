@@ -42,7 +42,7 @@ export default function Nav() {
 
   return (
     <nav className={styles.nav}>
-      <div className={styles.logo}>Lexi<span>Story</span></div>
+      <a href="/" className={styles.logo}>Lexi<span>Story</span></a>
       <div className={styles.right}>
         <div className={styles.streak}>🔥 {STREAK} jour</div>
 
