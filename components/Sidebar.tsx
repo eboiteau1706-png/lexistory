@@ -1,50 +1,82 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { createClient } from "@/lib/supabase";
+import { useRouter } from "next/navigation";
 import styles from "./Sidebar.module.css";
-
-const STREAK = 1;
-const STORIES_READ = 1;
-const LEVEL = "Intermédiaire";
 
 export default function Sidebar() {
   const [loading, setLoading] = useState(false);
+  const [user, setUser]       = useState<any>(null);
+  const [ready, setReady]     = useState(false);
+  const supabase = createClient();
+  const router   = useRouter();
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null);
+      setReady(true);
+    });
+    const { data: listener } = supabase.auth.onAuthStateChange((_e, session) => {
+      setUser(session?.user ?? null);
+    });
+    return () => listener.subscription.unsubscribe();
+  }, []);
 
   async function handlePremium() {
     setLoading(true);
     try {
-      const res = await fetch("/api/checkout", { method: "POST" });
+      const res  = await fetch("/api/checkout", { method: "POST" });
       const data = await res.json();
       if (data.url) window.location.href = data.url;
-    } catch (e) {
-      alert("Erreur, réessaie.");
-    } finally {
-      setLoading(false);
-    }
+    } catch { alert("Erreur, réessaie."); }
+    finally { setLoading(false); }
   }
+
+  if (!ready) return null;
 
   return (
     <aside className={styles.sidebar}>
-      {/* Streak */}
-      <div className={styles.card}>
-        <p className={styles.cardTitle}>🔥 Ta série</p>
-        <div className={styles.streakDisplay}>
-          <div className={styles.streakNum}>{STREAK}</div>
-          <div className={styles.streakSub}>jour consécutif</div>
-        </div>
-      </div>
 
-      {/* Stats */}
-      <div className={styles.card}>
-        <p className={styles.cardTitle}>📊 Mes stats</p>
-        <div className={styles.statRow}>
-          <span className={styles.statLabel}>Histoires lues</span>
-          <span className={styles.statVal}>{STORIES_READ}</span>
+      {user ? (
+        <>
+          {/* Streak */}
+          <div className={styles.card}>
+            <p className={styles.cardTitle}>🔥 Ta série</p>
+            <div className={styles.streakDisplay}>
+              <div className={styles.streakNum}>1</div>
+              <div className={styles.streakSub}>jour consécutif</div>
+            </div>
+          </div>
+
+          {/* Stats */}
+          <div className={styles.card}>
+            <p className={styles.cardTitle}>📊 Mes stats</p>
+            <div className={styles.statRow}>
+              <span className={styles.statLabel}>Histoires lues</span>
+              <span className={styles.statVal}>1</span>
+            </div>
+            <div className={styles.statRow}>
+              <span className={styles.statLabel}>Niveau actuel</span>
+              <span className={`${styles.statVal} ${styles.gold}`}>Lecteur</span>
+            </div>
+          </div>
+        </>
+      ) : (
+        /* Non connecté */
+        <div className={styles.loginCard}>
+          <div className={styles.loginIcon}>📖</div>
+          <div className={styles.loginTitle}>Suis ta progression</div>
+          <div className={styles.loginText}>
+            Connecte-toi pour voir ta série, tes stats et tes mots appris.
+          </div>
+          <button
+            className={styles.loginBtn}
+            onClick={() => router.push("/login")}
+          >
+            Se connecter
+          </button>
         </div>
-        <div className={styles.statRow}>
-          <span className={styles.statLabel}>Niveau actuel</span>
-          <span className={`${styles.statVal} ${styles.gold}`}>{LEVEL}</span>
-        </div>
-      </div>
+      )}
 
       {/* Premium */}
       <div className={styles.premiumCard}>
@@ -72,6 +104,7 @@ export default function Sidebar() {
           En Premium, accède à toutes les histoires passées.
         </div>
       </div>
+
     </aside>
   );
 }

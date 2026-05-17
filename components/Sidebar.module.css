@@ -128,3 +128,47 @@
 }
 .lockedIcon { font-size: 2rem; margin-bottom: 10px; }
 .lockedText { font-size: 0.85rem; color: var(--text-muted); line-height: 1.55; }
+
+/* Non connecté */
+.loginCard {
+  background: var(--surface);
+  border: 1px dashed var(--border);
+  border-radius: var(--radius);
+  padding: 24px 20px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.loginIcon { font-size: 2rem; }
+
+.loginTitle {
+  font-family: var(--font-playfair), serif;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.loginText {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  line-height: 1.55;
+}
+
+.loginBtn {
+  width: 100%;
+  padding: 10px;
+  border-radius: 10px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  color: var(--text);
+  font-family: inherit;
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  margin-top: 4px;
+}
+.loginBtn:hover { border-color: var(--accent); color: var(--accent); }
