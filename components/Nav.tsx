@@ -7,28 +7,28 @@ import styles from "./Nav.module.css";
 const STREAK = 1;
 
 export default function Nav() {
-  const [loading, setLoading] = useState(false);
-  const [user, setUser]       = useState<any>(null);
-  const [ready, setReady]     = useState(false);
+  const [loading, setLoading]   = useState(false);
+  const [user, setUser]         = useState<any>(null);
+  const [ready, setReady]       = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
   const supabase = createClient();
   const router   = useRouter();
   const pathname = usePathname();
 
   useEffect(() => {
-    // Vérifie la session au chargement
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null);
       setReady(true);
     });
-
-    // Écoute les changements d'auth
     const { data: listener } = supabase.auth.onAuthStateChange((_e, session) => {
       setUser(session?.user ?? null);
       setReady(true);
     });
-
     return () => listener.subscription.unsubscribe();
-  }, [pathname]); // re-vérifie à chaque changement de page
+  }, [pathname]);
+
+  // Ferme le menu quand on change de page
+  useEffect(() => { setMenuOpen(false); }, [pathname]);
 
   async function handlePremium() {
     setLoading(true);
@@ -40,28 +40,59 @@ export default function Nav() {
     finally { setLoading(false); }
   }
 
+  function handleProfile() {
+    setMenuOpen(false);
+    router.push(user ? "/profile" : "/login");
+  }
+
   return (
-    <nav className={styles.nav}>
-      <a href="/" className={styles.logo}>Lexi<span>Story</span></a>
-      <div className={styles.right}>
-        <div className={styles.streak}>🔥 {STREAK} jour</div>
+    <>
+      <nav className={styles.nav}>
+        <a href="/" className={styles.logo}>Lexi<span>Story</span></a>
 
-        {ready && (
-          user ? (
-            <button className={styles.btnGhost} onClick={() => router.push("/profile")}>
-              Mon profil
+        {/* Desktop */}
+        <div className={styles.desktopRight}>
+          <div className={styles.streak}>🔥 {STREAK} jour</div>
+          {ready && (
+            <button className={styles.btnGhost} onClick={handleProfile}>
+              {user ? "Mon profil" : "Connexion"}
             </button>
-          ) : (
-            <button className={styles.btnGhost} onClick={() => router.push("/login")}>
-              Connexion
-            </button>
-          )
-        )}
+          )}
+          <button className={styles.btnPrimary} onClick={handlePremium} disabled={loading}>
+            {loading ? "..." : "Premium — 1,99€/mois"}
+          </button>
+        </div>
 
-        <button className={styles.btnPrimary} onClick={handlePremium} disabled={loading}>
-          {loading ? "..." : "Premium — 1,99€/mois"}
+        {/* Mobile hamburger */}
+        <button
+          className={styles.hamburger}
+          onClick={() => setMenuOpen(!menuOpen)}
+          aria-label="Menu"
+        >
+          <span className={`${styles.bar} ${menuOpen ? styles.barOpen1 : ""}`} />
+          <span className={`${styles.bar} ${menuOpen ? styles.barOpen2 : ""}`} />
+          <span className={`${styles.bar} ${menuOpen ? styles.barOpen3 : ""}`} />
         </button>
-      </div>
-    </nav>
+      </nav>
+
+      {/* Mobile menu dropdown */}
+      {menuOpen && (
+        <div className={styles.mobileMenu}>
+          <div className={styles.mobileStreak}>🔥 {STREAK} jour de série</div>
+          {ready && (
+            <button className={styles.mobileBtn} onClick={handleProfile}>
+              {user ? "👤 Mon profil" : "🔑 Connexion"}
+            </button>
+          )}
+          <button
+            className={styles.mobilePremiumBtn}
+            onClick={() => { setMenuOpen(false); handlePremium(); }}
+            disabled={loading}
+          >
+            {loading ? "..." : "✨ Premium — 1,99€/mois"}
+          </button>
+        </div>
+      )}
+    </>
   );
 }
