@@ -73,7 +73,8 @@ const DICT: Record<string, Definition> = {
   "disparaît":       { etym: "Du latin disparere, cesser d'être visible", defOrig: "Cesse d'être visible, s'en va, n'est plus là.", defSimple: "Ne plus être là, s'en aller. Comme un lapin qu'un magicien fait disparaître dans son chapeau !" },
   "couchers":        { etym: "De coucher, du latin collocare", defOrig: "Moments où le soleil descend sous l'horizon en fin de journée.", defSimple: "Le moment où le soleil descend et disparaît à l'horizon le soir. C'est souvent très coloré et beau !" },
   "colorés":         { etym: "Du latin coloratus", defOrig: "Qui présentent de vives couleurs, qui sont richement colorés.", defSimple: "Qui ont plein de couleurs vives et belles. Un arc-en-ciel est très coloré !" },
- 
+  "atmosphere":      { etym: "Du grec atmos (vapeur) + sphaira (sphère)", defOrig: "Couche de gaz entourant la Terre, maintenue par la gravité.", defSimple: "L'enveloppe d'air qui entoure la Terre. C'est l'air qu'on respire, mais en très très grande quantité !" },
+
   // ── HISTOIRE: biais cognitifs (Érudit) ────────────────────
   "rationnelle":     { etym: "Du latin rationalis, conforme à la raison", defOrig: "Qui est fondée sur la raison, la logique, et non sur les émotions ou les intuitions.", defSimple: "Qui suit la logique et la réflexion, pas les émotions. Prendre une décision rationnelle = réfléchir avant d'agir." },
   "méthodique":      { etym: "Du grec methodos, voie vers", defOrig: "Qui procède avec ordre et méthode, de façon organisée et systématique.", defSimple: "Qui fait les choses dans l'ordre, étape par étape. Quelqu'un de méthodique ne laisse rien au hasard." },
