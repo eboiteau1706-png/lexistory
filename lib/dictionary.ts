@@ -1,17 +1,12 @@
 // lib/dictionary.ts
-// ─────────────────────────────────────────────────────────
-// Dictionnaire embarqué. Ajoute des mots au fur et à mesure
-// que tu crées de nouvelles histoires.
-// ─────────────────────────────────────────────────────────
-
 export interface Definition {
-  etym:      string;  // origine étymologique courte
-  defOrig:   string;  // définition de dictionnaire
-  defSimple: string;  // explication simple (niveau 12 ans)
+  etym:      string;
+  defOrig:   string;
+  defSimple: string;
 }
-
+ 
 const DICT: Record<string, Definition> = {
-  // ── HISTOIRE: flamant rose ─────────────────────────────
+  // ── HISTOIRE: flamant rose (Lecteur) ──────────────────────
   "flamant":         { etym: "Du latin flamant, couleur de flamme", defOrig: "Grand oiseau échassier au plumage rose ou rouge, aux pattes et au cou très longs, vivant en colonies dans les zones humides.", defSimple: "Un grand oiseau avec de longues pattes roses qui vit dans les marais. On le reconnaît à sa couleur rose unique !" },
   "flamants":        { etym: "Du latin flamant, couleur de flamme", defOrig: "Pluriel de flamant. Grands oiseaux échassiers au plumage rose ou rouge, vivant en colonies.", defSimple: "Plusieurs grands oiseaux roses avec de longues pattes qui vivent ensemble près de l'eau." },
   "emblématiques":   { etym: "Du latin emblema, ornement en relief", defOrig: "Qui constituent le symbole caractéristique d'une chose, d'un lieu ou d'un groupe.", defSimple: "Quelque chose qui représente si bien un endroit qu'on y pense automatiquement. Comme la Tour Eiffel pour Paris !" },
@@ -56,33 +51,85 @@ const DICT: Record<string, Definition> = {
   "oiseaux":         { etym: "Du latin avis, oiseau", defOrig: "Animaux vertébrés couverts de plumes, à sang chaud, dont les membres antérieurs sont des ailes.", defSimple: "Les animaux avec des plumes et des ailes. Les moineaux, les aigles et les flamants sont des oiseaux." },
   "nature":          { etym: "Du latin natura", defOrig: "L'ensemble du monde physique, des êtres vivants et des phénomènes non créés par l'homme.", defSimple: "Tout ce qui existe sans que l'homme l'ait fabriqué : les forêts, les animaux, les rivières, le ciel." },
   "longueur":        { etym: "Du latin longitudo", defOrig: "Dimension d'un objet dans son plus grand sens.", defSimple: "La taille d'un objet de bout en bout. La longueur d'une table, c'est la mesure du côté le plus long." },
-
+ 
+  // ── HISTOIRE: ciel bleu (Curieux) ─────────────────────────
+  "ciel":            { etym: "Du latin caelum", defOrig: "Espace visible au-dessus de nos têtes, limité par l'horizon.", defSimple: "Ce qu'on voit quand on lève la tête dehors. Il est bleu le jour et noir la nuit !" },
+  "bleu":            { etym: "Du germanique blao", defOrig: "Couleur du spectre visible entre le vert et le violet, celle du ciel par temps clair.", defSimple: "Une couleur, comme celle du ciel ou de la mer. C'est une couleur froide et apaisante." },
+  "lumière":         { etym: "Du latin lumen", defOrig: "Rayonnement électromagnétique visible par l'œil humain, permettant de voir les objets.", defSimple: "Ce qui nous permet de voir. Le soleil, les lampes et les bougies produisent de la lumière." },
+  "soleil":          { etym: "Du latin sol", defOrig: "Étoile autour de laquelle gravite la Terre, source de lumière et de chaleur pour notre planète.", defSimple: "La grande boule de feu dans le ciel qui nous donne de la chaleur et de la lumière chaque jour." },
+  "semble":          { etym: "Du latin simulare, imiter", defOrig: "Avoir l'apparence de, donner l'impression de.", defSimple: "Avoir l'air de quelque chose. Il semble fatigué = on dirait qu'il est fatigué." },
+  "blanche":         { etym: "Du germanique blank, brillant", defOrig: "Qui est de la couleur de la neige, du lait ; qui réfléchit toutes les couleurs du spectre visible.", defSimple: "La couleur de la neige ou du lait. C'est quand toutes les couleurs sont mélangées ensemble !" },
+  "réalité":         { etym: "Du latin realitas", defOrig: "Ce qui existe effectivement, par opposition à ce qui est imaginé ou apparent.", defSimple: "Ce qui est vraiment vrai, pas juste dans notre tête. La réalité, c'est ce qui existe pour de vrai." },
+  "contient":        { etym: "Du latin continere, tenir ensemble", defOrig: "A à l'intérieur, renferme en soi.", defSimple: "Avoir quelque chose dedans. Une bouteille contient de l'eau = il y a de l'eau dans la bouteille." },
+  "arc-en-ciel":     { etym: "De arc + en + ciel", defOrig: "Phénomène optique formant un arc de cercle aux couleurs du spectre visible après la pluie.", defSimple: "Le grand arc coloré qu'on voit dans le ciel après la pluie quand le soleil brille. Il a 7 couleurs !" },
+  "atmosphère":      { etym: "Du grec atmos (vapeur) + sphaira (sphère)", defOrig: "Couche de gaz entourant la Terre, maintenue par la gravité.", defSimple: "L'enveloppe d'air qui entoure la Terre. C'est l'air qu'on respire, mais en très très grande quantité !" },
+  "minuscules":      { etym: "Du latin minusculus, assez petit", defOrig: "Extrêmement petits, de très faible dimension.", defSimple: "Tout petit, presque invisible. Les microbes sont minuscules, on ne peut pas les voir sans microscope." },
+  "particules":      { etym: "Du latin particula, petite partie", defOrig: "Très petites portions de matière.", defSimple: "Des tout petits morceaux de quelque chose. L'air est rempli de particules tellement petites qu'on ne les voit pas." },
+  "dévient":         { etym: "Du latin deviare, s'écarter", defOrig: "Change de direction, s'écarte de sa trajectoire initiale.", defSimple: "Changer de direction. Comme quand tu lances une balle et qu'elle rebondit sur un mur." },
+  "directions":      { etym: "Du latin directio, action de diriger", defOrig: "Sens dans lequel quelque chose se déplace ou est orienté.", defSimple: "Le chemin qu'on prend pour aller quelque part. Gauche, droite, haut, bas sont des directions." },
+  "rebondit":        { etym: "De re + bondir", defOrig: "Fait un bond après avoir heurté un obstacle, repart dans une autre direction.", defSimple: "Repartir après avoir touché quelque chose. Comme une balle de tennis qui rebondit sur le sol." },
+  "diffusion":       { etym: "Du latin diffusio, épandage", defOrig: "Phénomène par lequel des ondes ou des particules sont dispersées dans toutes les directions.", defSimple: "Quand quelque chose se répand partout dans toutes les directions. Comme une odeur qui se diffuse dans toute la pièce." },
+  "traverse":        { etym: "Du latin transversare, passer à travers", defOrig: "Passe d'un côté à l'autre en passant par l'intérieur.", defSimple: "Passer d'un bout à l'autre. Traverser la rue = aller d'un trottoir à l'autre." },
+  "disparaît":       { etym: "Du latin disparere, cesser d'être visible", defOrig: "Cesse d'être visible, s'en va, n'est plus là.", defSimple: "Ne plus être là, s'en aller. Comme un lapin qu'un magicien fait disparaître dans son chapeau !" },
+  "couchers":        { etym: "De coucher, du latin collocare", defOrig: "Moments où le soleil descend sous l'horizon en fin de journée.", defSimple: "Le moment où le soleil descend et disparaît à l'horizon le soir. C'est souvent très coloré et beau !" },
+  "colorés":         { etym: "Du latin coloratus", defOrig: "Qui présentent de vives couleurs, qui sont richement colorés.", defSimple: "Qui ont plein de couleurs vives et belles. Un arc-en-ciel est très coloré !" },
+ 
+  // ── HISTOIRE: biais cognitifs (Érudit) ────────────────────
+  "rationnelle":     { etym: "Du latin rationalis, conforme à la raison", defOrig: "Qui est fondée sur la raison, la logique, et non sur les émotions ou les intuitions.", defSimple: "Qui suit la logique et la réflexion, pas les émotions. Prendre une décision rationnelle = réfléchir avant d'agir." },
+  "méthodique":      { etym: "Du grec methodos, voie vers", defOrig: "Qui procède avec ordre et méthode, de façon organisée et systématique.", defSimple: "Qui fait les choses dans l'ordre, étape par étape. Quelqu'un de méthodique ne laisse rien au hasard." },
+  "cognitive":       { etym: "Du latin cognoscere, connaître", defOrig: "Qui se rapporte aux processus mentaux de la connaissance, de la pensée et de la perception.", defSimple: "Qui concerne la façon dont notre cerveau pense et comprend les choses." },
+  "biais":           { etym: "Du vieux français biais, de travers", defOrig: "Tendance systématique à dévier de la pensée rationnelle, erreur de jugement inconsciente.", defSimple: "Une erreur que notre cerveau fait sans qu'on s'en rende compte. Comme des lunettes déformantes qui changent ce qu'on voit." },
+  "raccourcis":      { etym: "De raccourcir, rendre plus court", defOrig: "Moyens plus rapides d'arriver à un résultat, en évitant les étapes habituelles.", defSimple: "Des chemins plus courts pour aller plus vite. Notre cerveau prend des raccourcis pour penser plus vite, mais parfois il se trompe." },
+  "mentaux":         { etym: "Du latin mentalis, de l'esprit", defOrig: "Qui appartiennent à l'esprit, à la pensée, à l'activité psychique.", defSimple: "Qui se passe dans la tête. Les calculs mentaux, c'est faire des maths dans sa tête sans papier." },
+  "altèrent":        { etym: "Du latin alterare, changer", defOrig: "Modifient en mal, dégradent, changent de façon négative.", defSimple: "Changer quelque chose en pire. Comme quand la chaleur altère la nourriture et la rend moins bonne." },
+  "jugement":        { etym: "Du latin judicamentum", defOrig: "Faculté de l'esprit qui permet d'évaluer, d'apprécier et de distinguer le vrai du faux.", defSimple: "La capacité à distinguer ce qui est bien ou vrai. Avoir du jugement, c'est savoir prendre les bonnes décisions." },
+  "inconsciente":    { etym: "Du latin in (sans) + conscientia (conscience)", defOrig: "Qui se produit sans que la personne en soit consciente ou sans qu'elle le décide volontairement.", defSimple: "Quelque chose qu'on fait sans s'en rendre compte. Comme cligner des yeux ou respirer." },
+  "confirmation":    { etym: "Du latin confirmatio, action de confirmer", defOrig: "Action de rendre certain, de valider ce qui était supposé ou cru.", defSimple: "Le fait de prouver que quelque chose est vrai. Confirmer une réservation = dire qu'on vient bien." },
+  "pernicieux":      { etym: "Du latin perniciosus, qui détruit", defOrig: "Qui cause de graves dommages de façon insidieuse et progressive, très nuisible.", defSimple: "Très dangereux mais de façon cachée et lente. Comme une maladie qui s'installe sans qu'on s'en aperçoive." },
+  "naturellement":   { etym: "Du latin naturaliter", defOrig: "De façon naturelle, spontanée, sans effort ni contrainte.", defSimple: "Sans forcer, de façon automatique. Comme respirer, ça se fait naturellement sans y penser." },
+  "corroborent":     { etym: "Du latin corroborare, renforcer", defOrig: "Confirment, appuient, renforcent la vérité ou la validité de quelque chose.", defSimple: "Confirmer et renforcer quelque chose. Des preuves qui corroborent une histoire = des preuves qui montrent que c'est vrai." },
+  "croyances":       { etym: "Du latin credentia, confiance", defOrig: "Choses tenues pour vraies sans nécessairement avoir de preuves, convictions personnelles.", defSimple: "Ce qu'on croit être vrai, même sans preuve. Croire au Père Noël est une croyance d'enfant." },
+  "préexistantes":   { etym: "Du latin prae (avant) + existere (exister)", defOrig: "Qui existent déjà avant, qui étaient là auparavant.", defSimple: "Qui existent déjà depuis avant. Des connaissances préexistantes = des choses qu'on savait déjà." },
+  "contredisent":    { etym: "Du latin contradicere, parler contre", defOrig: "Affirment le contraire, s'opposent à ce qui a été dit ou cru.", defSimple: "Dire le contraire. Si tu dis qu'il fait beau et moi que c'est nuageux, on se contredit." },
+  "mécanisme":       { etym: "Du grec mechane, machine", defOrig: "Ensemble de processus qui fonctionnent ensemble pour produire un résultat.", defSimple: "La façon dont quelque chose fonctionne. Le mécanisme d'une montre, c'est tout ce qui fait tourner les aiguilles." },
+  "cognition":       { etym: "Du latin cognitio, connaissance", defOrig: "Ensemble des processus mentaux liés à la connaissance : perception, mémoire, raisonnement.", defSimple: "Tout ce que notre cerveau fait pour comprendre le monde : penser, mémoriser, apprendre." },
+  "accablantes":     { etym: "Du vieux français accabler, écraser", defOrig: "Qui sont si nombreuses ou si évidentes qu'elles écrasent toute opposition possible.", defSimple: "Tellement fortes qu'on ne peut pas les ignorer. Des preuves accablantes, c'est des preuves tellement claires qu'on ne peut pas dire non." },
+  "halo":            { etym: "Du grec halos, disque lumineux", defOrig: "Auréole lumineuse autour d'un astre ; par extension, rayonnement positif qui entoure une personne.", defSimple: "Un cercle de lumière autour de quelque chose. L'effet de halo, c'est quand on voit quelqu'un en rose parce qu'on aime une chose chez lui." },
+  "influent":        { etym: "Du latin influens, qui coule dans", defOrig: "Qui a beaucoup d'influence, qui agit fortement sur les personnes ou les choses.", defSimple: "Qui a beaucoup de pouvoir sur les autres. Un influent sur les réseaux sociaux = quelqu'un que beaucoup de gens écoutent." },
+  "percevons":       { etym: "Du latin percipere, saisir", defOrig: "Prenons conscience de quelque chose par les sens ou l'intuition.", defSimple: "Ce qu'on ressent ou voit. Percevoir un bruit = entendre quelque chose." },
+  "éloquence":       { etym: "Du latin eloquentia, art de parler", defOrig: "Art de bien parler, de s'exprimer avec facilité, clarté et force de persuasion.", defSimple: "La capacité à très bien parler et convaincre les gens. Un avocat éloquent parle si bien qu'on le croit facilement." },
+  "charisme":        { etym: "Du grec kharisma, grâce divine", defOrig: "Qualité d'une personne qui séduit et influence les autres par sa seule présence et personnalité.", defSimple: "Le pouvoir naturel d'attirer et de fasciner les gens. Certains leaders ont beaucoup de charisme, les gens les suivent naturellement." },
+  "spontanément":    { etym: "Du latin spontaneus, de plein gré", defOrig: "De façon naturelle et spontanée, sans y avoir été poussé ou réfléchi.", defSimple: "Sans réfléchir, automatiquement. Applaudir spontanément = applaudir sans décider de le faire." },
+  "vertus":          { etym: "Du latin virtus, force morale", defOrig: "Qualités morales ou intellectuelles considérées comme excellentes et louables.", defSimple: "Les bonnes qualités de quelqu'un. La gentillesse, la générosité et l'honnêteté sont des vertus." },
+  "justification":   { etym: "Du latin justificatio", defOrig: "Raison ou preuve qui permet de justifier, d'expliquer ou de légitimer quelque chose.", defSimple: "Une raison valable pour expliquer quelque chose. Sans justification = sans explication valable." },
+  "attrayantes":     { etym: "Du latin attrahere, attirer", defOrig: "Qui attirent par leur beauté ou leurs qualités, qui sont séduisantes.", defSimple: "Belles et qui donnent envie. Une vitrine attrayante donne envie d'entrer dans le magasin." },
+  "affranchir":      { etym: "Du latin francus, libre", defOrig: "Se libérer de quelque chose qui contraint, s'émanciper d'une domination.", defSimple: "Se libérer de quelque chose. S'affranchir d'une mauvaise habitude = arrêter de la faire." },
+  "introspection":   { etym: "Du latin introspicere, regarder à l'intérieur", defOrig: "Observation et analyse de ses propres pensées, sentiments et motivations.", defSimple: "Se regarder à l'intérieur de soi-même pour comprendre ce qu'on pense et ressent vraiment." },
+  "exigeante":       { etym: "Du latin exigere, réclamer", defOrig: "Qui demande beaucoup d'efforts, de qualités ou de conditions strictes.", defSimple: "Qui demande beaucoup d'efforts. Un travail exigeant = un travail difficile qui demande beaucoup." },
+  "lucidité":        { etym: "Du latin luciditas, clarté", defOrig: "Qualité d'un esprit clair qui voit et comprend les choses telles qu'elles sont réellement.", defSimple: "Voir les choses clairement, sans se mentir à soi-même. La lucidité, c'est savoir regarder la vérité en face." },
+ 
   // ── MOTS COURANTS ─────────────────────────────────────────
-  "sans":      { etym: "Du latin sine", defOrig: "Préposition exprimant l'absence, la privation ou la manque de quelque chose.", defSimple: "Qui n'a pas quelque chose. Sans sucre = pas de sucre dedans." },
-  "doute":     { etym: "Du latin dubitare, hésiter", defOrig: "Incertitude de l'esprit qui hésite entre deux jugements ou deux partis.", defSimple: "Quand on n'est pas sûr de quelque chose. Sans doute = probablement, c'est très probable." },
-  "cache":     { etym: "Du latin coactare, contraindre", defOrig: "Dissimule, tient hors de la vue ou de la connaissance.", defSimple: "Mettre quelque chose pour qu'on ne le voit pas. Comme cacher un cadeau pour surprendre quelqu'un." },
+  "sans":      { etym: "Du latin sine", defOrig: "Préposition exprimant l'absence ou la privation de quelque chose.", defSimple: "Qui n'a pas quelque chose. Sans sucre = pas de sucre dedans." },
+  "doute":     { etym: "Du latin dubitare, hésiter", defOrig: "Incertitude de l'esprit qui hésite entre deux jugements.", defSimple: "Quand on n'est pas sûr de quelque chose. Sans doute = probablement." },
+  "cache":     { etym: "Du latin coactare, contraindre", defOrig: "Dissimule, tient hors de la vue ou de la connaissance.", defSimple: "Mettre quelque chose pour qu'on ne le voit pas. Comme cacher un cadeau." },
   "monde":     { etym: "Du latin mundus", defOrig: "Ensemble de tout ce qui existe ; la Terre et ses habitants.", defSimple: "La planète Terre avec tous les gens et les pays qui y vivent." },
-  "leur":      { etym: "Du latin illorum, d'eux", defOrig: "Pronom ou adjectif possessif de la troisième personne du pluriel.", defSimple: "Un mot pour dire que quelque chose appartient à plusieurs personnes. Leur maison = la maison qui est à eux." },
-
-  // ── AJOUTE ICI LES MOTS DE TES PROCHAINES HISTOIRES ──────
+  "leur":      { etym: "Du latin illorum, d'eux", defOrig: "Pronom ou adjectif possessif de la troisième personne du pluriel.", defSimple: "Un mot pour dire que quelque chose appartient à plusieurs personnes." },
 };
-
-// ── FONCTION DE RECHERCHE ──────────────────────────────────
+ 
 function normalize(str: string): string {
   return str
     .toLowerCase()
     .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "") // retire accents
+    .replace(/[\u0300-\u036f]/g, "")
     .replace(/[^a-z]/g, "");
 }
-
+ 
 export function lookup(word: string): Definition | null {
-  // Recherche exacte
   if (DICT[word]) return DICT[word];
-  // Recherche sans accents
   const norm = normalize(word);
   for (const key of Object.keys(DICT)) {
     if (normalize(key) === norm) return DICT[key];
   }
   return null;
 }
+ 
