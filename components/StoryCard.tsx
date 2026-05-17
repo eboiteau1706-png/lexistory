@@ -1,5 +1,6 @@
 "use client";
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
+import { createClient } from "@/lib/supabase";
 import WordPopup from "./WordPopup";
 import ClickableText from "./ClickableText";
 import styles from "./StoryCard.module.css";
@@ -10,18 +11,41 @@ interface Props { story: Story; }
 export default function StoryCard({ story }: Props) {
   const [seenWords, setSeenWords]   = useState<Set<string>>(new Set());
   const [activeWord, setActiveWord] = useState<string | null>(null);
+  const [userId, setUserId]         = useState<string | null>(null);
+  const supabase = createClient();
 
-  const handleWordClick = useCallback((word: string) => {
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user) setUserId(session.user.id);
+    });
+  }, []);
+
+  // Marque l'histoire comme lue
+  useEffect(() => {
+    if (!userId || !story.slug) return;
+    supabase.from("stories_read").upsert(
+      { user_id: userId, story_slug: story.slug, story_level: story.level },
+      { onConflict: "user_id,story_slug" }
+    );
+  }, [userId, story.slug]);
+
+  const handleWordClick = useCallback(async (word: string) => {
     setSeenWords(prev => new Set(prev).add(word));
     setActiveWord(word);
-  }, []);
+    // Sauvegarde le mot vu
+    if (userId) {
+      await supabase.from("words_seen").upsert(
+        { user_id: userId, word },
+        { onConflict: "user_id,word" }
+      );
+    }
+  }, [userId]);
 
   const pct = Math.min(100, Math.round((seenWords.size / 15) * 100));
 
   return (
     <>
       <div className={styles.card}>
-        {/* ── HEADER ── */}
         <div className={styles.header}>
           <div className={styles.meta}>
             <span className={styles.tag}>{story.category}</span>
@@ -36,7 +60,6 @@ export default function StoryCard({ story }: Props) {
           <span className={styles.levelPill}>{story.level}</span>
         </div>
 
-        {/* ── PROGRESS ── */}
         <div className={styles.progressWrap}>
           <div className={styles.progressBar}>
             <div className={styles.progressFill} style={{ width: `${pct}%` }} />
@@ -51,20 +74,14 @@ export default function StoryCard({ story }: Props) {
           </div>
         </div>
 
-        {/* ── BODY ── */}
         <div className={styles.body}>
           {story.paragraphs.map((p, i) => (
             <p key={i}>
-              <ClickableText
-                text={p}
-                seenWords={seenWords}
-                onWordClick={handleWordClick}
-              />
+              <ClickableText text={p} seenWords={seenWords} onWordClick={handleWordClick} />
             </p>
           ))}
         </div>
 
-        {/* ── HINT ── */}
         <div className={styles.hint}>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <circle cx="12" cy="12" r="10"/>
@@ -76,13 +93,8 @@ export default function StoryCard({ story }: Props) {
         </div>
       </div>
 
-      {/* ── POPUP ── */}
       {activeWord && (
-        <WordPopup
-          word={activeWord}
-          seenCount={seenWords.size}
-          onClose={() => setActiveWord(null)}
-        />
+        <WordPopup word={activeWord} seenCount={seenWords.size} onClose={() => setActiveWord(null)} />
       )}
     </>
   );
