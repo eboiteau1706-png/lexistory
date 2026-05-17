@@ -1,0 +1,130 @@
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  animation: fadeUp 0.6s 0.15s ease both;
+}
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px;
+}
+
+.cardTitle {
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--text-dim);
+  margin-bottom: 16px;
+}
+
+/* Streak */
+.streakDisplay { text-align: center; padding: 8px 0; }
+.streakNum {
+  font-family: var(--font-playfair), serif;
+  font-size: 3rem;
+  font-weight: 900;
+  color: var(--accent);
+  line-height: 1;
+}
+.streakSub { font-size: 0.78rem; color: var(--text-dim); margin-top: 4px; }
+
+/* Stats */
+.statRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 0.88rem;
+}
+.statRow:last-child { border-bottom: none; padding-bottom: 0; }
+.statLabel { color: var(--text-muted); }
+.statVal   { font-weight: 600; color: var(--text); }
+.gold      { color: var(--accent); }
+.green     { color: var(--green); }
+
+/* Mots consultés chips */
+.wordsList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 10px;
+  max-height: 110px;
+  overflow-y: auto;
+}
+.wordChip {
+  font-size: 0.75rem;
+  padding: 3px 10px;
+  border-radius: 50px;
+  background: rgba(109, 186, 138, 0.1);
+  color: var(--green);
+  border: 1px solid rgba(109, 186, 138, 0.2);
+}
+
+/* Premium */
+.premiumCard {
+  background: linear-gradient(135deg, #1e1a0e, #2a2210);
+  border: 1px solid rgba(232, 201, 122, 0.25);
+  border-radius: var(--radius);
+  padding: 20px;
+  position: relative;
+  overflow: hidden;
+}
+.premiumCard::before {
+  content: '';
+  position: absolute;
+  top: -40px; right: -40px;
+  width: 120px; height: 120px;
+  background: radial-gradient(circle, rgba(232,201,122,0.15), transparent 70%);
+  pointer-events: none;
+}
+.premiumTitle {
+  font-family: var(--font-playfair), serif;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--accent);
+  margin-bottom: 8px;
+}
+.premiumText {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  line-height: 1.55;
+  margin-bottom: 14px;
+}
+.premiumPrice {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 12px;
+}
+.premiumPrice span { font-size: 0.78rem; font-weight: 400; color: var(--text-dim); }
+.btnUpgrade {
+  width: 100%;
+  padding: 10px;
+  border-radius: 10px;
+  background: var(--accent);
+  color: var(--bg);
+  font-family: inherit;
+  font-size: 0.88rem;
+  font-weight: 700;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.btnUpgrade:hover { background: var(--accent2); transform: translateY(-1px); }
+
+/* Locked */
+.lockedCard {
+  background: var(--surface);
+  border: 1px dashed var(--border);
+  border-radius: var(--radius);
+  padding: 28px 20px;
+  text-align: center;
+  opacity: 0.55;
+}
+.lockedIcon { font-size: 2rem; margin-bottom: 10px; }
+.lockedText { font-size: 0.85rem; color: var(--text-muted); line-height: 1.55; }

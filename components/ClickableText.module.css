@@ -1,0 +1,18 @@
+.word {
+  display: inline;
+  cursor: pointer;
+  border-radius: 3px;
+  padding: 1px 1px;
+  transition: background 0.1s, color 0.1s;
+}
+.word:hover {
+  background: rgba(232, 201, 122, 0.14);
+  color: var(--accent);
+}
+.seen {
+  color: var(--green);
+}
+.seen:hover {
+  background: rgba(109, 186, 138, 0.1);
+  color: var(--green);
+}
