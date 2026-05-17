@@ -22,12 +22,22 @@ export default function StoryCard({ story }: Props) {
 
   // Marque l'histoire comme lue
   useEffect(() => {
-    if (!userId || !story.slug) return;
-    supabase.from("stories_read").upsert(
-      { user_id: userId, story_slug: story.slug, story_level: story.level },
-      { onConflict: "user_id,story_slug" }
-    );
-  }, [userId, story.slug]);
+  if (!userId || !story.slug) return;
+  supabase.from("stories_read")
+    .select("id")
+    .eq("user_id", userId)
+    .eq("story_slug", story.slug)
+    .single()
+    .then(({ data }) => {
+      if (!data) {
+        supabase.from("stories_read").insert({
+          user_id: userId,
+          story_slug: story.slug,
+          story_level: story.level,
+        });
+      }
+    });
+}, [userId, story.slug]);
 
   const handleWordClick = useCallback(async (word: string) => {
     setSeenWords(prev => new Set(prev).add(word));
