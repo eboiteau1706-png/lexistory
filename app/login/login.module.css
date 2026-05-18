@@ -39,10 +39,6 @@
 }
 
 .googleBtn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
   width: 100%;
   padding: 12px;
   border-radius: 12px;
@@ -53,9 +49,16 @@
   font-size: 0.9rem;
   font-weight: 600;
   cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
   transition: all 0.2s;
 }
-.googleBtn:hover { border-color: var(--text-muted); }
+.googleBtn:hover {
+  border-color: var(--text-muted);
+  background: var(--surface);
+}
 
 .divider {
   display: flex;
