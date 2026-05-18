@@ -226,3 +226,138 @@
 }
 .btnSave:hover:not(:disabled) { background: var(--accent2); }
 .btnSave:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* Stats avancées Premium */
+.advancedStats {
+  width: 100%;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.advancedStats.blurred {
+  filter: blur(4px);
+  pointer-events: none;
+  user-select: none;
+  opacity: 0.7;
+  position: relative;
+}
+
+.advancedTitle {
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.premiumTag {
+  font-size: 0.7rem;
+  padding: 3px 10px;
+  border-radius: 50px;
+  background: rgba(232,201,122,0.15);
+  border: 1px solid rgba(232,201,122,0.3);
+  color: var(--accent);
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+
+/* Breakdown niveaux */
+.breakdown { display: flex; flex-direction: column; gap: 8px; }
+.breakdownTitle {
+  font-size: 0.72rem;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  margin-bottom: 2px;
+}
+
+.breakdownRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.breakdownLabel {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  width: 80px;
+  flex-shrink: 0;
+}
+
+.barWrap {
+  flex: 1;
+  height: 6px;
+  background: var(--border);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.bar {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent2), var(--accent));
+  border-radius: 3px;
+  transition: width 0.8s ease;
+  min-width: 3px;
+}
+
+.breakdownVal {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  font-weight: 600;
+  width: 20px;
+  text-align: right;
+}
+
+/* Derniers mots */
+.topWords { display: flex; flex-direction: column; gap: 8px; }
+
+.wordChips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.wordChip {
+  padding: 4px 12px;
+  border-radius: 50px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+/* Moyenne */
+.avgStat {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  background: rgba(232,201,122,0.05);
+  border: 1px solid rgba(232,201,122,0.15);
+  border-radius: 10px;
+}
+
+.avgLabel { font-size: 0.82rem; color: var(--text-muted); }
+.avgVal { font-size: 0.88rem; font-weight: 700; color: var(--accent); }
+
+/* Badge premium profil */
+.premiumBadge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 16px;
+  border-radius: 50px;
+  background: linear-gradient(135deg, var(--accent2), var(--accent));
+  color: var(--bg);
+  font-size: 0.78rem;
+  font-weight: 700;
+  margin-bottom: 4px;
+}

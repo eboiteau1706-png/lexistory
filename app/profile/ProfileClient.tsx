@@ -18,36 +18,42 @@ export default function ProfileClient({ user }: { user: User }) {
   const [wordsCount, setWordsCount]   = useState(0);
   const [storiesCount, setStoriesCount] = useState(0);
   const [streak, setStreak]           = useState(0);
+  const [topWords, setTopWords]       = useState<string[]>([]);
+  const [levelBreakdown, setLevelBreakdown] = useState<Record<string, number>>({});
 
   useEffect(() => {
-    // Charge le profil
     supabase.from("profiles").select("username, is_premium").eq("id", user.id).single()
       .then(({ data }) => {
         if (data?.username) setUsername(data.username);
         if (data?.is_premium) setIsPremium(data.is_premium);
       });
 
-    // Compte les mots vus
     supabase.from("words_seen").select("word", { count: "exact" }).eq("user_id", user.id)
-      .then(({ count }) => setWordsCount(count ?? 0));
+      .then(({ count, data }) => {
+        setWordsCount(count ?? 0);
+        if (data) setTopWords(data.slice(0, 5).map((d: any) => d.word));
+      });
 
-    // Compte les histoires lues
-    supabase.from("stories_read").select("story_slug", { count: "exact" }).eq("user_id", user.id)
-      .then(({ count }) => setStoriesCount(count ?? 0));
+    supabase.from("stories_read").select("story_slug, story_level, read_at", { count: "exact" }).eq("user_id", user.id)
+      .then(({ count, data }) => {
+        setStoriesCount(count ?? 0);
+        if (data) {
+          const breakdown: Record<string, number> = {};
+          data.forEach((d: any) => {
+            breakdown[d.story_level] = (breakdown[d.story_level] || 0) + 1;
+          });
+          setLevelBreakdown(breakdown);
+        }
+      });
 
-    // Calcule le streak (jours consécutifs)
     supabase.from("stories_read").select("read_at").eq("user_id", user.id).order("read_at", { ascending: false })
       .then(({ data }) => {
-        if (!data || data.length === 0) { setStreak(0); return; }
+        if (!data || data.length === 0) return;
         let s = 1;
-        const dates = data.map(d => new Date(d.read_at).toDateString());
-        const unique = [...new Set(dates)];
-        for (let i = 1; i < unique.length; i++) {
-          const prev = new Date(unique[i - 1]);
-          const curr = new Date(unique[i]);
-          const diff = (prev.getTime() - curr.getTime()) / (1000 * 60 * 60 * 24);
-          if (diff === 1) s++;
-          else break;
+        const dates = [...new Set(data.map((d: any) => new Date(d.read_at).toDateString()))];
+        for (let i = 1; i < dates.length; i++) {
+          const diff = (new Date(dates[i-1]).getTime() - new Date(dates[i]).getTime()) / 86400000;
+          if (diff === 1) s++; else break;
         }
         setStreak(s);
       });
@@ -56,15 +62,10 @@ export default function ProfileClient({ user }: { user: User }) {
   async function handleSaveUsername() {
     if (!newUsername.trim()) return;
     setSaving(true); setError("");
-    const { error } = await supabase.from("profiles")
-      .upsert({ id: user.id, username: newUsername.trim() });
+    const { error } = await supabase.from("profiles").upsert({ id: user.id, username: newUsername.trim() });
     setSaving(false);
-    if (error) {
-      setError(error.message.includes("unique") ? "Ce pseudo est déjà pris !" : "Erreur, réessaie.");
-    } else {
-      setUsername(newUsername.trim());
-      setEditing(false); setNewUsername("");
-    }
+    if (error) setError(error.message.includes("unique") ? "Ce pseudo est déjà pris !" : "Erreur, réessaie.");
+    else { setUsername(newUsername.trim()); setEditing(false); setNewUsername(""); }
   }
 
   async function handleLogout() {
@@ -79,13 +80,13 @@ export default function ProfileClient({ user }: { user: User }) {
   }
 
   const initial = (username?.[0] || user.email?.[0] || "?").toUpperCase();
+  const levelEmoji: Record<string, string> = { "Curieux": "🌱", "Lecteur": "📖", "Érudit": "🎓" };
+  const maxStories = Math.max(...Object.values(levelBreakdown), 1);
 
   return (
     <div className={styles.page}>
       <div className={styles.card}>
         <div className={styles.avatar}>{initial}</div>
-
-        {/* Badge Premium */}
         {isPremium && <div className={styles.premiumBadge}>✨ Premium</div>}
 
         {/* Pseudo */}
@@ -117,28 +118,73 @@ export default function ProfileClient({ user }: { user: User }) {
           })}
         </div>
 
-        {/* Stats réelles */}
+        {/* Stats de base — tout le monde */}
         <div className={styles.stats}>
           <div className={styles.statBox}>
             <div className={styles.statNum}>{streak}</div>
-            <div className={styles.statLabel}>Jour de série</div>
+            <div className={styles.statLabel}>🔥 Série</div>
           </div>
           <div className={styles.statBox}>
             <div className={styles.statNum}>{storiesCount}</div>
-            <div className={styles.statLabel}>Histoires lues</div>
+            <div className={styles.statLabel}>📖 Histoires</div>
           </div>
           <div className={styles.statBox}>
             <div className={styles.statNum}>{wordsCount}</div>
-            <div className={styles.statLabel}>Mots appris</div>
+            <div className={styles.statLabel}>✨ Mots</div>
           </div>
         </div>
 
-        {/* Premium ou bouton upgrade */}
+        {/* Stats avancées Premium */}
+        <div className={`${styles.advancedStats} ${!isPremium ? styles.blurred : ""}`}>
+          <div className={styles.advancedTitle}>
+            📊 Stats détaillées
+            {!isPremium && <span className={styles.premiumTag}>Premium</span>}
+          </div>
+
+          {/* Histoires par niveau */}
+          <div className={styles.breakdown}>
+            <div className={styles.breakdownTitle}>Histoires lues par niveau</div>
+            {["Curieux", "Lecteur", "Érudit"].map(level => (
+              <div key={level} className={styles.breakdownRow}>
+                <span className={styles.breakdownLabel}>{levelEmoji[level]} {level}</span>
+                <div className={styles.barWrap}>
+                  <div
+                    className={styles.bar}
+                    style={{ width: `${((levelBreakdown[level] || 0) / maxStories) * 100}%` }}
+                  />
+                </div>
+                <span className={styles.breakdownVal}>{levelBreakdown[level] || 0}</span>
+              </div>
+            ))}
+          </div>
+
+          {/* Derniers mots appris */}
+          {topWords.length > 0 && (
+            <div className={styles.topWords}>
+              <div className={styles.breakdownTitle}>Derniers mots consultés</div>
+              <div className={styles.wordChips}>
+                {topWords.map(w => (
+                  <span key={w} className={styles.wordChip}>{w}</span>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Moyenne par jour */}
+          <div className={styles.avgStat}>
+            <span className={styles.avgLabel}>Moyenne</span>
+            <span className={styles.avgVal}>
+              {streak > 0 ? (wordsCount / Math.max(streak, 1)).toFixed(1) : 0} mots/jour
+            </span>
+          </div>
+        </div>
+
+        {/* Bouton upgrade si pas premium */}
         {!isPremium && (
           <div className={styles.plan}>
             <span className={styles.planBadge}>Plan Gratuit</span>
             <button className={styles.upgradeBtn} onClick={handlePremium}>
-              Passer Premium — 1,99€/mois ✨
+              Débloquer les stats — 1,99€/mois ✨
             </button>
           </div>
         )}
