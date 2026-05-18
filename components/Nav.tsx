@@ -31,14 +31,18 @@ export default function Nav() {
   useEffect(() => { setMenuOpen(false); }, [pathname]);
 
   async function handlePremium() {
-    setLoading(true);
-    try {
-      const res  = await fetch("/api/checkout", { method: "POST" });
-      const data = await res.json();
-      if (data.url) window.location.href = data.url;
-    } catch { alert("Erreur, réessaie."); }
-    finally { setLoading(false); }
+  if (!user) {
+    router.push("/login");
+    return;
   }
+  setLoading(true);
+  try {
+    const res  = await fetch("/api/checkout", { method: "POST" });
+    const data = await res.json();
+    if (data.url) window.location.href = data.url;
+  } catch { alert("Erreur, réessaie."); }
+  finally { setLoading(false); }
+}
 
   function handleProfile() {
     setMenuOpen(false);
