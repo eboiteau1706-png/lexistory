@@ -10,19 +10,19 @@ import type { Story } from "@/lib/stories";
 interface Props { story: Story; }
 
 export default function StoryCard({ story }: Props) {
-  const [seenWords, setSeenWords]       = useState<Set<string>>(new Set());
-  const [activeWord, setActiveWord]     = useState<string | null>(null);
-  const [userId, setUserId]             = useState<string | null>(null);
-  const [isPremium, setIsPremium]       = useState(false);
-  const [xpGained, setXpGained]         = useState<number | null>(null);
-  const [readPct, setReadPct]           = useState(0);
+  const [seenWords, setSeenWords]               = useState<Set<string>>(new Set());
+  const [activeWord, setActiveWord]             = useState<string | null>(null);
+  const [userId, setUserId]                     = useState<string | null>(null);
+  const [isPremium, setIsPremium]               = useState(false);
+  const [xpGained, setXpGained]                 = useState<number | null>(null);
+  const [readPct, setReadPct]                   = useState(0);
   const [alreadyCompleted, setAlreadyCompleted] = useState(false);
-  const storyReadRef  = useRef(false);
-  const fullReadRef   = useRef(false);
-  const intervalRef   = useRef<NodeJS.Timeout | null>(null);
+  const storyReadRef = useRef(false);
+  const fullReadRef  = useRef(false);
+  const intervalRef  = useRef<NodeJS.Timeout | null>(null);
   const supabase = createClient();
 
-  // Reset + démarrage barre quand l'histoire change
+  // Reset + barre — 60 secondes pour 100% (600ms par %)
   useEffect(() => {
     setSeenWords(new Set());
     setActiveWord(null);
@@ -41,60 +41,45 @@ export default function StoryCard({ story }: Props) {
         }
         return prev + 1;
       });
-    }, 1000);
+    }, 600); // 600ms × 100 = 60 secondes
 
     return () => {
       if (intervalRef.current) clearInterval(intervalRef.current);
     };
   }, [story.slug]);
 
-  // Chargement session + vérification si déjà complétée
+  // Chargement session
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session?.user) {
         setUserId(session.user.id);
         supabase.from("profiles").select("is_premium").eq("id", session.user.id).single()
           .then(({ data }) => { if (data?.is_premium) setIsPremium(true); });
-        // Vérifie si l'histoire a déjà été lue
-        supabase.from("stories_read")
-          .select("id")
-          .eq("user_id", session.user.id)
-          .eq("story_slug", story.slug)
-          .single()
-          .then(({ data }) => { if (data) setAlreadyCompleted(true); });
       }
     });
-  }, [story.slug]);
+  }, []);
 
-  // XP bonus à 100% de lecture
+  // Vérifie si déjà complétée
   useEffect(() => {
-    if (readPct >= 100 && !fullReadRef.current && userId && !alreadyCompleted) {
-      fullReadRef.current = true;
-      const bonus = isPremium ? 8 : 5;
-      supabase.from("profiles").select("xp").eq("id", userId).single()
-        .then(({ data }) => {
-          const currentXp = data?.xp ?? 0;
-          supabase.from("profiles").update({ xp: currentXp + bonus }).eq("id", userId);
-          setXpGained(bonus);
-          setTimeout(() => setXpGained(null), 3000);
-          window.dispatchEvent(new CustomEvent("lexistory:story-read"));
-        });
-    }
-  }, [readPct, userId, isPremium, alreadyCompleted]);
+    if (!userId) return;
+    setAlreadyCompleted(false);
+    supabase.from("stories_read")
+      .select("id")
+      .eq("user_id", userId)
+      .eq("story_slug", story.slug)
+      .single()
+      .then(({ data }) => { if (data) setAlreadyCompleted(true); });
+  }, [userId, story.slug]);
 
-  // Marque l'histoire comme lue après 10 secondes + XP principal
+  // Histoire lue + XP principal quand barre = 100%
   useEffect(() => {
-    if (!userId || !story.slug || storyReadRef.current) return;
-    const timer = setTimeout(async () => {
-      if (storyReadRef.current) return;
-      storyReadRef.current = true;
+    if (readPct < 100 || !userId || storyReadRef.current) return;
+    storyReadRef.current = true;
 
+    const markRead = async () => {
       const { data: existing } = await supabase
-        .from("stories_read")
-        .select("id")
-        .eq("user_id", userId)
-        .eq("story_slug", story.slug)
-        .single();
+        .from("stories_read").select("id")
+        .eq("user_id", userId).eq("story_slug", story.slug).single();
 
       if (existing) { setAlreadyCompleted(true); return; }
 
@@ -105,10 +90,8 @@ export default function StoryCard({ story }: Props) {
       });
 
       const { data: reads } = await supabase
-        .from("stories_read")
-        .select("read_at")
-        .eq("user_id", userId)
-        .order("read_at", { ascending: false });
+        .from("stories_read").select("read_at")
+        .eq("user_id", userId).order("read_at", { ascending: false });
 
       let streak = 1;
       if (reads && reads.length > 1) {
@@ -119,23 +102,34 @@ export default function StoryCard({ story }: Props) {
         }
       }
 
-      const storyXp = getStoryXp(isPremium);
-      const bonusXp = getStreakBonus(streak, isPremium);
-      const totalXp = storyXp + bonusXp;
-
-      const { data: profile } = await supabase
-        .from("profiles").select("xp").eq("id", userId).single();
-
+      const totalXp = getStoryXp(isPremium) + getStreakBonus(streak, isPremium);
+      const { data: profile } = await supabase.from("profiles").select("xp").eq("id", userId).single();
       const currentXp = profile?.xp ?? 0;
       await supabase.from("profiles").update({ xp: currentXp + totalXp }).eq("id", userId);
 
+      setAlreadyCompleted(true);
       setXpGained(totalXp);
       setTimeout(() => setXpGained(null), 3000);
       window.dispatchEvent(new CustomEvent("lexistory:story-read"));
+    };
 
-    }, 10000);
-    return () => clearTimeout(timer);
-  }, [userId, story.slug, isPremium]);
+    markRead();
+  }, [readPct, userId, story.slug, isPremium]);
+
+  // XP bonus +5 à 100% (lecture complète)
+  useEffect(() => {
+    if (readPct >= 100 && !fullReadRef.current && userId && !alreadyCompleted) {
+      fullReadRef.current = true;
+      const bonus = isPremium ? 8 : 5;
+      supabase.from("profiles").select("xp").eq("id", userId).single()
+        .then(({ data }) => {
+          const currentXp = data?.xp ?? 0;
+          supabase.from("profiles").update({ xp: currentXp + bonus }).eq("id", userId);
+          setXpGained(prev => (prev ?? 0) + bonus);
+          setTimeout(() => setXpGained(null), 3000);
+        });
+    }
+  }, [readPct, userId, isPremium, alreadyCompleted]);
 
   const handleWordClick = useCallback(async (word: string) => {
     setSeenWords(prev => new Set(prev).add(word));
