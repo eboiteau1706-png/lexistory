@@ -7,6 +7,19 @@ export interface Definition {
 
 const DICT: Record<string, Definition> = {
 
+  "veulent":  { etym: "Du latin volere", defOrig: "Troisième personne du pluriel du présent de vouloir.", defSimple: "Ils désirent quelque chose. 'Ils veulent partir' = ils désirent partir." },
+  "veut":     { etym: "Du latin volere", defOrig: "Troisième personne du singulier du présent de vouloir.", defSimple: "Il/elle désire quelque chose." },
+  "veux":     { etym: "Du latin volere", defOrig: "Première et deuxième personne du présent de vouloir.", defSimple: "Je/tu désires quelque chose." },
+  "avaient":  { etym: "Du latin habere", defOrig: "Troisième personne du pluriel de l'imparfait de avoir.", defSimple: "Ils possédaient quelque chose dans le passé." },
+  "avait":    { etym: "Du latin habere", defOrig: "Imparfait de avoir.", defSimple: "Il/elle possédait quelque chose dans le passé." },
+  "étaient":  { etym: "Du latin esse", defOrig: "Imparfait pluriel de être.", defSimple: "Ils/elles avaient une caractéristique dans le passé." },
+  "était":    { etym: "Du latin esse", defOrig: "Imparfait de être.", defSimple: "Il/elle avait une caractéristique dans le passé." },
+  "peuvent":  { etym: "Du latin potere", defOrig: "Troisième personne du pluriel du présent de pouvoir.", defSimple: "Ils/elles sont capables de faire quelque chose." },
+  "font":     { etym: "Du latin facere", defOrig: "Troisième personne du pluriel du présent de faire.", defSimple: "Ils/elles réalisent quelque chose." },
+  "vont":     { etym: "Du latin vadere", defOrig: "Troisième personne du pluriel du présent de aller.", defSimple: "Ils/elles se déplacent vers un endroit." },
+  "disent":   { etym: "Du latin dicere", defOrig: "Troisième personne du pluriel du présent de dire.", defSimple: "Ils/elles expriment quelque chose." },
+  "voulait":  { etym: "Du latin volere", defOrig: "Imparfait de vouloir.", defSimple: "Il/elle désirait quelque chose dans le passé." },
+
   // ── MOTS COMMUNS ──────────────────────────────────────────
   "sans":            { etym: "Du latin sine", defOrig: "Préposition exprimant l'absence ou la privation.", defSimple: "Qui n'a pas quelque chose. Sans sucre = pas de sucre dedans." },
   "doute":           { etym: "Du latin dubitare, hésiter", defOrig: "Incertitude de l'esprit qui hésite entre deux jugements.", defSimple: "Quand on n'est pas sûr de quelque chose. Sans doute = probablement." },
@@ -512,18 +525,7 @@ const DICT: Record<string, Definition> = {
   "ne":      { etym: "Du latin non", defOrig: "Adverbe de négation utilisé avec 'pas', 'plus', 'jamais'.", defSimple: "Mot qui sert à faire une phrase négative. 'Je ne sais pas' = je ne sais pas." },
   "pas":     { etym: "Du latin passus, pas", defOrig: "Adverbe de négation utilisé avec 'ne'.", defSimple: "Mot qui exprime la négation. 'Je ne veux pas' = refus de vouloir quelque chose." },
 
-"veulent":  { etym: "Du latin volere", defOrig: "Troisième personne du pluriel du présent de vouloir.", defSimple: "Ils désirent quelque chose. 'Ils veulent partir' = ils désirent partir." },
-  "veut":     { etym: "Du latin volere", defOrig: "Troisième personne du singulier du présent de vouloir.", defSimple: "Il/elle désire quelque chose." },
-  "veux":     { etym: "Du latin volere", defOrig: "Première et deuxième personne du présent de vouloir.", defSimple: "Je/tu désires quelque chose." },
-  "avaient":  { etym: "Du latin habere", defOrig: "Troisième personne du pluriel de l'imparfait de avoir.", defSimple: "Ils possédaient quelque chose dans le passé." },
-  "avait":    { etym: "Du latin habere", defOrig: "Imparfait de avoir.", defSimple: "Il/elle possédait quelque chose dans le passé." },
-  "étaient":  { etym: "Du latin esse", defOrig: "Imparfait pluriel de être.", defSimple: "Ils/elles avaient une caractéristique dans le passé." },
-  "était":    { etym: "Du latin esse", defOrig: "Imparfait de être.", defSimple: "Il/elle avait une caractéristique dans le passé." },
-  "peuvent":  { etym: "Du latin potere", defOrig: "Troisième personne du pluriel du présent de pouvoir.", defSimple: "Ils/elles sont capables de faire quelque chose." },
-  "font":     { etym: "Du latin facere", defOrig: "Troisième personne du pluriel du présent de faire.", defSimple: "Ils/elles réalisent quelque chose." },
-  "vont":     { etym: "Du latin vadere", defOrig: "Troisième personne du pluriel du présent de aller.", defSimple: "Ils/elles se déplacent vers un endroit." },
-  "disent":   { etym: "Du latin dicere", defOrig: "Troisième personne du pluriel du présent de dire.", defSimple: "Ils/elles expriment quelque chose." },
-  "voulait":  { etym: "Du latin volere", defOrig: "Imparfait de vouloir.", defSimple: "Il/elle désirait quelque chose dans le passé." },
+
 
 };
 
