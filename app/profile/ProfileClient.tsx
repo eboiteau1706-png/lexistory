@@ -31,10 +31,10 @@ export default function ProfileClient({ user }: { user: User }) {
         setXp(data?.xp ?? 0);
       });
 
-    supabase.from("words_seen").select("word", { count: "exact" }).eq("user_id", user.id)
+    supabase.from("words_seen").select("word", { count: "exact" }).eq("user_id", user.id).order("seen_at", { ascending: false })
       .then(({ count, data }) => {
         setWordsCount(count ?? 0);
-        if (data) setTopWords(data.slice(0, 5).map((d: any) => d.word));
+        if (data) setTopWords(data.slice(0, 8).map((d: any) => d.word));
       });
 
     supabase.from("stories_read").select("story_slug, story_level, read_at", { count: "exact" }).eq("user_id", user.id)
@@ -80,8 +80,8 @@ export default function ProfileClient({ user }: { user: User }) {
     if (data.url) window.location.href = data.url;
   }
 
-  const initial  = (username?.[0] || user.email?.[0] || "?").toUpperCase();
-  const level    = getLevel(xp);
+  const initial   = (username?.[0] || user.email?.[0] || "?").toUpperCase();
+  const level     = getLevel(xp);
   const { current, needed, pct } = getXpProgress(xp);
   const nextLevel = LEVELS.find(l => l.level === level.level + 1);
   const levelEmoji: Record<string, string> = { "Curieux": "🌱", "Lecteur": "📖", "Érudit": "🎓" };
@@ -157,7 +157,7 @@ export default function ProfileClient({ user }: { user: User }) {
           </div>
         </div>
 
-        {/* Stats avancées */}
+        {/* Stats avancées Premium */}
         <div className={`${styles.advancedStats} ${!isPremium ? styles.blurred : ""}`}>
           <div className={styles.advancedTitle}>
             📊 Stats détaillées
@@ -201,8 +201,11 @@ export default function ProfileClient({ user }: { user: User }) {
           </div>
         )}
 
-        {/* Lien vers les rangs */}
-        <a href="/rangs" className={styles.rangsLink}>🏆 Voir tous les rangs →</a>
+        {/* Liens classement et rangs */}
+        <div className={styles.linksRow}>
+          <a href="/classement" className={styles.linkBtn}>🏆 Classement →</a>
+          <a href="/rangs" className={styles.linkBtn}>⭐ Rangs & XP →</a>
+        </div>
 
         <div className={styles.actions}>
           <a href="/" className={styles.backBtn}>← Retour aux histoires</a>

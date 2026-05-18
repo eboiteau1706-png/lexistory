@@ -28,6 +28,8 @@ async function fetchWikt(word: string): Promise<string | null> {
           if (clean.toLowerCase().includes("chiffre romain")) continue;
           if (clean.toLowerCase().includes("lettre") && clean.length < 50) continue;
           if (clean.toLowerCase().includes("alphabet")) continue;
+          if (clean.toLowerCase().includes("synonyme de")) continue;
+          if (clean.toLowerCase().startsWith("voir ")) continue;
           return clean;
         }
       }
@@ -62,25 +64,25 @@ function getVariants(word: string): string[] {
   if (w.endsWith("ient"))   variants.push(w.slice(0, -4) + "ir", w.slice(0, -4) + "enir");
   if (w.endsWith("vent"))   variants.push(w.slice(0, -4) + "ir");
   if (w.endsWith("ont"))    variants.push(w.slice(0, -3) + "ir", w.slice(0, -3) + "re");
-  if (w.endsWith("aient")) variants.push(w.slice(0, -5) + "er", w.slice(0, -5) + "re");
-  if (w.endsWith("ons"))   variants.push(w.slice(0, -3) + "er");
-  if (w.endsWith("ez"))    variants.push(w.slice(0, -2) + "er");
-  if (w.endsWith("ait"))   variants.push(w.slice(0, -3) + "er", w.slice(0, -3) + "re");
-  if (w.endsWith("ant"))   variants.push(w.slice(0, -3) + "er", w.slice(0, -3) + "re");
-  if (w.endsWith("ent"))   variants.push(w.slice(0, -3) + "er", w.slice(0, -3) + "re");
-  if (w.endsWith("és"))    variants.push(w.slice(0, -2) + "er", w.slice(0, -1));
-  if (w.endsWith("ées"))   variants.push(w.slice(0, -3) + "er");
-  if (w.endsWith("ée"))    variants.push(w.slice(0, -2) + "er");
-  if (w.endsWith("ué"))    variants.push(w.slice(0, -2) + "uer");
-  if (w.endsWith("ié"))    variants.push(w.slice(0, -2) + "ier");
-  if (w.endsWith("aux"))   variants.push(w.slice(0, -3) + "al");
-  if (w.endsWith("eaux"))  variants.push(w.slice(0, -4) + "eau");
+  if (w.endsWith("aient"))  variants.push(w.slice(0, -5) + "er", w.slice(0, -5) + "re");
+  if (w.endsWith("ons"))    variants.push(w.slice(0, -3) + "er");
+  if (w.endsWith("ez"))     variants.push(w.slice(0, -2) + "er");
+  if (w.endsWith("ait"))    variants.push(w.slice(0, -3) + "er", w.slice(0, -3) + "re");
+  if (w.endsWith("ant"))    variants.push(w.slice(0, -3) + "er", w.slice(0, -3) + "re");
+  if (w.endsWith("ent"))    variants.push(w.slice(0, -3) + "er", w.slice(0, -3) + "re");
+  if (w.endsWith("és"))     variants.push(w.slice(0, -2) + "er", w.slice(0, -1));
+  if (w.endsWith("ées"))    variants.push(w.slice(0, -3) + "er");
+  if (w.endsWith("ée"))     variants.push(w.slice(0, -2) + "er");
+  if (w.endsWith("ué"))     variants.push(w.slice(0, -2) + "uer");
+  if (w.endsWith("ié"))     variants.push(w.slice(0, -2) + "ier");
+  if (w.endsWith("aux"))    variants.push(w.slice(0, -3) + "al");
+  if (w.endsWith("eaux"))   variants.push(w.slice(0, -4) + "eau");
   if (w.endsWith("s") && w.length > 3) variants.push(w.slice(0, -1));
   if (w.endsWith("x") && w.length > 3) variants.push(w.slice(0, -1));
-  if (w.endsWith("ves"))   variants.push(w.slice(0, -3) + "f");
-  if (w.endsWith("ve"))    variants.push(w.slice(0, -2) + "f");
-  if (w.endsWith("nne"))   variants.push(w.slice(0, -2));
-  if (w.endsWith("nnes"))  variants.push(w.slice(0, -3));
+  if (w.endsWith("ves"))    variants.push(w.slice(0, -3) + "f");
+  if (w.endsWith("ve"))     variants.push(w.slice(0, -2) + "f");
+  if (w.endsWith("nne"))    variants.push(w.slice(0, -2));
+  if (w.endsWith("nnes"))   variants.push(w.slice(0, -3));
 
   return [...new Set(variants)].filter(v => v.length > 2);
 }

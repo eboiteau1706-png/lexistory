@@ -92,9 +92,10 @@ export default function Nav() {
         <div className={styles.desktopRight}>
           {/* Stats utilisateur connecté */}
           {ready && user && (
-            <div className={styles.userStats}>
-              <span className={styles.streakPill}>🔥 {streak}j</span>
-              <div className={styles.levelPill} onClick={() => router.push("/classement")} title={`${xp} XP — Cliquer pour le classement`}>
+            
+<div className={styles.userStats}>
+  <span className={styles.streakPill}>🔥 {streak}j</span>
+  <div className={styles.levelPill}>
                 <span className={styles.levelText}>{level.emoji} {level.name}</span>
                 <div className={styles.xpBarRow}>
                   <div className={styles.xpBar}>
@@ -105,7 +106,7 @@ export default function Nav() {
               </div>
             </div>
           )}
-
+ <a href="/classement" className={styles.btnGhost}>🏆 Classement</a>
           {/* Liens nav */}
           {ready && (
             <button className={styles.btnGhost} onClick={() => router.push(user ? "/profile" : "/login")}>
