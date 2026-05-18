@@ -14,11 +14,11 @@ export default async function Home({
   const level  = (params.level as Story["level"]) ?? "Lecteur";
   const dayParam = params.day ? parseInt(params.day) : null;
 
-  const levelStories = STORIES.filter(s => s.level === level);
-  const reference    = new Date("2026-05-17");
-  const today        = new Date();
-  const diffDays     = Math.floor((today.getTime() - reference.getTime()) / (1000 * 60 * 60 * 24));
-  const todayIndex   = diffDays % levelStories.length;
+const levelStories = STORIES.filter(s => s.level === level);
+const reference    = new Date("2026-05-17T00:00:00");
+const parisNow     = new Date(new Date().toLocaleString("en-US", { timeZone: "Europe/Paris" }));
+const diffDays     = Math.floor((parisNow.getTime() - reference.getTime()) / (1000 * 60 * 60 * 24));
+const todayIndex   = diffDays % levelStories.length;
 
   // Si un jour spécifique est demandé (Premium), utilise cet index
   const index = dayParam !== null ? dayParam % levelStories.length : todayIndex;

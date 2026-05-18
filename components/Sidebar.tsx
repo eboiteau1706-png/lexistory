@@ -23,13 +23,12 @@ export default function Sidebar() {
   const levelEmoji: Record<Story["level"], string> = { "Curieux": "🌱", "Lecteur": "📖", "Érudit": "🎓" };
 
   // Calcul du jour actuel — même logique que page.tsx
-  const reference    = new Date("2026-05-17T00:00:00");
-  const now          = new Date();
-  const diffDays     = Math.floor((now.getTime() - reference.getTime()) / (1000 * 60 * 60 * 24));
-  const levelStories = STORIES.filter(s => s.level === level);
-  const currentIndex = diffDays % levelStories.length;
-  // Histoires disponibles = aujourd'hui + passées seulement
-  const availableStories = levelStories.slice(0, currentIndex + 1).reverse();
+const reference    = new Date("2026-05-17T00:00:00");
+const parisNow     = new Date(new Date().toLocaleString("en-US", { timeZone: "Europe/Paris" }));
+const diffDays     = Math.floor((parisNow.getTime() - reference.getTime()) / (1000 * 60 * 60 * 24));
+const levelStories = STORIES.filter(s => s.level === level);
+const currentIndex = diffDays % levelStories.length;
+const availableStories = levelStories.slice(0, currentIndex + 1).reverse();
 
   async function loadStats(uid: string) {
     const { data: profile } = await supabase.from("profiles").select("is_premium").eq("id", uid).single();
