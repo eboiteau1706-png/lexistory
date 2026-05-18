@@ -20,13 +20,47 @@ export default function StoryCard({ story }: Props) {
   const intervalRef                 = useRef<NodeJS.Timeout | null>(null);
   const supabase = createClient();
 
-  // Reset quand l'histoire change
-  useEffect(() => {
-    setSeenWords(new Set());
-    setActiveWord(null);
-    storyReadRef.current = false;
-    setXpGained(null);
-    setReadPct(0);
+const fullReadRef = useRef(false);
+
+// Reset quand l'histoire change
+useEffect(() => {
+  setSeenWords(new Set());
+  setActiveWord(null);
+  storyReadRef.current = false;
+  fullReadRef.current = false;  // ← juste ça ici
+  setXpGained(null);
+  setReadPct(0);
+
+  if (intervalRef.current) clearInterval(intervalRef.current);
+  intervalRef.current = setInterval(() => {
+    setReadPct(prev => {
+      if (prev >= 100) {
+        if (intervalRef.current) clearInterval(intervalRef.current);
+        return 100;
+      }
+      return prev + 1;
+    });
+  }, 1000);
+
+  return () => {
+    if (intervalRef.current) clearInterval(intervalRef.current);
+  };
+}, [story.slug]);
+
+// XP bonus à 100% de lecture — useEffect SÉPARÉ
+useEffect(() => {
+  if (readPct >= 100 && !fullReadRef.current && userId) {
+    fullReadRef.current = true;
+    const bonus = isPremium ? 8 : 5;
+    supabase.from("profiles").select("xp").eq("id", userId).single()
+      .then(({ data }) => {
+        const currentXp = data?.xp ?? 0;
+        supabase.from("profiles").update({ xp: currentXp + bonus }).eq("id", userId);
+        setXpGained(bonus);
+        setTimeout(() => setXpGained(null), 3000);
+        window.dispatchEvent(new CustomEvent("lexistory:story-read"));
+      });
+  }
 
     // Barre de progression basée sur le temps — 100 secondes pour 100%
     if (intervalRef.current) clearInterval(intervalRef.current);
