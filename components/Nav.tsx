@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase";
 import { useRouter, usePathname } from "next/navigation";
+import { getLevel, getXpProgress } from "@/lib/xp";
 import styles from "./Nav.module.css";
 
 export default function Nav() {
@@ -10,34 +11,35 @@ export default function Nav() {
   const [ready, setReady]         = useState(false);
   const [isPremium, setIsPremium] = useState(false);
   const [streak, setStreak]       = useState(0);
+  const [xp, setXp]               = useState(0);
   const [menuOpen, setMenuOpen]   = useState(false);
   const supabase = createClient();
   const router   = useRouter();
   const pathname = usePathname();
 
-  async function loadStreak(userId: string) {
-    const { data } = await supabase
+  async function loadUserData(userId: string) {
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("is_premium, xp")
+      .eq("id", userId)
+      .single();
+    if (profile?.is_premium) setIsPremium(true);
+    setXp(profile?.xp ?? 0);
+
+    const { data: reads } = await supabase
       .from("stories_read")
       .select("read_at")
       .eq("user_id", userId)
       .order("read_at", { ascending: false });
 
-    if (!data || data.length === 0) { setStreak(0); return; }
-
-    const dates = [...new Set(data.map((d: any) => new Date(d.read_at).toDateString()))];
+    if (!reads || reads.length === 0) { setStreak(0); return; }
+    const dates = [...new Set(reads.map((d: any) => new Date(d.read_at).toDateString()))];
     const today = new Date().toDateString();
     const yesterday = new Date(Date.now() - 86400000).toDateString();
-
-    // Si pas joué aujourd'hui ni hier → streak cassé
-    if (dates[0] !== today && dates[0] !== yesterday) {
-      setStreak(0); return;
-    }
-
+    if (dates[0] !== today && dates[0] !== yesterday) { setStreak(0); return; }
     let s = 1;
     for (let i = 1; i < dates.length; i++) {
-      const prev = new Date(dates[i - 1]);
-      const curr = new Date(dates[i]);
-      const diff = (prev.getTime() - curr.getTime()) / 86400000;
+      const diff = (new Date(dates[i-1]).getTime() - new Date(dates[i]).getTime()) / 86400000;
       if (diff === 1) s++; else break;
     }
     setStreak(s);
@@ -47,28 +49,17 @@ export default function Nav() {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null);
       setReady(true);
-      if (session?.user) {
-        supabase.from("profiles").select("is_premium").eq("id", session.user.id).single()
-          .then(({ data }) => { if (data?.is_premium) setIsPremium(true); });
-        loadStreak(session.user.id);
-      }
+      if (session?.user) loadUserData(session.user.id);
     });
     const { data: listener } = supabase.auth.onAuthStateChange((_e, session) => {
       setUser(session?.user ?? null);
-      if (session?.user) {
-        supabase.from("profiles").select("is_premium").eq("id", session.user.id).single()
-          .then(({ data }) => { if (data?.is_premium) setIsPremium(true); else setIsPremium(false); });
-        loadStreak(session.user.id);
-      } else {
-        setIsPremium(false);
-        setStreak(0);
-      }
+      if (session?.user) loadUserData(session.user.id);
+      else { setIsPremium(false); setStreak(0); setXp(0); }
     });
 
-    // Rafraîchit le streak quand une histoire est lue
     const onStoryRead = () => {
       supabase.auth.getSession().then(({ data: { session } }) => {
-        if (session?.user) loadStreak(session.user.id);
+        if (session?.user) loadUserData(session.user.id);
       });
     };
     window.addEventListener("lexistory:story-read", onStoryRead);
@@ -92,12 +83,8 @@ export default function Nav() {
     finally { setLoading(false); }
   }
 
-  function handleProfile() {
-    setMenuOpen(false);
-    router.push(user ? "/profile" : "/login");
-  }
-
-  const streakLabel = streak > 0 ? `🔥 ${streak} jour${streak > 1 ? "s" : ""}` : "🔥 0 jour";
+  const level = getLevel(xp);
+  const { pct } = getXpProgress(xp);
 
   return (
     <>
@@ -106,10 +93,18 @@ export default function Nav() {
 
         <div className={styles.desktopRight}>
           {ready && user && (
-            <div className={styles.streak}>{streakLabel}</div>
+            <>
+              <div className={styles.streak}>🔥 {streak} jour{streak > 1 ? "s" : ""}</div>
+              <div className={styles.levelBadge} title={`${xp} XP`}>
+                <span>{level.emoji} {level.name}</span>
+                <div className={styles.xpBar}>
+                  <div className={styles.xpFill} style={{ width: `${pct}%` }} />
+                </div>
+              </div>
+            </>
           )}
           {ready && (
-            <button className={styles.btnGhost} onClick={handleProfile}>
+            <button className={styles.btnGhost} onClick={() => router.push(user ? "/profile" : "/login")}>
               {user ? "Mon profil" : "Connexion"}
             </button>
           )}
@@ -133,10 +128,12 @@ export default function Nav() {
       {menuOpen && (
         <div className={styles.mobileMenu}>
           {ready && user && (
-            <div className={styles.mobileStreak}>{streakLabel}</div>
+            <>
+              <div className={styles.mobileStreak}>🔥 {streak} jour{streak > 1 ? "s" : ""} · {level.emoji} {level.name}</div>
+            </>
           )}
           {ready && (
-            <button className={styles.mobileBtn} onClick={handleProfile}>
+            <button className={styles.mobileBtn} onClick={() => { setMenuOpen(false); router.push(user ? "/profile" : "/login"); }}>
               {user ? "👤 Mon profil" : "🔑 Connexion"}
             </button>
           )}

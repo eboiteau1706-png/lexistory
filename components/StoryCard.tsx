@@ -1,6 +1,7 @@
 "use client";
 import { useState, useCallback, useEffect, useRef } from "react";
 import { createClient } from "@/lib/supabase";
+import { getStoryXp, getStreakBonus, getLevel } from "@/lib/xp";
 import WordPopup from "./WordPopup";
 import ClickableText from "./ClickableText";
 import styles from "./StoryCard.module.css";
@@ -12,48 +13,92 @@ export default function StoryCard({ story }: Props) {
   const [seenWords, setSeenWords]   = useState<Set<string>>(new Set());
   const [activeWord, setActiveWord] = useState<string | null>(null);
   const [userId, setUserId]         = useState<string | null>(null);
+  const [isPremium, setIsPremium]   = useState(false);
+  const [xpGained, setXpGained]     = useState<number | null>(null);
   const storyReadRef                = useRef(false);
   const supabase = createClient();
 
-  // Reset quand l'histoire change
   useEffect(() => {
     setSeenWords(new Set());
     setActiveWord(null);
     storyReadRef.current = false;
+    setXpGained(null);
   }, [story.slug]);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session?.user) setUserId(session.user.id);
+      if (session?.user) {
+        setUserId(session.user.id);
+        supabase.from("profiles").select("is_premium").eq("id", session.user.id).single()
+          .then(({ data }) => { if (data?.is_premium) setIsPremium(true); });
+      }
     });
   }, []);
 
-  // Marque l'histoire comme lue après 5 secondes
+  // Marque l'histoire comme lue + donne XP après 5 secondes
   useEffect(() => {
     if (!userId || !story.slug || storyReadRef.current) return;
     const timer = setTimeout(async () => {
       if (storyReadRef.current) return;
       storyReadRef.current = true;
+
       const { data } = await supabase
         .from("stories_read")
         .select("id")
         .eq("user_id", userId)
         .eq("story_slug", story.slug)
         .single();
+
       if (!data) {
         await supabase.from("stories_read").insert({
           user_id: userId,
           story_slug: story.slug,
           story_level: story.level,
         });
-        // Signal pour rafraîchir les stats
+
+        // Calcule le streak
+        const { data: reads } = await supabase
+          .from("stories_read")
+          .select("read_at")
+          .eq("user_id", userId)
+          .order("read_at", { ascending: false });
+
+        let streak = 1;
+        if (reads && reads.length > 1) {
+          const dates = [...new Set(reads.map((d: any) => new Date(d.read_at).toDateString()))];
+          for (let i = 1; i < dates.length; i++) {
+            const diff = (new Date(dates[i-1]).getTime() - new Date(dates[i]).getTime()) / 86400000;
+            if (diff === 1) streak++; else break;
+          }
+        }
+
+        // Calcule l'XP total
+        const storyXp   = getStoryXp(isPremium);
+        const bonusXp   = getStreakBonus(streak, isPremium);
+        const totalXp   = storyXp + bonusXp;
+
+        // Met à jour l'XP dans Supabase
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("xp")
+          .eq("id", userId)
+          .single();
+
+        const currentXp = profile?.xp ?? 0;
+        await supabase
+          .from("profiles")
+          .update({ xp: currentXp + totalXp })
+          .eq("id", userId);
+
+        setXpGained(totalXp);
+        setTimeout(() => setXpGained(null), 3000);
+
         window.dispatchEvent(new CustomEvent("lexistory:story-read"));
       }
     }, 5000);
     return () => clearTimeout(timer);
-  }, [userId, story.slug]);
+  }, [userId, story.slug, isPremium]);
 
-  // Clic sur un mot → popup + sauvegarde immédiate + signal stats
   const handleWordClick = useCallback(async (word: string) => {
     setSeenWords(prev => new Set(prev).add(word));
     setActiveWord(word);
@@ -66,7 +111,6 @@ export default function StoryCard({ story }: Props) {
     }
   }, [userId]);
 
-  // Barre de progression par histoire
   const totalWords = story.paragraphs.join(" ").split(/\s+/).length;
   const pct = Math.min(100, Math.round((seenWords.size / Math.max(totalWords * 0.3, 10)) * 100));
 
@@ -110,12 +154,19 @@ export default function StoryCard({ story }: Props) {
         </div>
 
         <div className={styles.hint}>
-           💡 Clique sur un mot pour voir sa définition — les mots consultés passent en{" "}
-            <span style={{ color: "var(--green)", fontWeight: 600 }}>vert</span>.
+          💡 Clique sur un mot pour voir sa définition — les mots consultés passent en{" "}
+          <span style={{ color: "var(--green)", fontWeight: 600 }}>vert</span>.
         </div>
       </div>
 
-{activeWord && (
+      {/* Popup XP gagné */}
+      {xpGained !== null && (
+        <div className={styles.xpPopup}>
+          +{xpGained} XP ✨{isPremium ? " (x1.5 Premium)" : ""}
+        </div>
+      )}
+
+      {activeWord && (
         <WordPopup word={activeWord} seenCount={seenWords.size} onClose={() => setActiveWord(null)} />
       )}
     </>
