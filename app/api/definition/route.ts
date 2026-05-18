@@ -7,55 +7,30 @@ export async function GET(request: NextRequest) {
   if (!word) return NextResponse.json({ error: "Mot manquant" }, { status: 400 });
 
   try {
-    // Appel au Wiktionnaire français
     const res = await fetch(
-      `https://fr.wiktionary.org/api/rest_v1/page/definition/${encodeURIComponent(word.toLowerCase())}`,
+      `https://fr.wiktionary.org/w/api.php?action=query&titles=${encodeURIComponent(word)}&prop=extracts&exintro=true&explaintext=true&format=json&origin=*`,
       { headers: { "Accept": "application/json" } }
     );
 
-    if (!res.ok) {
-      return NextResponse.json({ found: false }, { status: 200 });
-    }
-
     const data = await res.json();
+    const pages = data.query?.pages;
+    if (!pages) return NextResponse.json({ found: false });
 
-    // Extrait la première définition française
-    const frSection = data.fr;
-    if (!frSection || frSection.length === 0) {
-      return NextResponse.json({ found: false }, { status: 200 });
+    const page = Object.values(pages)[0] as any;
+    if (!page || page.missing !== undefined) {
+      return NextResponse.json({ found: false });
     }
 
-    // Cherche la première définition avec du texte
-    let defOrig = "";
-    let partOfSpeech = "";
+    // Extrait la première définition du texte
+    const text = page.extract || "";
+    const lines = text.split("\n").filter((l: string) => l.trim().length > 20);
+    const defOrig = lines[0] || "";
 
-    for (const section of frSection) {
-      partOfSpeech = section.partOfSpeech || "";
-      if (section.definitions && section.definitions.length > 0) {
-        const firstDef = section.definitions[0];
-        // Nettoie le HTML de la définition
-        defOrig = firstDef.definition
-          .replace(/<[^>]*>/g, "")
-          .replace(/\s+/g, " ")
-          .trim();
-        if (defOrig.length > 10) break;
-      }
-    }
+    if (!defOrig) return NextResponse.json({ found: false });
 
-    if (!defOrig) {
-      return NextResponse.json({ found: false }, { status: 200 });
-    }
-
-    return NextResponse.json({
-      found: true,
-      word,
-      defOrig,
-      partOfSpeech,
-      etym: "", // Wiktionnaire ne donne pas toujours l'étymologie facilement
-      defSimple: "", // Pas de version simplifiée disponible
-    });
+    return NextResponse.json({ found: true, word, defOrig });
 
   } catch (err) {
-    return NextResponse.json({ found: false }, { status: 200 });
+    return NextResponse.json({ found: false });
   }
 }
