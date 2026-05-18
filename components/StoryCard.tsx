@@ -115,8 +115,7 @@ export default function StoryCard({ story }: Props) {
         </div>
       </div>
 
-      {activeWord && (
-      {activeWord && (
+{activeWord && (
         <WordPopup word={activeWord} seenCount={seenWords.size} onClose={() => setActiveWord(null)} />
       )}
     </>
