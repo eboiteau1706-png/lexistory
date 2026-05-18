@@ -7,57 +7,35 @@ import type { Story } from "@/lib/stories";
 import styles from "./Sidebar.module.css";
 
 export default function Sidebar() {
-  const [loading, setLoading]       = useState(false);
-  const [user, setUser]             = useState<any>(null);
-  const [ready, setReady]           = useState(false);
-  const [isPremium, setIsPremium]   = useState(false);
-  const [wordsCount, setWordsCount] = useState(0);
+  const [loading, setLoading]           = useState(false);
+  const [user, setUser]                 = useState<any>(null);
+  const [userId, setUserId]             = useState<string | null>(null);
+  const [ready, setReady]               = useState(false);
+  const [isPremium, setIsPremium]       = useState(false);
+  const [wordsCount, setWordsCount]     = useState(0);
   const [storiesCount, setStoriesCount] = useState(0);
-  const [streak, setStreak]         = useState(0);
-  const [showHistory, setShowHistory] = useState(false);
+  const [streak, setStreak]             = useState(0);
+  const [showHistory, setShowHistory]   = useState(false);
   const supabase = createClient();
   const router   = useRouter();
   const searchParams = useSearchParams();
   const level = (searchParams.get("level") as Story["level"]) ?? "Lecteur";
   const levelEmoji: Record<Story["level"], string> = { "Curieux": "🌱", "Lecteur": "📖", "Érudit": "🎓" };
 
-  useEffect(() => {
-  let interval: NodeJS.Timeout;
-
-  supabase.auth.getSession().then(({ data: { session } }) => {
-    setUser(session?.user ?? null);
-    setReady(true);
-    if (session?.user) {
-      loadStats(session.user.id);
-      interval = setInterval(() => loadStats(session.user.id), 10000);
-    }
-  });
-
-  const { data: listener } = supabase.auth.onAuthStateChange((_e, session) => {
-    setUser(session?.user ?? null);
-    if (session?.user) loadStats(session.user.id);
-  });
-
-  return () => {
-    listener.subscription.unsubscribe();
-    if (interval) clearInterval(interval);
-  };
-}, []);
-
-  async function loadStats(userId: string) {
-    const { data: profile } = await supabase.from("profiles").select("is_premium").eq("id", userId).single();
+  async function loadStats(uid: string) {
+    const { data: profile } = await supabase.from("profiles").select("is_premium").eq("id", uid).single();
     if (profile?.is_premium) setIsPremium(true);
 
-    const { count: wc } = await supabase.from("words_seen").select("word", { count: "exact" }).eq("user_id", userId);
+    const { count: wc } = await supabase.from("words_seen").select("word", { count: "exact" }).eq("user_id", uid);
     setWordsCount(wc ?? 0);
 
-    const { count: sc } = await supabase.from("stories_read").select("story_slug", { count: "exact" }).eq("user_id", userId);
+    const { count: sc } = await supabase.from("stories_read").select("story_slug", { count: "exact" }).eq("user_id", uid);
     setStoriesCount(sc ?? 0);
 
-    const { data: reads } = await supabase.from("stories_read").select("read_at").eq("user_id", userId).order("read_at", { ascending: false });
+    const { data: reads } = await supabase.from("stories_read").select("read_at").eq("user_id", uid).order("read_at", { ascending: false });
     if (reads && reads.length > 0) {
       let s = 1;
-      const dates = [...new Set(reads.map(d => new Date(d.read_at).toDateString()))];
+      const dates = [...new Set(reads.map((d: any) => new Date(d.read_at).toDateString()))];
       for (let i = 1; i < dates.length; i++) {
         const diff = (new Date(dates[i-1]).getTime() - new Date(dates[i]).getTime()) / 86400000;
         if (diff === 1) s++; else break;
@@ -66,26 +44,57 @@ export default function Sidebar() {
     }
   }
 
-  async function handlePremium() {
-  if (!user) {
-    router.push("/login");
-    return;
-  }
-  setLoading(true);
-  try {
-    const res  = await fetch("/api/checkout", { method: "POST" });
-    const data = await res.json();
-    if (data.url) window.location.href = data.url;
-  } catch { alert("Erreur, réessaie."); }
-  finally { setLoading(false); }
-}
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
 
-  // Histoires du niveau courant pour l'historique Premium
-  const levelStories = STORIES.filter(s => s.level === level);
-  const reference = new Date("2026-05-17");
-  const today = new Date();
-  const diffDays = Math.floor((today.getTime() - reference.getTime()) / 86400000);
-  const currentIndex = diffDays % levelStories.length;
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null);
+      setReady(true);
+      if (session?.user) {
+        setUserId(session.user.id);
+        loadStats(session.user.id);
+        interval = setInterval(() => loadStats(session.user.id), 30000);
+      }
+    });
+
+    const { data: listener } = supabase.auth.onAuthStateChange((_e, session) => {
+      setUser(session?.user ?? null);
+      if (session?.user) {
+        setUserId(session.user.id);
+        loadStats(session.user.id);
+      }
+    });
+
+    // Rafraîchit immédiatement quand un mot est vu ou une histoire lue
+    const onWordSeen = () => { if (userId) loadStats(userId); };
+    const onStoryRead = () => { if (userId) loadStats(userId); };
+    window.addEventListener("lexistory:word-seen", onWordSeen);
+    window.addEventListener("lexistory:story-read", onStoryRead);
+
+    return () => {
+      listener.subscription.unsubscribe();
+      if (interval) clearInterval(interval);
+      window.removeEventListener("lexistory:word-seen", onWordSeen);
+      window.removeEventListener("lexistory:story-read", onStoryRead);
+    };
+  }, [userId]);
+
+  async function handlePremium() {
+    if (!user) { router.push("/login"); return; }
+    setLoading(true);
+    try {
+      const res  = await fetch("/api/checkout", { method: "POST" });
+      const data = await res.json();
+      if (data.url) window.location.href = data.url;
+    } catch { alert("Erreur, réessaie."); }
+    finally { setLoading(false); }
+  }
+
+  const levelStories  = STORIES.filter(s => s.level === level);
+  const reference     = new Date("2026-05-17");
+  const today         = new Date();
+  const diffDays      = Math.floor((today.getTime() - reference.getTime()) / 86400000);
+  const currentIndex  = diffDays % levelStories.length;
 
   if (!ready) return null;
 
@@ -126,7 +135,6 @@ export default function Sidebar() {
         </div>
       )}
 
-      {/* Premium ou upgrade */}
       {isPremium ? (
         <div className={styles.card}>
           <p className={styles.cardTitle}>✨ Abonné Premium</p>

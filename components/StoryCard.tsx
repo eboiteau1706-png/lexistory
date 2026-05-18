@@ -9,7 +9,6 @@ import type { Story } from "@/lib/stories";
 interface Props { story: Story; }
 
 export default function StoryCard({ story }: Props) {
-  // Réinitialise les mots vus à chaque changement d'histoire
   const [seenWords, setSeenWords]   = useState<Set<string>>(new Set());
   const [activeWord, setActiveWord] = useState<string | null>(null);
   const [userId, setUserId]         = useState<string | null>(null);
@@ -47,25 +46,27 @@ export default function StoryCard({ story }: Props) {
           story_slug: story.slug,
           story_level: story.level,
         });
+        // Signal pour rafraîchir les stats
+        window.dispatchEvent(new CustomEvent("lexistory:story-read"));
       }
     }, 5000);
     return () => clearTimeout(timer);
   }, [userId, story.slug]);
 
-  // Quand on clique sur un mot → ouvre popup ET sauvegarde immédiatement
+  // Clic sur un mot → popup + sauvegarde immédiate + signal stats
   const handleWordClick = useCallback(async (word: string) => {
     setSeenWords(prev => new Set(prev).add(word));
     setActiveWord(word);
-    // Sauvegarde immédiate dès que la définition s'ouvre
     if (userId) {
       await supabase.from("words_seen").upsert(
         { user_id: userId, word },
         { onConflict: "user_id,word" }
       );
+      window.dispatchEvent(new CustomEvent("lexistory:word-seen"));
     }
   }, [userId]);
 
-  // Barre de progression basée sur les mots de CETTE histoire uniquement
+  // Barre de progression par histoire
   const totalWords = story.paragraphs.join(" ").split(/\s+/).length;
   const pct = Math.min(100, Math.round((seenWords.size / Math.max(totalWords * 0.3, 10)) * 100));
 
