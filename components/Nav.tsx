@@ -95,16 +95,16 @@ export default function Nav() {
             
 <div className={styles.userStats}>
   <span className={styles.streakPill}>🔥 {streak}j</span>
-  <div className={styles.levelPill}>
-                <span className={styles.levelText}>{level.emoji} {level.name}</span>
-                <div className={styles.xpBarRow}>
-                  <div className={styles.xpBar}>
-                    <div className={styles.xpFill} style={{ width: `${pct}%` }} />
-                  </div>
-                  <span className={styles.xpText}>{current}/{needed}</span>
-                </div>
-              </div>
-            </div>
+  <div className={styles.levelPill} onClick={() => router.push("/rangs")} style={{ cursor: "pointer" }}>
+    <span className={styles.levelText}>{level.emoji} {level.name}</span>
+    <div className={styles.xpBarRow}>
+      <div className={styles.xpBar}>
+        <div className={styles.xpFill} style={{ width: `${pct}%` }} />
+      </div>
+      <span className={styles.xpText}>{current}/{needed}</span>
+    </div>
+  </div>
+</div>
           )}
  <a href="/classement" className={styles.btnGhost}>🏆 Classement</a>
           {/* Liens nav */}

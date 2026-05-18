@@ -27,6 +27,13 @@ export default function Rangs() {
               </div>
             </div>
             <div className={styles.xpRule}>
+              <span className={styles.xpIcon}>✅</span>
+              <div>
+                <div className={styles.xpRuleName}>Histoire lue à 100%</div>
+                <div className={styles.xpRuleVal}>+5 XP <span className={styles.premium}>(+8 XP Premium)</span></div>
+              </div>
+            </div>
+            <div className={styles.xpRule}>
               <span className={styles.xpIcon}>🔥</span>
               <div>
                 <div className={styles.xpRuleName}>Streak 3 jours</div>

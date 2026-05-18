@@ -240,10 +240,10 @@
 }
 
 .advancedStats.blurred {
-  filter: blur(4px);
+  filter: blur(8px);
   pointer-events: none;
   user-select: none;
-  opacity: 0.7;
+  opacity: 0.5;
   position: relative;
 }
 
