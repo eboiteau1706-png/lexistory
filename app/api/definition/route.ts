@@ -15,7 +15,6 @@ async function fetchWikt(word: string): Promise<string | null> {
         const clean = line
           .replace(/^# /, "")
           .replace(/\[\[([^\]|]+)\|?[^\]]*\]\]/g, "$1")
-          .replace(/\{\{[^}]*\}\}/g, "")
           .replace(/'{2,3}/g, "")
           .replace(/<[^>]*>/g, "")
           .replace(/\(.*?\)/g, "")
