@@ -10,8 +10,8 @@ interface Props {
 // Normalise un mot pour la clé de dictionnaire
 function toKey(raw: string): string {
   return raw
-    .replace(/^[«».,;:!?()'"\u2026\u2014\u2013\u2019\u201c\u201d\l'\-]+|[«».,;:!?()'"\u2026\u2014\u2013\u2019\u201c\u201d'\-]+$/g, "")
-    .replace(/^[ldmjnstcLD][''\u2019]/i, "") // retire l' d' m' j' etc
+    
+    .replace(/^[«».,;:!?()'"\u2026\u2014\u2013\u2019\u201c\u201d'\-]+|[«».,;:!?()'"\u2026\u2014\u2013\u2019\u201c\u201d'\-]+$/g, "")
     .toLowerCase();
 }
 

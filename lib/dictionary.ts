@@ -7,6 +7,11 @@ export interface Definition {
 
 const DICT: Record<string, Definition> = {
 
+  "limbique":        { etym: "Du latin limbus, bordure", defOrig: "Relatif au système cérébral qui gère les émotions et la mémoire.", defSimple: "Une partie du cerveau qui s'occupe de nos émotions et de nos souvenirs." },
+  "post-traumatiques":{ etym: "Du latin post (après) + grec trauma (blessure)", defOrig: "Relatifs aux troubles psychologiques survenant après un événement traumatisant.", defSimple: "Qui apparaît après un choc psychologique très fort. Les cauchemars répétés après un accident sont post-traumatiques." },
+  "post-traumatique":{ etym: "Du latin post (après) + grec trauma (blessure)", defOrig: "Relatif aux troubles survenant après un événement traumatisant.", defSimple: "Qui survient après un choc psychologique. Le stress post-traumatique = l'anxiété qui reste longtemps après un événement terrible." },
+  "grave-le":        { etym: "Du latin graphein, écrire", defOrig: "Impératif du verbe graver, suivi d'un pronom.", defSimple: "Ordre de graver quelque chose, de le marquer profondément. 'Grave-le dans ta mémoire' = souviens-t'en pour toujours." },
+  "grave":           { etym: "Du latin gravis, lourd", defOrig: "Qui a de l'importance, de la profondeur ; aussi : action de graver.", defSimple: "Sérieux et important. Ou : marquer profondément. Une situation grave = une situation sérieuse." },
   "veulent":  { etym: "Du latin volere", defOrig: "Troisième personne du pluriel du présent de vouloir.", defSimple: "Ils désirent quelque chose. 'Ils veulent partir' = ils désirent partir." },
   "veut":     { etym: "Du latin volere", defOrig: "Troisième personne du singulier du présent de vouloir.", defSimple: "Il/elle désire quelque chose." },
   "veux":     { etym: "Du latin volere", defOrig: "Première et deuxième personne du présent de vouloir.", defSimple: "Je/tu désires quelque chose." },
@@ -86,7 +91,6 @@ const DICT: Record<string, Definition> = {
   "mnésique":        { etym: "Du grec mneme, mémoire", defOrig: "Relatif à la mémoire et aux processus de mémorisation.", defSimple: "Qui concerne la mémoire. La consolidation mnésique = comment les souvenirs se fixent dans notre mémoire." },
   "consolidation":   { etym: "Du latin consolidare, rendre solide", defOrig: "Processus par lequel un souvenir est stabilisé et ancré dans la mémoire.", defSimple: "Rendre quelque chose solide et durable. La consolidation d'un souvenir = le fixer pour qu'il reste longtemps." },
   "amygdale":        { etym: "Du grec amygdalê, amande", defOrig: "Structure du cerveau limbique en forme d'amande, impliquée dans le traitement des émotions.", defSimple: "Une petite partie du cerveau en forme d'amande qui gère nos émotions, surtout la peur." },
-  "limbique":        { etym: "Du latin limbus, bordure", defOrig: "Relatif au système cérébral qui gère les émotions et la mémoire.", defSimple: "Une partie du cerveau qui s'occupe de nos émotions et de nos souvenirs." },
   "évolutive":       { etym: "Du latin evolutio, déroulement", defOrig: "Relative à l'évolution biologique des espèces.", defSimple: "Qui aide les êtres vivants à survivre et à s'adapter au fil du temps." },
   "traumatiques":    { etym: "Du grec trauma, blessure", defOrig: "Relatifs à un traumatisme, événement bouleversant laissant des traces durables.", defSimple: "Qui cause un choc psychologique très fort. Un accident grave peut être traumatisant." },
   "envahissant":     { etym: "De envahir, du latin invadere", defOrig: "Qui occupe tout l'espace, qui prend toute la place.", defSimple: "Qui prend toute la place et ne laisse pas de repos. Une pensée envahissante = qu'on ne peut pas arrêter." },
