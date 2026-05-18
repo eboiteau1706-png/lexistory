@@ -1,5 +1,5 @@
 "use client";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { lookup } from "@/lib/dictionary";
 import styles from "./WordPopup.module.css";
 
@@ -9,15 +9,38 @@ interface Props {
   onClose: () => void;
 }
 
-export default function WordPopup({ word, seenCount, onClose }: Props) {
-  const def = lookup(word);
+interface WiktDef {
+  found: boolean;
+  defOrig?: string;
+  partOfSpeech?: string;
+  etym?: string;
+}
 
-  // Fermer avec Escape
+export default function WordPopup({ word, seenCount, onClose }: Props) {
+  const localDef = lookup(word);
+  const [wiktDef, setWiktDef]     = useState<WiktDef | null>(null);
+  const [loading, setLoading]     = useState(false);
+
+  // Si pas dans le dico local, cherche sur Wiktionnaire
+  useEffect(() => {
+    if (localDef) return;
+    setLoading(true);
+    setWiktDef(null);
+    fetch(`/api/definition?word=${encodeURIComponent(word)}`)
+      .then(r => r.json())
+      .then(data => { setWiktDef(data); setLoading(false); })
+      .catch(() => { setWiktDef({ found: false }); setLoading(false); });
+  }, [word, localDef]);
+
   useEffect(() => {
     const handler = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
   }, [onClose]);
+
+  const defOrig   = localDef?.defOrig   || wiktDef?.defOrig   || "";
+  const defSimple = localDef?.defSimple || "";
+  const etym      = localDef?.etym      || "";
 
   return (
     <div className={styles.overlay} onClick={(e) => e.target === e.currentTarget && onClose()}>
@@ -25,31 +48,44 @@ export default function WordPopup({ word, seenCount, onClose }: Props) {
         <button className={styles.close} onClick={onClose}>✕</button>
 
         <div className={styles.word}>{word}</div>
+        {etym && <div className={styles.etym}>{etym}</div>}
 
-        {def ? (
+        {loading ? (
+          <div className={styles.loading}>
+            <div className={styles.shimmerBox} />
+            <div className={styles.shimmerBox} style={{ height: "48px" }} />
+          </div>
+        ) : defOrig ? (
           <>
-            <div className={styles.etym}>{def.etym}</div>
-
             <div className={styles.section}>
-              <div className={styles.label}>Définition officielle</div>
-              <div className={styles.defOrig}>{def.defOrig}</div>
+              <div className={styles.label}>Définition</div>
+              <div className={styles.defOrig}>{defOrig}</div>
             </div>
 
-            <div className={styles.section}>
-              <div className={styles.label}>En clair 💡</div>
-              <div className={styles.defSimple}>{def.defSimple}</div>
-            </div>
+            {defSimple && (
+              <div className={styles.section}>
+                <div className={styles.label}>En clair 💡</div>
+                <div className={styles.defSimple}>{defSimple}</div>
+              </div>
+            )}
+
+            {!localDef && wiktDef?.found && (
+              <div className={styles.source}>Source : Wiktionnaire</div>
+            )}
           </>
         ) : (
           <>
-            <div className={styles.etym}> </div>
             <div className={styles.section}>
-              <div className={styles.label}>Définition officielle</div>
-              <div className={styles.defOrig}>Ce mot n&apos;est pas encore dans notre dictionnaire.</div>
+              <div className={styles.label}>Définition</div>
+              <div className={styles.defOrig}>
+                Ce mot n&apos;est pas encore dans notre dictionnaire.
+              </div>
             </div>
             <div className={styles.section}>
               <div className={styles.label}>En clair 💡</div>
-              <div className={styles.defSimple}>Nous ajoutons de nouveaux mots chaque jour ! 📚</div>
+              <div className={styles.defSimple}>
+                Nous ajoutons de nouveaux mots régulièrement ! 📚
+              </div>
             </div>
           </>
         )}
@@ -63,4 +99,32 @@ export default function WordPopup({ word, seenCount, onClose }: Props) {
       </div>
     </div>
   );
+}
+
+.loading {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.shimmerBox {
+  height: 32px;
+  border-radius: 8px;
+  background: linear-gradient(90deg, var(--surface2) 25%, var(--border) 50%, var(--surface2) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.2s infinite;
+}
+
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+.source {
+  font-size: 0.7rem;
+  color: var(--text-dim);
+  text-align: right;
+  margin-top: -8px;
+  font-style: italic;
 }
