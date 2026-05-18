@@ -160,9 +160,11 @@ export default function LoginPage() {
           </p>
         )}
 
-        <p className={styles.footer}>
-          Pas de mot de passe — on t&apos;envoie un lien magique par email.
-        </p>
+        {mode === "magic" && (
+  <p className={styles.footer}>
+    Pas de mot de passe — on t&apos;envoie un lien magique par email.
+  </p>
+)}
       </div>
     </div>
   );
