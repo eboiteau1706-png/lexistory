@@ -16,20 +16,19 @@ interface Friendship {
   user_id: string;
   friend_id: string;
   status: string;
-  profiles: Profile;
 }
 
 export default function AmisPage() {
   const supabase = createClient();
-  const [myId, setMyId]               = useState<string | null>(null);
-  const [search, setSearch]           = useState("");
+  const [myId, setMyId]                 = useState<string | null>(null);
+  const [search, setSearch]             = useState("");
   const [searchResult, setSearchResult] = useState<Profile | null>(null);
-  const [searching, setSearching]     = useState(false);
-  const [searchError, setSearchError] = useState("");
-  const [friends, setFriends]         = useState<Profile[]>([]);
-  const [pending, setPending]         = useState<Friendship[]>([]);
-  const [sent, setSent]               = useState<Friendship[]>([]);
-  const [loading, setLoading]         = useState(true);
+  const [searching, setSearching]       = useState(false);
+  const [searchError, setSearchError]   = useState("");
+  const [friends, setFriends]           = useState<Profile[]>([]);
+  const [pending, setPending]           = useState<{ friendship: Friendship; profile: Profile }[]>([]);
+  const [sent, setSent]                 = useState<{ friendship: Friendship; profile: Profile }[]>([]);
+  const [loading, setLoading]           = useState(true);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -39,44 +38,51 @@ export default function AmisPage() {
     });
   }, []);
 
+  async function getProfile(id: string): Promise<Profile | null> {
+    const { data } = await supabase
+      .from("profiles")
+      .select("id, username, xp, is_premium")
+      .eq("id", id)
+      .single();
+    return data as Profile | null;
+  }
+
   async function loadFriendships(uid: string) {
     setLoading(true);
 
-    // Demandes reçues (pending)
-    const { data: received } = await supabase
+    // Toutes les friendships qui concernent cet user
+    const { data: allF } = await supabase
       .from("friendships")
-      .select("*, profiles!friendships_user_id_fkey(id, username, xp, is_premium)")
-      .eq("friend_id", uid)
-      .eq("status", "pending");
-    setPending((received as any) ?? []);
+      .select("*")
+      .or(`user_id.eq.${uid},friend_id.eq.${uid}`);
 
-    // Demandes envoyées
-    const { data: sentData } = await supabase
-      .from("friendships")
-      .select("*, profiles!friendships_friend_id_fkey(id, username, xp, is_premium)")
-      .eq("user_id", uid)
-      .eq("status", "pending");
-    setSent((sentData as any) ?? []);
+    if (!allF) { setLoading(false); return; }
 
-    // Amis acceptés
-    const { data: accepted1 } = await supabase
-      .from("friendships")
-      .select("*, profiles!friendships_friend_id_fkey(id, username, xp, is_premium)")
-      .eq("user_id", uid)
-      .eq("status", "accepted");
+    const pendingList: { friendship: Friendship; profile: Profile }[] = [];
+    const sentList:    { friendship: Friendship; profile: Profile }[] = [];
+    const friendList:  Profile[] = [];
 
-    const { data: accepted2 } = await supabase
-      .from("friendships")
-      .select("*, profiles!friendships_user_id_fkey(id, username, xp, is_premium)")
-      .eq("friend_id", uid)
-      .eq("status", "accepted");
+    for (const f of allF) {
+      const otherId = f.user_id === uid ? f.friend_id : f.user_id;
+      const profile = await getProfile(otherId);
+      if (!profile) continue;
 
-    const allFriends = [
-      ...((accepted1 as any) ?? []).map((f: any) => f.profiles),
-      ...((accepted2 as any) ?? []).map((f: any) => f.profiles),
-    ].filter(Boolean);
+      if (f.status === "accepted") {
+        friendList.push(profile);
+      } else if (f.status === "pending") {
+        if (f.friend_id === uid) {
+          // Demande reçue
+          pendingList.push({ friendship: f, profile });
+        } else {
+          // Demande envoyée
+          sentList.push({ friendship: f, profile });
+        }
+      }
+    }
 
-    setFriends(allFriends);
+    setFriends(friendList.sort((a, b) => b.xp - a.xp));
+    setPending(pendingList);
+    setSent(sentList);
     setLoading(false);
   }
 
@@ -95,6 +101,19 @@ export default function AmisPage() {
     setSearching(false);
     if (!data) { setSearchError("Aucun joueur trouvé avec ce pseudo."); return; }
     if (data.id === myId) { setSearchError("C'est toi ! 😄"); return; }
+
+    // Vérifie si déjà ami ou demande en cours
+    const { data: existing } = await supabase
+      .from("friendships")
+      .select("id, status")
+      .or(`and(user_id.eq.${myId},friend_id.eq.${data.id}),and(user_id.eq.${data.id},friend_id.eq.${myId})`)
+      .single();
+
+    if (existing) {
+      if (existing.status === "accepted") { setSearchError("Vous êtes déjà amis !"); return; }
+      if (existing.status === "pending")  { setSearchError("Une demande est déjà en cours."); return; }
+    }
+
     setSearchResult(data as Profile);
   }
 
@@ -118,13 +137,10 @@ export default function AmisPage() {
 
   async function removeFriend(friendId: string) {
     if (!myId) return;
-    await supabase.from("friendships")
-      .delete()
+    await supabase.from("friendships").delete()
       .or(`and(user_id.eq.${myId},friend_id.eq.${friendId}),and(user_id.eq.${friendId},friend_id.eq.${myId})`);
     loadFriendships(myId);
   }
-
-  const sortedFriends = [...friends].sort((a, b) => b.xp - a.xp);
 
   return (
     <div className={styles.page}>
@@ -164,15 +180,15 @@ export default function AmisPage() {
         {pending.length > 0 && (
           <div className={styles.section}>
             <div className={styles.sectionTitle}>Demandes reçues 🔔 {pending.length}</div>
-            {pending.map((f: any) => (
-              <div key={f.id} className={styles.friendRow}>
+            {pending.map(({ friendship, profile }) => (
+              <div key={friendship.id} className={styles.friendRow}>
                 <div className={styles.playerInfo}>
-                  <span className={styles.playerName}>{f.profiles?.username}</span>
-                  <span className={styles.playerLevel}>{getLevel(f.profiles?.xp ?? 0).emoji} {getLevel(f.profiles?.xp ?? 0).name}</span>
+                  <span className={styles.playerName}>{profile.username}</span>
+                  <span className={styles.playerLevel}>{getLevel(profile.xp).emoji} {getLevel(profile.xp).name}</span>
                 </div>
                 <div className={styles.actions}>
-                  <button className={styles.btnAccept} onClick={() => acceptRequest(f.id)}>✅ Accepter</button>
-                  <button className={styles.btnReject} onClick={() => rejectRequest(f.id)}>❌</button>
+                  <button className={styles.btnAccept} onClick={() => acceptRequest(friendship.id)}>✅ Accepter</button>
+                  <button className={styles.btnReject} onClick={() => rejectRequest(friendship.id)}>❌</button>
                 </div>
               </div>
             ))}
@@ -183,13 +199,13 @@ export default function AmisPage() {
         {sent.length > 0 && (
           <div className={styles.section}>
             <div className={styles.sectionTitle}>Demandes envoyées ⏳</div>
-            {sent.map((f: any) => (
-              <div key={f.id} className={styles.friendRow}>
+            {sent.map(({ friendship, profile }) => (
+              <div key={friendship.id} className={styles.friendRow}>
                 <div className={styles.playerInfo}>
-                  <span className={styles.playerName}>{f.profiles?.username}</span>
-                  <span className={styles.playerLevel}>{getLevel(f.profiles?.xp ?? 0).emoji} {getLevel(f.profiles?.xp ?? 0).name}</span>
+                  <span className={styles.playerName}>{profile.username}</span>
+                  <span className={styles.playerLevel}>{getLevel(profile.xp).emoji} {getLevel(profile.xp).name}</span>
                 </div>
-                <button className={styles.btnReject} onClick={() => rejectRequest(f.id)}>Annuler</button>
+                <button className={styles.btnReject} onClick={() => rejectRequest(friendship.id)}>Annuler</button>
               </div>
             ))}
           </div>
@@ -200,10 +216,10 @@ export default function AmisPage() {
           <div className={styles.sectionTitle}>Mes amis {friends.length > 0 ? `(${friends.length})` : ""}</div>
           {loading ? (
             <div className={styles.empty}>Chargement...</div>
-          ) : sortedFriends.length === 0 ? (
+          ) : friends.length === 0 ? (
             <div className={styles.empty}>Tu n&apos;as pas encore d&apos;amis. Recherche un pseudo pour commencer !</div>
           ) : (
-            sortedFriends.map((f, i) => {
+            friends.map((f, i) => {
               const level = getLevel(f.xp);
               return (
                 <div key={f.id} className={styles.friendRow}>
