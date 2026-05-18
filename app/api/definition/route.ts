@@ -1,46 +1,80 @@
 import { NextRequest, NextResponse } from "next/server";
 
 async function fetchWikt(word: string): Promise<string | null> {
-  const res = await fetch(
-    `https://fr.wiktionary.org/w/api.php?action=parse&page=${encodeURIComponent(word)}&prop=wikitext&format=json&origin=*`
-  );
-  const data = await res.json();
-  const wikitext = data.parse?.wikitext?.["*"] || "";
-  if (!wikitext) return null;
+  try {
+    const res = await fetch(
+      `https://fr.wiktionary.org/w/api.php?action=parse&page=${encodeURIComponent(word)}&prop=wikitext&format=json&origin=*`
+    );
+    const data = await res.json();
+    const wikitext = data.parse?.wikitext?.["*"] || "";
+    if (!wikitext) return null;
 
-  const lines = wikitext.split("\n");
-  for (const line of lines) {
-    if (line.startsWith("# ") && !line.startsWith("## ")) {
-      const clean = line
-        .replace(/^# /, "")
-        .replace(/\[\[([^\]|]+)\|?[^\]]*\]\]/g, "$1")
-        .replace(/\{\{[^}]*\}\}/g, "")
-        .replace(/'{2,3}/g, "")
-        .replace(/<[^>]*>/g, "")
-        .trim();
-      if (clean.length > 10) return clean;
+    const lines = wikitext.split("\n");
+    for (const line of lines) {
+      if (line.startsWith("# ") && !line.startsWith("## ")) {
+        const clean = line
+          .replace(/^# /, "")
+          .replace(/\[\[([^\]|]+)\|?[^\]]*\]\]/g, "$1")
+          .replace(/\{\{[^}]*\}\}/g, "")
+          .replace(/'{2,3}/g, "")
+          .replace(/<[^>]*>/g, "")
+          .replace(/\(.*?\)/g, "")
+          .trim();
+        if (clean.length > 8) return clean;
+      }
     }
+    return null;
+  } catch { return null; }
+}
+
+function extractBaseWord(def: string): string | null {
+  const patterns = [
+    /^[Pp]luriel de [«"]?(\w+)[»"]?/,
+    /^[Ff]éminin de [«"]?(\w+)[»"]?/,
+    /^[Ff]éminin pluriel de [«"]?(\w+)[»"]?/,
+    /^[Aa]ction de [«"]?(\w+)[»"]?/,
+    /^[Pp]articipe (?:passé|présent) de [«"]?(\w+)[»"]?/,
+    /^[A-Za-z]+ personne .+ de [«"]?(\w+)[»"]?/,
+    /^[Ff]orme .+ du verbe [«"]?(\w+)[»"]?/,
+    /^[Ii]nfinitif [«"]?(\w+)[»"]?/,
+  ];
+  for (const p of patterns) {
+    const m = def.match(p);
+    if (m) return m[1];
   }
   return null;
 }
 
-function extractRedirect(def: string): string | null {
-  // "Pluriel de X" → retourne X
-  const pluriel = def.match(/^[Pp]luriel de [«"]?(\w+)[»"]?/);
-  if (pluriel) return pluriel[1];
-  // "Féminin de X"
-  const feminin = def.match(/^[Ff]éminin de [«"]?(\w+)[»"]?/);
-  if (feminin) return feminin[1];
-  // "Action de X"
-  const action = def.match(/^[Aa]ction de [«"]?(\w+)[»"]?/);
-  if (action) return action[1];
-  // "Participe passé de X"
-  const participe = def.match(/^[Pp]articipe (?:passé|présent) de [«"]?(\w+)[»"]?/);
-  if (participe) return participe[1];
-  // "Première/Deuxième/Troisième personne de X"
-  const personne = def.match(/^[A-Za-z]+ personne .+ de [«"]?(\w+)[»"]?/);
-  if (personne) return personne[1];
-  return null;
+function getVariants(word: string): string[] {
+  const w = word.toLowerCase();
+  const variants = [w];
+
+  // Retire les terminaisons de conjugaison courantes
+  if (w.endsWith("ent"))   variants.push(w.slice(0, -3) + "er", w.slice(0, -3) + "re");
+  if (w.endsWith("aient")) variants.push(w.slice(0, -5) + "er");
+  if (w.endsWith("ons"))   variants.push(w.slice(0, -3) + "er");
+  if (w.endsWith("ez"))    variants.push(w.slice(0, -2) + "er");
+  if (w.endsWith("ait"))   variants.push(w.slice(0, -3) + "er", w.slice(0, -3) + "re");
+  if (w.endsWith("ant"))   variants.push(w.slice(0, -3) + "er", w.slice(0, -3) + "re");
+  if (w.endsWith("és"))    variants.push(w.slice(0, -2) + "er", w.slice(0, -1));
+  if (w.endsWith("ées"))   variants.push(w.slice(0, -3) + "er");
+  if (w.endsWith("ée"))    variants.push(w.slice(0, -2) + "er");
+  if (w.endsWith("ué"))    variants.push(w.slice(0, -2) + "uer");
+  if (w.endsWith("ié"))    variants.push(w.slice(0, -2) + "ier");
+
+  // Pluriels
+  if (w.endsWith("aux"))   variants.push(w.slice(0, -3) + "al");
+  if (w.endsWith("eaux"))  variants.push(w.slice(0, -4) + "eau");
+  if (w.endsWith("s"))     variants.push(w.slice(0, -1));
+  if (w.endsWith("x"))     variants.push(w.slice(0, -1));
+
+  // Féminins
+  if (w.endsWith("ves"))   variants.push(w.slice(0, -3) + "f");
+  if (w.endsWith("ve"))    variants.push(w.slice(0, -2) + "f");
+  if (w.endsWith("nne"))   variants.push(w.slice(0, -2));
+  if (w.endsWith("nnes"))  variants.push(w.slice(0, -3));
+
+  return [...new Set(variants)];
 }
 
 export async function GET(request: NextRequest) {
@@ -49,33 +83,22 @@ export async function GET(request: NextRequest) {
   if (!word) return NextResponse.json({ error: "Mot manquant" }, { status: 400 });
 
   try {
-    // Essai 1 : mot exact
-    let defOrig = await fetchWikt(word.toLowerCase());
+    const variants = getVariants(word);
 
-    // Si c'est une redirection (pluriel, conjugaison...) → cherche le mot de base
-    if (defOrig) {
-      const redirect = extractRedirect(defOrig);
-      if (redirect) {
-        const baseDef = await fetchWikt(redirect.toLowerCase());
-        if (baseDef) defOrig = baseDef;
+    for (const variant of variants) {
+      let def = await fetchWikt(variant);
+      if (def) {
+        const base = extractBaseWord(def);
+        if (base) {
+          const baseDef = await fetchWikt(base);
+          if (baseDef) def = baseDef;
+        }
+        return NextResponse.json({ found: true, word, defOrig: def });
       }
     }
 
-    // Essai 2 : retire le 's' final (pluriel)
-    if (!defOrig && word.endsWith("s")) {
-      defOrig = await fetchWikt(word.slice(0, -1).toLowerCase());
-    }
-
-    // Essai 3 : retire 'ent' final (conjugaison)
-    if (!defOrig && word.endsWith("ent")) {
-      defOrig = await fetchWikt(word.slice(0, -3).toLowerCase());
-    }
-
-    if (!defOrig) return NextResponse.json({ found: false });
-
-    return NextResponse.json({ found: true, word, defOrig });
-
-  } catch (err) {
+    return NextResponse.json({ found: false });
+  } catch {
     return NextResponse.json({ found: false });
   }
 }
