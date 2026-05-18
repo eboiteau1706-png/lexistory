@@ -112,6 +112,7 @@ export default function Nav() {
               {user ? "Mon profil" : "Connexion"}
             </button>
           )}
+          <a href="/classement" className={styles.btnGhost}>🥇 Classement</a>
           {ready && !isPremium && (
             <button className={styles.btnPrimary} onClick={handlePremium} disabled={loading}>
               {loading ? "..." : "Premium — 1,99€/mois"}
@@ -149,6 +150,9 @@ export default function Nav() {
               {loading ? "..." : "✨ Premium — 1,99€/mois"}
             </button>
           )}
+          <button className={styles.mobileBtn} onClick={() => { setMenuOpen(false); router.push("/classement"); }}>
+  🥇 Classement
+</button>
           {ready && isPremium && (
             <div className={styles.mobilePremiumBadge}>✨ Abonné Premium</div>
           )}
