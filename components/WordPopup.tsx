@@ -100,31 +100,3 @@ export default function WordPopup({ word, seenCount, onClose }: Props) {
     </div>
   );
 }
-
-.loading {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  margin-bottom: 16px;
-}
-
-.shimmerBox {
-  height: 32px;
-  border-radius: 8px;
-  background: linear-gradient(90deg, var(--surface2) 25%, var(--border) 50%, var(--surface2) 75%);
-  background-size: 200% 100%;
-  animation: shimmer 1.2s infinite;
-}
-
-@keyframes shimmer {
-  0% { background-position: 200% 0; }
-  100% { background-position: -200% 0; }
-}
-
-.source {
-  font-size: 0.7rem;
-  color: var(--text-dim);
-  text-align: right;
-  margin-top: -8px;
-  font-style: italic;
-}
