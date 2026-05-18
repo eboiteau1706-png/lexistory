@@ -8,14 +8,21 @@ import type { Story } from "@/lib/stories";
 export default async function Home({
   searchParams,
 }: {
-  searchParams: Promise<{ level?: string }>;
+  searchParams: Promise<{ level?: string; day?: string }>;
 }) {
   const params = await searchParams;
-  const level = (params.level as Story["level"]) ?? "Lecteur";
+  const level  = (params.level as Story["level"]) ?? "Lecteur";
+  const dayParam = params.day ? parseInt(params.day) : null;
 
-  const story =
-    [...STORIES].reverse().find((s) => s.level === level) ??
-    STORIES[STORIES.length - 1];
+  const levelStories = STORIES.filter(s => s.level === level);
+  const reference    = new Date("2026-05-17");
+  const today        = new Date();
+  const diffDays     = Math.floor((today.getTime() - reference.getTime()) / (1000 * 60 * 60 * 24));
+  const todayIndex   = diffDays % levelStories.length;
+
+  // Si un jour spécifique est demandé (Premium), utilise cet index
+  const index = dayParam !== null ? dayParam % levelStories.length : todayIndex;
+  const story = levelStories[index] ?? levelStories[0];
 
   return (
     <main className="main">

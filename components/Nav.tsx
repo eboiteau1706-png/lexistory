@@ -10,6 +10,7 @@ export default function Nav() {
   const [loading, setLoading]   = useState(false);
   const [user, setUser]         = useState<any>(null);
   const [ready, setReady]       = useState(false);
+  const [isPremium, setIsPremium] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const supabase = createClient();
   const router   = useRouter();
@@ -19,30 +20,35 @@ export default function Nav() {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null);
       setReady(true);
+      if (session?.user) {
+        supabase.from("profiles").select("is_premium").eq("id", session.user.id).single()
+          .then(({ data }) => { if (data?.is_premium) setIsPremium(true); });
+      }
     });
     const { data: listener } = supabase.auth.onAuthStateChange((_e, session) => {
       setUser(session?.user ?? null);
-      setReady(true);
+      if (session?.user) {
+        supabase.from("profiles").select("is_premium").eq("id", session.user.id).single()
+          .then(({ data }) => { if (data?.is_premium) setIsPremium(true); });
+      } else {
+        setIsPremium(false);
+      }
     });
     return () => listener.subscription.unsubscribe();
   }, [pathname]);
 
-  // Ferme le menu quand on change de page
   useEffect(() => { setMenuOpen(false); }, [pathname]);
 
   async function handlePremium() {
-  if (!user) {
-    router.push("/login");
-    return;
+    if (!user) { router.push("/login"); return; }
+    setLoading(true);
+    try {
+      const res  = await fetch("/api/checkout", { method: "POST" });
+      const data = await res.json();
+      if (data.url) window.location.href = data.url;
+    } catch { alert("Erreur, réessaie."); }
+    finally { setLoading(false); }
   }
-  setLoading(true);
-  try {
-    const res  = await fetch("/api/checkout", { method: "POST" });
-    const data = await res.json();
-    if (data.url) window.location.href = data.url;
-  } catch { alert("Erreur, réessaie."); }
-  finally { setLoading(false); }
-}
 
   function handleProfile() {
     setMenuOpen(false);
@@ -62,24 +68,26 @@ export default function Nav() {
               {user ? "Mon profil" : "Connexion"}
             </button>
           )}
-          <button className={styles.btnPrimary} onClick={handlePremium} disabled={loading}>
-            {loading ? "..." : "Premium — 1,99€/mois"}
-          </button>
+          {/* Cache le bouton Premium si déjà abonné */}
+          {ready && !isPremium && (
+            <button className={styles.btnPrimary} onClick={handlePremium} disabled={loading}>
+              {loading ? "..." : "Premium — 1,99€/mois"}
+            </button>
+          )}
+          {ready && isPremium && (
+            <div className={styles.premiumBadge}>✨ Premium</div>
+          )}
         </div>
 
         {/* Mobile hamburger */}
-        <button
-          className={styles.hamburger}
-          onClick={() => setMenuOpen(!menuOpen)}
-          aria-label="Menu"
-        >
+        <button className={styles.hamburger} onClick={() => setMenuOpen(!menuOpen)} aria-label="Menu">
           <span className={`${styles.bar} ${menuOpen ? styles.barOpen1 : ""}`} />
           <span className={`${styles.bar} ${menuOpen ? styles.barOpen2 : ""}`} />
           <span className={`${styles.bar} ${menuOpen ? styles.barOpen3 : ""}`} />
         </button>
       </nav>
 
-      {/* Mobile menu dropdown */}
+      {/* Mobile menu */}
       {menuOpen && (
         <div className={styles.mobileMenu}>
           <div className={styles.mobileStreak}>🔥 {STREAK} jour de série</div>
@@ -88,13 +96,14 @@ export default function Nav() {
               {user ? "👤 Mon profil" : "🔑 Connexion"}
             </button>
           )}
-          <button
-            className={styles.mobilePremiumBtn}
-            onClick={() => { setMenuOpen(false); handlePremium(); }}
-            disabled={loading}
-          >
-            {loading ? "..." : "✨ Premium — 1,99€/mois"}
-          </button>
+          {ready && !isPremium && (
+            <button className={styles.mobilePremiumBtn} onClick={() => { setMenuOpen(false); handlePremium(); }} disabled={loading}>
+              {loading ? "..." : "✨ Premium — 1,99€/mois"}
+            </button>
+          )}
+          {ready && isPremium && (
+            <div className={styles.mobilePremiumBadge}>✨ Abonné Premium</div>
+          )}
         </div>
       )}
     </>
