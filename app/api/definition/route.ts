@@ -29,18 +29,17 @@ async function fetchWikt(word: string): Promise<string | null> {
 
 function extractBaseWord(def: string): string | null {
   const patterns = [
-    /^[Pp]luriel de [«"]?(\w+)[»"]?/,
-    /^[Ff]éminin de [«"]?(\w+)[»"]?/,
-    /^[Ff]éminin pluriel de [«"]?(\w+)[»"]?/,
-    /^[Aa]ction de [«"]?(\w+)[»"]?/,
-    /^[Pp]articipe (?:passé|présent) de [«"]?(\w+)[»"]?/,
-    /^[A-Za-z]+ personne .+ de [«"]?(\w+)[»"]?/,
-    /^[Ff]orme .+ du verbe [«"]?(\w+)[»"]?/,
-    /^[Ii]nfinitif [«"]?(\w+)[»"]?/,
+    /pluriel de [«"']?(\w+)[»"']?/i,
+    /f[ée]minin(?:\s+pluriel)? de [«"']?(\w+)[»"']?/i,
+    /action de [«"']?(\w+)[»"']?/i,
+    /participe (?:pass[ée]|pr[ée]sent) de [«"']?(\w+)[»"']?/i,
+    /personne .+ de [«"']?(\w+)[»"']?/i,
+    /forme .+ (?:du verbe|de) [«"']?(\w+)[»"']?/i,
+    /du verbe [«"']?(\w+)[»"']?/i,
   ];
   for (const p of patterns) {
     const m = def.match(p);
-    if (m) return m[1];
+    if (m?.[1]) return m[1];
   }
   return null;
 }
