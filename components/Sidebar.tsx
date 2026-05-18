@@ -22,6 +22,15 @@ export default function Sidebar() {
   const level = (searchParams.get("level") as Story["level"]) ?? "Lecteur";
   const levelEmoji: Record<Story["level"], string> = { "Curieux": "🌱", "Lecteur": "📖", "Érudit": "🎓" };
 
+  // Calcul du jour actuel — même logique que page.tsx
+  const reference    = new Date("2026-05-17T00:00:00");
+  const now          = new Date();
+  const diffDays     = Math.floor((now.getTime() - reference.getTime()) / (1000 * 60 * 60 * 24));
+  const levelStories = STORIES.filter(s => s.level === level);
+  const currentIndex = diffDays % levelStories.length;
+  // Histoires disponibles = aujourd'hui + passées seulement
+  const availableStories = levelStories.slice(0, currentIndex + 1).reverse();
+
   async function loadStats(uid: string) {
     const { data: profile } = await supabase.from("profiles").select("is_premium").eq("id", uid).single();
     if (profile?.is_premium) setIsPremium(true);
@@ -65,8 +74,7 @@ export default function Sidebar() {
       }
     });
 
-    // Rafraîchit immédiatement quand un mot est vu ou une histoire lue
-    const onWordSeen = () => { if (userId) loadStats(userId); };
+    const onWordSeen  = () => { if (userId) loadStats(userId); };
     const onStoryRead = () => { if (userId) loadStats(userId); };
     window.addEventListener("lexistory:word-seen", onWordSeen);
     window.addEventListener("lexistory:story-read", onStoryRead);
@@ -89,14 +97,6 @@ export default function Sidebar() {
     } catch { alert("Erreur, réessaie."); }
     finally { setLoading(false); }
   }
-
-  const levelStories  = STORIES.filter(s => s.level === level);
-const reference     = new Date("2026-05-17");
-const today         = new Date();
-const diffDays      = Math.floor((today.getTime() - reference.getTime()) / 86400000);
-const currentIndex  = diffDays % levelStories.length;
-// Seulement les histoires déjà passées + aujourd'hui
-const availableStories = levelStories.slice(0, currentIndex + 1);
 
   if (!ready) return null;
 
@@ -141,21 +141,29 @@ const availableStories = levelStories.slice(0, currentIndex + 1);
         <div className={styles.card}>
           <p className={styles.cardTitle}>✨ Abonné Premium</p>
           <button className={styles.historyBtn} onClick={() => setShowHistory(!showHistory)}>
-            {showHistory ? "Fermer l'historique ↑" : "📅 Voir les histoires passées"}
+            {showHistory ? "↑ Fermer" : "📅 Histoires passées"}
           </button>
           {showHistory && (
             <div className={styles.historyList}>
-              {availableStories.map((s, i) => (
-                <button
-                  key={s.slug}
-                  className={`${styles.historyItem} ${i === currentIndex ? styles.historyItemActive : ""}`}
-                  onClick={() => router.push(`/?level=${level}&day=${i}`)}
-                >
-                  <span className={styles.historyDot} />
-                  <span className={styles.historyDay}>J{i + 1}</span>
-                  <span className={styles.historyTitle}>{s.title}</span>
-                </button>
-              ))}
+              {availableStories.map((s, i) => {
+                const realIndex = currentIndex - i;
+                const isToday = realIndex === currentIndex;
+                return (
+                  <button
+                    key={s.slug}
+                    className={`${styles.historyItem} ${isToday ? styles.historyItemActive : ""}`}
+                    onClick={() => router.push(`/?level=${level}&day=${realIndex}`)}
+                  >
+                    <span className={styles.historyDot} />
+                    <div className={styles.historyContent}>
+                      <span className={styles.historyDay}>
+                        {isToday ? "Aujourd'hui" : `Jour ${realIndex + 1}`}
+                      </span>
+                      <span className={styles.historyTitle}>{s.title}</span>
+                    </div>
+                  </button>
+                );
+              })}
             </div>
           )}
         </div>
@@ -174,7 +182,7 @@ const availableStories = levelStories.slice(0, currentIndex + 1);
         <div className={styles.lockedCard}>
           <div className={styles.lockedIcon}>🔒</div>
           <div className={styles.lockedText}>
-            En Premium, accède à toutes les histoires passées et futures.
+            En Premium, accède à toutes les histoires passées.
           </div>
         </div>
       )}

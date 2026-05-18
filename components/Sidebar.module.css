@@ -172,3 +172,95 @@
   margin-top: 4px;
 }
 .loginBtn:hover { border-color: var(--accent); color: var(--accent); }
+
+/* ── HISTORIQUE PREMIUM ── */
+.historyBtn {
+  width: 100%;
+  margin-top: 8px;
+  padding: 9px 14px;
+  border-radius: 10px;
+  background: rgba(232,201,122,0.07);
+  border: 1px solid rgba(232,201,122,0.18);
+  color: var(--accent);
+  font-family: inherit;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  letter-spacing: 0.2px;
+}
+.historyBtn:hover { background: rgba(232,201,122,0.13); }
+
+.historyList {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 10px;
+  max-height: 220px;
+  overflow-y: auto;
+}
+.historyList::-webkit-scrollbar { width: 3px; }
+.historyList::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+.historyItem {
+  width: 100%;
+  padding: 9px 10px;
+  border-radius: 9px;
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--text-dim);
+  font-family: inherit;
+  cursor: pointer;
+  text-align: left;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.15s;
+}
+.historyItem:hover {
+  background: var(--surface2);
+  border-color: var(--border);
+  color: var(--text-muted);
+}
+
+.historyItemActive {
+  background: rgba(232,201,122,0.06) !important;
+  border-color: rgba(232,201,122,0.25) !important;
+  color: var(--text) !important;
+}
+
+.historyDot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--border);
+  flex-shrink: 0;
+  transition: background 0.15s;
+}
+.historyItemActive .historyDot { background: var(--accent); }
+
+.historyContent {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+
+.historyDay {
+  font-size: 0.65rem;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  font-weight: 600;
+}
+.historyItemActive .historyDay { color: var(--accent); }
+
+.historyTitle {
+  font-size: 0.78rem;
+  font-weight: 500;
+  line-height: 1.3;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: inherit;
+}
