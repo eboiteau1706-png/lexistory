@@ -20,8 +20,9 @@ async function fetchWikt(word: string): Promise<string | null> {
           .replace(/<[^>]*>/g, "")
           .trim();
         if (clean.length > 8) {
-          // Ignore les définitions de lettres de l'alphabet
-          if (clean.toLowerCase().includes("lettre") && clean.toLowerCase().includes("alphabet")) continue;
+          if (clean.toLowerCase().includes("chiffre romain")) continue;
+          if (clean.toLowerCase().includes("lettre") && clean.length < 50) continue;
+          if (clean.toLowerCase().includes("alphabet")) continue;
           return clean;
         }
       }
@@ -59,9 +60,7 @@ function getVariants(word: string): string[] {
   if (w.endsWith("ont"))    variants.push(w.slice(0, -3) + "ir", w.slice(0, -3) + "re");
 
   // Conjugaisons régulières
-  if (w.endsWith("aient")) variants.push(w.slice(0, -5) + "er");
-  if (w.endsWith("aient")) variants.push(w.slice(0, -5) + "er");
-  if (w.endsWith("aient")) variants.push(w.slice(0, -5) + "re");
+  if (w.endsWith("aient")) variants.push(w.slice(0, -5) + "er", w.slice(0, -5) + "re");
   if (w.endsWith("ons"))   variants.push(w.slice(0, -3) + "er");
   if (w.endsWith("ez"))    variants.push(w.slice(0, -2) + "er");
   if (w.endsWith("ait"))   variants.push(w.slice(0, -3) + "er", w.slice(0, -3) + "re");
@@ -85,7 +84,8 @@ function getVariants(word: string): string[] {
   if (w.endsWith("nne"))   variants.push(w.slice(0, -2));
   if (w.endsWith("nnes"))  variants.push(w.slice(0, -3));
 
-  return [...new Set(variants)];
+  // Filtre les variantes trop courtes
+  return [...new Set(variants)].filter(v => v.length > 2);
 }
 
 export async function GET(request: NextRequest) {
