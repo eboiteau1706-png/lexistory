@@ -84,17 +84,24 @@ export async function GET(request: NextRequest) {
   try {
     const variants = getVariants(word);
 
-    for (const variant of variants) {
-      let def = await fetchWikt(variant);
-      if (def) {
-        const base = extractBaseWord(def);
-        if (base) {
-          const baseDef = await fetchWikt(base);
-          if (baseDef) def = baseDef;
-        }
-        return NextResponse.json({ found: true, word, defOrig: def });
-      }
-    }
+for (const variant of variants) {
+  let def = await fetchWikt(variant);
+  if (!def) continue;
+
+  // Jusqu'à 3 redirections
+  for (let i = 0; i < 3; i++) {
+    const base = extractBaseWord(def);
+    if (!base) break;
+    const baseDef = await fetchWikt(base);
+    if (baseDef) def = baseDef;
+    else break;
+  }
+
+  // Si c'est encore une définition grammaticale → on ignore
+  if (extractBaseWord(def)) continue;
+
+  return NextResponse.json({ found: true, word, defOrig: def });
+}
 
     return NextResponse.json({ found: false });
   } catch {
