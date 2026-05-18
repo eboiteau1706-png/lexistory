@@ -56,14 +56,12 @@ export default function Nav() {
       if (session?.user) loadUserData(session.user.id);
       else { setIsPremium(false); setStreak(0); setXp(0); }
     });
-
     const onStoryRead = () => {
       supabase.auth.getSession().then(({ data: { session } }) => {
         if (session?.user) loadUserData(session.user.id);
       });
     };
     window.addEventListener("lexistory:story-read", onStoryRead);
-
     return () => {
       listener.subscription.unsubscribe();
       window.removeEventListener("lexistory:story-read", onStoryRead);
@@ -92,27 +90,30 @@ export default function Nav() {
         <a href="/" className={styles.logo}>Lexi<span>Story</span></a>
 
         <div className={styles.desktopRight}>
-          <a href="/rangs" className={styles.btnGhost}>🏆 Rangs</a>
+          {/* Stats utilisateur connecté */}
           {ready && user && (
-            <>
-              <div className={styles.streak}>🔥 {streak} jour{streak > 1 ? "s" : ""}</div>
-              <div className={styles.levelBadge}>
-                <span>{level.emoji} {level.name}</span>
+            <div className={styles.userStats}>
+              <span className={styles.streakPill}>🔥 {streak}j</span>
+              <div className={styles.levelPill} onClick={() => router.push("/classement")} title={`${xp} XP — Cliquer pour le classement`}>
+                <span className={styles.levelText}>{level.emoji} {level.name}</span>
                 <div className={styles.xpBarRow}>
                   <div className={styles.xpBar}>
                     <div className={styles.xpFill} style={{ width: `${pct}%` }} />
                   </div>
-                  <span className={styles.xpText}>{current}/{needed} XP</span>
+                  <span className={styles.xpText}>{current}/{needed}</span>
                 </div>
               </div>
-            </>
+            </div>
           )}
+
+          {/* Liens nav */}
           {ready && (
             <button className={styles.btnGhost} onClick={() => router.push(user ? "/profile" : "/login")}>
               {user ? "Mon profil" : "Connexion"}
             </button>
           )}
-          <a href="/classement" className={styles.btnGhost}>🥇 Classement</a>
+
+          {/* Premium ou badge */}
           {ready && !isPremium && (
             <button className={styles.btnPrimary} onClick={handlePremium} disabled={loading}>
               {loading ? "..." : "Premium — 1,99€/mois"}
@@ -132,14 +133,18 @@ export default function Nav() {
 
       {menuOpen && (
         <div className={styles.mobileMenu}>
-          <button className={styles.mobileBtn} onClick={() => { setMenuOpen(false); router.push("/rangs"); }}>
-            🏆 Rangs
-          </button>
           {ready && user && (
-            <div className={styles.mobileStreak}>
-              🔥 {streak} jour{streak > 1 ? "s" : ""} · {level.emoji} {level.name} · {xp} XP
+            <div className={styles.mobileUserInfo}>
+              <span>🔥 {streak} jour{streak > 1 ? "s" : ""}</span>
+              <span>{level.emoji} {level.name} · {xp} XP</span>
             </div>
           )}
+          <button className={styles.mobileBtn} onClick={() => { setMenuOpen(false); router.push("/classement"); }}>
+            🏆 Classement
+          </button>
+          <button className={styles.mobileBtn} onClick={() => { setMenuOpen(false); router.push("/rangs"); }}>
+            ⭐ Rangs & XP
+          </button>
           {ready && (
             <button className={styles.mobileBtn} onClick={() => { setMenuOpen(false); router.push(user ? "/profile" : "/login"); }}>
               {user ? "👤 Mon profil" : "🔑 Connexion"}
@@ -150,9 +155,6 @@ export default function Nav() {
               {loading ? "..." : "✨ Premium — 1,99€/mois"}
             </button>
           )}
-          <button className={styles.mobileBtn} onClick={() => { setMenuOpen(false); router.push("/classement"); }}>
-  🥇 Classement
-</button>
           {ready && isPremium && (
             <div className={styles.mobilePremiumBadge}>✨ Abonné Premium</div>
           )}

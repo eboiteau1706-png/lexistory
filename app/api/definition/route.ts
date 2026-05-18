@@ -2,14 +2,19 @@ import { NextRequest, NextResponse } from "next/server";
 
 async function fetchWikt(word: string): Promise<string | null> {
   try {
-    const res = await fetch(
-      `https://fr.wiktionary.org/w/api.php?action=parse&page=${encodeURIComponent(word)}&prop=wikitext&format=json&origin=*`
-    );
+    const url = `https://fr.wiktionary.org/w/api.php?action=query&titles=${encodeURIComponent(word)}&prop=revisions&rvprop=content&format=json&formatversion=2`;
+    const res = await fetch(url, {
+      headers: { "User-Agent": "LexiStory/1.0 (contact: e.boiteau1706@gmail.com)" },
+      next: { revalidate: 3600 }
+    });
+    if (!res.ok) return null;
     const data = await res.json();
-    const wikitext = data.parse?.wikitext?.["*"] || "";
-    if (!wikitext) return null;
+    const page = data.query?.pages?.[0];
+    if (!page || page.missing) return null;
 
-    const lines = wikitext.split("\n");
+    const content = page.revisions?.[0]?.content || "";
+    const lines = content.split("\n");
+
     for (const line of lines) {
       if (line.startsWith("# ") && !line.startsWith("## ")) {
         const clean = line
@@ -52,14 +57,11 @@ function getVariants(word: string): string[] {
   const w = word.toLowerCase();
   const variants = [w];
 
-  // Verbes irréguliers courants
   if (w.endsWith("eulent")) variants.push(w.slice(0, -6) + "oir");
   if (w.endsWith("ulent"))  variants.push(w.slice(0, -5) + "oir");
   if (w.endsWith("ient"))   variants.push(w.slice(0, -4) + "ir", w.slice(0, -4) + "enir");
   if (w.endsWith("vent"))   variants.push(w.slice(0, -4) + "ir");
   if (w.endsWith("ont"))    variants.push(w.slice(0, -3) + "ir", w.slice(0, -3) + "re");
-
-  // Conjugaisons régulières
   if (w.endsWith("aient")) variants.push(w.slice(0, -5) + "er", w.slice(0, -5) + "re");
   if (w.endsWith("ons"))   variants.push(w.slice(0, -3) + "er");
   if (w.endsWith("ez"))    variants.push(w.slice(0, -2) + "er");
@@ -71,20 +73,15 @@ function getVariants(word: string): string[] {
   if (w.endsWith("ée"))    variants.push(w.slice(0, -2) + "er");
   if (w.endsWith("ué"))    variants.push(w.slice(0, -2) + "uer");
   if (w.endsWith("ié"))    variants.push(w.slice(0, -2) + "ier");
-
-  // Pluriels
   if (w.endsWith("aux"))   variants.push(w.slice(0, -3) + "al");
   if (w.endsWith("eaux"))  variants.push(w.slice(0, -4) + "eau");
   if (w.endsWith("s") && w.length > 3) variants.push(w.slice(0, -1));
   if (w.endsWith("x") && w.length > 3) variants.push(w.slice(0, -1));
-
-  // Féminins
   if (w.endsWith("ves"))   variants.push(w.slice(0, -3) + "f");
   if (w.endsWith("ve"))    variants.push(w.slice(0, -2) + "f");
   if (w.endsWith("nne"))   variants.push(w.slice(0, -2));
   if (w.endsWith("nnes"))  variants.push(w.slice(0, -3));
 
-  // Filtre les variantes trop courtes
   return [...new Set(variants)].filter(v => v.length > 2);
 }
 
@@ -100,7 +97,6 @@ export async function GET(request: NextRequest) {
       let def = await fetchWikt(variant);
       if (!def) continue;
 
-      // Jusqu'à 3 redirections
       for (let i = 0; i < 3; i++) {
         const base = extractBaseWord(def);
         if (!base) break;
@@ -109,7 +105,6 @@ export async function GET(request: NextRequest) {
         else break;
       }
 
-      // Si c'est encore une définition grammaticale → on ignore
       if (extractBaseWord(def)) continue;
 
       return NextResponse.json({ found: true, word, defOrig: def });
