@@ -496,8 +496,18 @@ const DICT: Record<string, Definition> = {
   "devenir": { etym: "Du latin devenire, arriver", defOrig: "Verbe exprimant un changement d'état.", defSimple: "Verbe qui indique qu'on change. 'Devenir grand' = grandir, passer de petit à grand." },
   "rester":  { etym: "Du latin restare, demeurer", defOrig: "Verbe exprimant la permanence dans un lieu ou un état.", defSimple: "Verbe qui indique qu'on ne bouge pas ou qu'on continue pareil. 'Rester calme' = continuer à être calme." },
   "paraître":{ etym: "Du latin parescere, apparaître", defOrig: "Verbe exprimant l'apparence ou la publication.", defSimple: "Verbe qui indique qu'on a l'air de quelque chose. 'Il paraît fatigué' = il a l'air fatigué." },
+  "deux":    { etym: "Du latin duos", defOrig: "Nombre entier entre un et trois.", defSimple: "Le chiffre 2. Un de plus que un, un de moins que trois." },
+  "aujourd'hui": { etym: "Du latin ad + hoc + de + hoc + die, en ce jour", defOrig: "Adverbe désignant le jour présent, la journée actuelle.", defSimple: "Le jour où on est maintenant. Pas hier, pas demain — maintenant, ce jour-ci." },
+  "trois":       { etym: "Du latin tres", defOrig: "Nombre entier entre deux et quatre.", defSimple: "Le chiffre 3." },
+  "quatre":      { etym: "Du latin quattuor", defOrig: "Nombre entier entre trois et cinq.", defSimple: "Le chiffre 4." },
+  "cinq":        { etym: "Du latin quinque", defOrig: "Nombre entier entre quatre et six.", defSimple: "Le chiffre 5." },
+  "six":         { etym: "Du latin sex", defOrig: "Nombre entier entre cinq et sept.", defSimple: "Le chiffre 6." },
+  "sept":        { etym: "Du latin septem", defOrig: "Nombre entier entre six et huit.", defSimple: "Le chiffre 7." },
+  "huit":        { etym: "Du latin octo", defOrig: "Nombre entier entre sept et neuf.", defSimple: "Le chiffre 8." },
+  "neuf":        { etym: "Du latin novem", defOrig: "Nombre entier entre huit et dix.", defSimple: "Le chiffre 9." },
+  "dix":         { etym: "Du latin decem", defOrig: "Nombre entier entre neuf et onze.", defSimple: "Le chiffre 10." },
 
-  };
+};
 
 function normalize(str: string): string {
   return str
