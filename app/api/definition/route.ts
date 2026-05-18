@@ -40,13 +40,13 @@ async function fetchWikt(word: string): Promise<string | null> {
 
 function extractBaseWord(def: string): string | null {
   const patterns = [
-    /pluriel de [«"']?(\w+)[»"']?/i,
-    /f[ée]minin(?:\s+pluriel)? de [«"']?(\w+)[»"']?/i,
-    /action de [«"']?(\w+)[»"']?/i,
-    /participe (?:pass[ée]|pr[ée]sent) de [«"']?(\w+)[»"']?/i,
-    /personne .+ de [«"']?(\w+)[»"']?/i,
-    /forme .+ (?:du verbe|de) [«"']?(\w+)[»"']?/i,
-    /du verbe [«"']?(\w+)[»"']?/i,
+    /pluriel de [«"']?([\w\u00C0-\u017E]+)[»"']?/i,
+    /f[ée]minin(?:\s+pluriel)? de [«"']?([\w\u00C0-\u017E]+)[»"']?/i,
+    /action de [«"']?([\w\u00C0-\u017E]+)[»"']?/i,
+    /participe (?:pass[ée]|pr[ée]sent) de [«"']?([\w\u00C0-\u017E]+)[»"']?/i,
+    /personne .+ de [«"']?([\w\u00C0-\u017E]+)[»"']?/i,
+    /forme .+ (?:du verbe|de) [«"']?([\w\u00C0-\u017E]+)[»"']?/i,
+    /du verbe [«"']?([\w\u00C0-\u017E]+)[»"']?/i,
   ];
   for (const p of patterns) {
     const m = def.match(p);

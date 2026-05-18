@@ -7,6 +7,7 @@ export interface Definition {
 
 const DICT: Record<string, Definition> = {
 
+  "alzheimer": { etym: "Du nom du Dr Alois Alzheimer", defOrig: "Maladie neurodégénérative provoquant une perte progressive de la mémoire.", defSimple: "Une maladie du cerveau qui fait perdre la mémoire petit à petit. Elle touche surtout les personnes âgées." },
   "limbique":        { etym: "Du latin limbus, bordure", defOrig: "Relatif au système cérébral qui gère les émotions et la mémoire.", defSimple: "Une partie du cerveau qui s'occupe de nos émotions et de nos souvenirs." },
   "post-traumatiques":{ etym: "Du latin post (après) + grec trauma (blessure)", defOrig: "Relatifs aux troubles psychologiques survenant après un événement traumatisant.", defSimple: "Qui apparaît après un choc psychologique très fort. Les cauchemars répétés après un accident sont post-traumatiques." },
   "post-traumatique":{ etym: "Du latin post (après) + grec trauma (blessure)", defOrig: "Relatif aux troubles survenant après un événement traumatisant.", defSimple: "Qui survient après un choc psychologique. Le stress post-traumatique = l'anxiété qui reste longtemps après un événement terrible." },
