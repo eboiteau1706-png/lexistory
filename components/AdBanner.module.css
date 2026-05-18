@@ -1,0 +1,49 @@
+.wrapper {
+  position: relative;
+  z-index: 1;
+  max-width: 860px;
+  margin: 0 auto 0;
+  padding: 0 24px 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.label {
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--text-dim);
+  text-align: center;
+}
+
+/* Zone pub AdSense */
+.wrapper ins {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  min-height: 90px;
+  overflow: hidden;
+}
+
+.premium {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-size: 0.75rem;
+  color: var(--text-dim);
+  padding: 4px 0;
+}
+
+.premium a {
+  color: var(--accent);
+  text-decoration: none;
+  font-weight: 600;
+  transition: color 0.2s;
+}
+.premium a:hover { color: var(--accent2); }
+
+@media (max-width: 680px) {
+  .wrapper { padding: 0 16px 24px; }
+}
