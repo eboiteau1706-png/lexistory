@@ -15,14 +15,34 @@ export default function StoryCard({ story }: Props) {
   const [userId, setUserId]         = useState<string | null>(null);
   const [isPremium, setIsPremium]   = useState(false);
   const [xpGained, setXpGained]     = useState<number | null>(null);
+  const [readPct, setReadPct]       = useState(0);
   const storyReadRef                = useRef(false);
+  const intervalRef                 = useRef<NodeJS.Timeout | null>(null);
   const supabase = createClient();
 
+  // Reset quand l'histoire change
   useEffect(() => {
     setSeenWords(new Set());
     setActiveWord(null);
     storyReadRef.current = false;
     setXpGained(null);
+    setReadPct(0);
+
+    // Barre de progression basée sur le temps — 100 secondes pour 100%
+    if (intervalRef.current) clearInterval(intervalRef.current);
+    intervalRef.current = setInterval(() => {
+      setReadPct(prev => {
+        if (prev >= 100) {
+          if (intervalRef.current) clearInterval(intervalRef.current);
+          return 100;
+        }
+        return prev + 1;
+      });
+    }, 1000);
+
+    return () => {
+      if (intervalRef.current) clearInterval(intervalRef.current);
+    };
   }, [story.slug]);
 
   useEffect(() => {
@@ -41,7 +61,6 @@ export default function StoryCard({ story }: Props) {
       if (storyReadRef.current) return;
       storyReadRef.current = true;
 
-      // Vérifie si déjà lue
       const { data: existing } = await supabase
         .from("stories_read")
         .select("id")
@@ -49,23 +68,20 @@ export default function StoryCard({ story }: Props) {
         .eq("story_slug", story.slug)
         .single();
 
-      if (existing) return; // Déjà lue, pas d'XP
+      if (existing) return;
 
-      // Insère l'histoire lue
       await supabase.from("stories_read").insert({
         user_id: userId,
         story_slug: story.slug,
         story_level: story.level,
       });
 
-      // Calcule le streak APRÈS l'insert
       const { data: reads } = await supabase
         .from("stories_read")
         .select("read_at")
         .eq("user_id", userId)
         .order("read_at", { ascending: false });
 
-      // Streak minimum = 1 (la lecture qu'on vient de faire)
       let streak = 1;
       if (reads && reads.length > 1) {
         const dates = [...new Set(reads.map((d: any) => new Date(d.read_at).toDateString()))];
@@ -75,12 +91,10 @@ export default function StoryCard({ story }: Props) {
         }
       }
 
-      // Calcule l'XP
       const storyXp = getStoryXp(isPremium);
       const bonusXp = getStreakBonus(streak, isPremium);
       const totalXp = storyXp + bonusXp;
 
-      // Récupère l'XP actuel et met à jour
       const { data: profile } = await supabase
         .from("profiles")
         .select("xp")
@@ -113,9 +127,6 @@ export default function StoryCard({ story }: Props) {
     }
   }, [userId]);
 
-  const totalWords = story.paragraphs.join(" ").split(/\s+/).length;
-  const pct = Math.min(100, Math.round((seenWords.size / Math.max(totalWords * 0.3, 10)) * 100));
-
   return (
     <>
       <div className={styles.card}>
@@ -135,7 +146,7 @@ export default function StoryCard({ story }: Props) {
 
         <div className={styles.progressWrap}>
           <div className={styles.progressBar}>
-            <div className={styles.progressFill} style={{ width: `${pct}%` }} />
+            <div className={styles.progressFill} style={{ width: `${readPct}%` }} />
           </div>
           <div className={styles.progressLabel}>
             <span>
@@ -143,7 +154,7 @@ export default function StoryCard({ story }: Props) {
                : seenWords.size === 1 ? "1 mot consulté"
                : `${seenWords.size} mots consultés`}
             </span>
-            <span>{pct}%</span>
+            <span>{readPct}%</span>
           </div>
         </div>
 

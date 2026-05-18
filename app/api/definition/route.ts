@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 async function fetchWikt(word: string): Promise<string | null> {
   try {
     const normalized = word.normalize("NFC");
-const url = `https://fr.wiktionary.org/w/api.php?action=query&titles=${encodeURIComponent(normalized)}&prop=revisions&rvprop=content&format=json&formatversion=2`;
+    const url = `https://fr.wiktionary.org/w/api.php?action=query&titles=${encodeURIComponent(normalized)}&prop=revisions&rvprop=content&format=json&formatversion=2`;
     const res = await fetch(url, {
       headers: { "User-Agent": "LexiStory/1.0 (contact: e.boiteau1706@gmail.com)" },
       next: { revalidate: 3600 }
@@ -25,7 +25,7 @@ const url = `https://fr.wiktionary.org/w/api.php?action=query&titles=${encodeURI
           .replace(/'{2,3}/g, "")
           .replace(/<[^>]*>/g, "")
           .trim();
-        if (clean.length > 8) {
+        if (clean.length > 5) {
           if (clean.toLowerCase().includes("chiffre romain")) continue;
           if (clean.toLowerCase().includes("lettre") && clean.length < 50) continue;
           if (clean.toLowerCase().includes("alphabet")) continue;
@@ -41,6 +41,7 @@ const url = `https://fr.wiktionary.org/w/api.php?action=query&titles=${encodeURI
 
 function extractBaseWord(def: string): string | null {
   const patterns = [
+    /^([\w\u00C0-\u017E]+)\.$/, // "évènement." → "évènement"
     /pluriel de [«"']?([\w\u00C0-\u017E]+)[»"']?/i,
     /f[ée]minin(?:\s+pluriel)? de [«"']?([\w\u00C0-\u017E]+)[»"']?/i,
     /action de [«"']?([\w\u00C0-\u017E]+)[»"']?/i,
@@ -57,12 +58,12 @@ function extractBaseWord(def: string): string | null {
 }
 
 function getVariants(word: string): string[] {
-  
   const w = word.toLowerCase();
   const variants = [w];
-  // Essaie aussi sans accents
-const withoutAccents = w.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-if (withoutAccents !== w) variants.push(withoutAccents);
+
+  // Essaie sans accents
+  const withoutAccents = w.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  if (withoutAccents !== w) variants.push(withoutAccents);
 
   if (w.endsWith("eulent")) variants.push(w.slice(0, -6) + "oir");
   if (w.endsWith("ulent"))  variants.push(w.slice(0, -5) + "oir");
