@@ -52,6 +52,7 @@
   color: var(--text-muted);
   border: 1px solid var(--border);
   transition: all 0.2s;
+  text-decoration: none;
 }
 .btnGhost:hover { color: var(--text); border-color: var(--text-muted); }
  

@@ -5,7 +5,6 @@ export default function Footer() {
     <footer className={styles.footer}>
       <div className={styles.links}>
         <a href="/a-propos">À propos</a>
-        <a href="/rangs">🏆 Rangs</a>
         <a href="/support">Support</a>
         <a href="/mentions-legales">Mentions légales</a>
         <a href="/confidentialite">Confidentialité</a>
