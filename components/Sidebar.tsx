@@ -22,17 +22,27 @@ export default function Sidebar() {
   const levelEmoji: Record<Story["level"], string> = { "Curieux": "🌱", "Lecteur": "📖", "Érudit": "🎓" };
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null);
-      setReady(true);
-      if (session?.user) loadStats(session.user.id);
-    });
-    const { data: listener } = supabase.auth.onAuthStateChange((_e, session) => {
-      setUser(session?.user ?? null);
-      if (session?.user) loadStats(session.user.id);
-    });
-    return () => listener.subscription.unsubscribe();
-  }, []);
+  let interval: NodeJS.Timeout;
+
+  supabase.auth.getSession().then(({ data: { session } }) => {
+    setUser(session?.user ?? null);
+    setReady(true);
+    if (session?.user) {
+      loadStats(session.user.id);
+      interval = setInterval(() => loadStats(session.user.id), 10000);
+    }
+  });
+
+  const { data: listener } = supabase.auth.onAuthStateChange((_e, session) => {
+    setUser(session?.user ?? null);
+    if (session?.user) loadStats(session.user.id);
+  });
+
+  return () => {
+    listener.subscription.unsubscribe();
+    if (interval) clearInterval(interval);
+  };
+}, []);
 
   async function loadStats(userId: string) {
     const { data: profile } = await supabase.from("profiles").select("is_premium").eq("id", userId).single();
