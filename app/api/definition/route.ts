@@ -15,11 +15,15 @@ async function fetchWikt(word: string): Promise<string | null> {
         const clean = line
           .replace(/^# /, "")
           .replace(/\[\[([^\]|]+)\|?[^\]]*\]\]/g, "$1")
+          .replace(/\{\{[^}]*\}\}/g, "")
           .replace(/'{2,3}/g, "")
           .replace(/<[^>]*>/g, "")
-          .replace(/\(.*?\)/g, "")
           .trim();
-        if (clean.length > 8) return clean;
+        if (clean.length > 8) {
+          // Ignore les définitions de lettres de l'alphabet
+          if (clean.toLowerCase().includes("lettre") && clean.toLowerCase().includes("alphabet")) continue;
+          return clean;
+        }
       }
     }
     return null;
@@ -47,13 +51,22 @@ function getVariants(word: string): string[] {
   const w = word.toLowerCase();
   const variants = [w];
 
-  // Retire les terminaisons de conjugaison courantes
-  if (w.endsWith("ent"))   variants.push(w.slice(0, -3) + "er", w.slice(0, -3) + "re");
+  // Verbes irréguliers courants
+  if (w.endsWith("eulent")) variants.push(w.slice(0, -6) + "oir");
+  if (w.endsWith("ulent"))  variants.push(w.slice(0, -5) + "oir");
+  if (w.endsWith("ient"))   variants.push(w.slice(0, -4) + "ir", w.slice(0, -4) + "enir");
+  if (w.endsWith("vent"))   variants.push(w.slice(0, -4) + "ir");
+  if (w.endsWith("ont"))    variants.push(w.slice(0, -3) + "ir", w.slice(0, -3) + "re");
+
+  // Conjugaisons régulières
   if (w.endsWith("aient")) variants.push(w.slice(0, -5) + "er");
+  if (w.endsWith("aient")) variants.push(w.slice(0, -5) + "er");
+  if (w.endsWith("aient")) variants.push(w.slice(0, -5) + "re");
   if (w.endsWith("ons"))   variants.push(w.slice(0, -3) + "er");
   if (w.endsWith("ez"))    variants.push(w.slice(0, -2) + "er");
   if (w.endsWith("ait"))   variants.push(w.slice(0, -3) + "er", w.slice(0, -3) + "re");
   if (w.endsWith("ant"))   variants.push(w.slice(0, -3) + "er", w.slice(0, -3) + "re");
+  if (w.endsWith("ent"))   variants.push(w.slice(0, -3) + "er", w.slice(0, -3) + "re");
   if (w.endsWith("és"))    variants.push(w.slice(0, -2) + "er", w.slice(0, -1));
   if (w.endsWith("ées"))   variants.push(w.slice(0, -3) + "er");
   if (w.endsWith("ée"))    variants.push(w.slice(0, -2) + "er");
@@ -63,8 +76,8 @@ function getVariants(word: string): string[] {
   // Pluriels
   if (w.endsWith("aux"))   variants.push(w.slice(0, -3) + "al");
   if (w.endsWith("eaux"))  variants.push(w.slice(0, -4) + "eau");
-  if (w.endsWith("s"))     variants.push(w.slice(0, -1));
-  if (w.endsWith("x"))     variants.push(w.slice(0, -1));
+  if (w.endsWith("s") && w.length > 3) variants.push(w.slice(0, -1));
+  if (w.endsWith("x") && w.length > 3) variants.push(w.slice(0, -1));
 
   // Féminins
   if (w.endsWith("ves"))   variants.push(w.slice(0, -3) + "f");
@@ -83,24 +96,24 @@ export async function GET(request: NextRequest) {
   try {
     const variants = getVariants(word);
 
-for (const variant of variants) {
-  let def = await fetchWikt(variant);
-  if (!def) continue;
+    for (const variant of variants) {
+      let def = await fetchWikt(variant);
+      if (!def) continue;
 
-  // Jusqu'à 3 redirections
-  for (let i = 0; i < 3; i++) {
-    const base = extractBaseWord(def);
-    if (!base) break;
-    const baseDef = await fetchWikt(base);
-    if (baseDef) def = baseDef;
-    else break;
-  }
+      // Jusqu'à 3 redirections
+      for (let i = 0; i < 3; i++) {
+        const base = extractBaseWord(def);
+        if (!base) break;
+        const baseDef = await fetchWikt(base);
+        if (baseDef) def = baseDef;
+        else break;
+      }
 
-  // Si c'est encore une définition grammaticale → on ignore
-  if (extractBaseWord(def)) continue;
+      // Si c'est encore une définition grammaticale → on ignore
+      if (extractBaseWord(def)) continue;
 
-  return NextResponse.json({ found: true, word, defOrig: def });
-}
+      return NextResponse.json({ found: true, word, defOrig: def });
+    }
 
     return NextResponse.json({ found: false });
   } catch {
