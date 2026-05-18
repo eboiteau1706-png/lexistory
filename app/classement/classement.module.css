@@ -144,3 +144,49 @@
 @media (max-width: 680px) {
   .card { padding: 24px 16px; }
 }
+
+.tabs {
+  display: flex;
+  gap: 4px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 4px;
+}
+
+.tab {
+  flex: 1;
+  padding: 8px;
+  border-radius: 8px;
+  border: none;
+  background: transparent;
+  color: var(--text-dim);
+  font-family: inherit;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.tabActive {
+  background: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--border);
+}
+
+.empty {
+  text-align: center;
+  color: var(--text-dim);
+  padding: 40px 0;
+  font-size: 0.9rem;
+}
+
+.backAmis {
+  font-size: 0.85rem;
+  color: var(--accent);
+  text-decoration: none;
+  text-align: center;
+  font-weight: 600;
+  transition: color 0.2s;
+}
+.backAmis:hover { color: var(--accent2); }

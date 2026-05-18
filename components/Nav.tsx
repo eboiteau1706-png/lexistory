@@ -107,6 +107,7 @@ export default function Nav() {
 </div>
           )}
  <a href="/classement" className={styles.btnGhost}>🏆 Classement</a>
+ <a href="/amis" className={styles.btnGhost}>👥 Amis</a>
           {/* Liens nav */}
           {ready && (
             <button className={styles.btnGhost} onClick={() => router.push(user ? "/profile" : "/login")}>
@@ -143,6 +144,9 @@ export default function Nav() {
           <button className={styles.mobileBtn} onClick={() => { setMenuOpen(false); router.push("/classement"); }}>
             🏆 Classement
           </button>
+          <button className={styles.mobileBtn} onClick={() => { setMenuOpen(false); router.push("/amis"); }}>
+  👥 Amis
+</button>
           <button className={styles.mobileBtn} onClick={() => { setMenuOpen(false); router.push("/rangs"); }}>
             ⭐ Rangs & XP
           </button>

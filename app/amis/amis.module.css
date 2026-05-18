@@ -1,0 +1,221 @@
+.page {
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  padding: 100px 24px 60px;
+  background: var(--bg);
+}
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 40px;
+  width: 100%;
+  max-width: 600px;
+  height: fit-content;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.title {
+  font-family: var(--font-playfair), serif;
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: var(--accent);
+  text-align: center;
+}
+
+.section { display: flex; flex-direction: column; gap: 10px; }
+
+.sectionTitle {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--text-dim);
+}
+
+/* Recherche */
+.searchRow {
+  display: flex;
+  gap: 8px;
+}
+
+.input {
+  flex: 1;
+  padding: 11px 14px;
+  border-radius: 10px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  color: var(--text);
+  font-family: inherit;
+  font-size: 0.9rem;
+  outline: none;
+  transition: border-color 0.2s;
+}
+.input:focus { border-color: var(--accent); }
+.input::placeholder { color: var(--text-dim); }
+
+.btnSearch {
+  padding: 11px 18px;
+  border-radius: 10px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  font-family: inherit;
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+.btnSearch:hover { border-color: var(--accent); color: var(--accent); }
+
+.error {
+  font-size: 0.82rem;
+  color: #e88080;
+}
+
+.searchResult {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  background: rgba(232,201,122,0.06);
+  border: 1px solid rgba(232,201,122,0.2);
+  border-radius: 12px;
+}
+
+/* Rows */
+.friendRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+}
+
+.rank {
+  font-size: 0.78rem;
+  color: var(--text-dim);
+  font-weight: 600;
+  width: 28px;
+  flex-shrink: 0;
+}
+
+.playerInfo {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.playerName {
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.playerLevel {
+  font-size: 0.75rem;
+  color: var(--text-dim);
+}
+
+.premiumTag {
+  font-size: 0.7rem;
+  padding: 1px 6px;
+  border-radius: 50px;
+  background: rgba(232,201,122,0.15);
+  border: 1px solid rgba(232,201,122,0.3);
+  color: var(--accent);
+}
+
+.actions { display: flex; gap: 6px; }
+
+.btnAdd {
+  padding: 8px 16px;
+  border-radius: 10px;
+  background: var(--accent);
+  border: none;
+  color: var(--bg);
+  font-family: inherit;
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+.btnAdd:hover { background: var(--accent2); }
+
+.btnAccept {
+  padding: 7px 12px;
+  border-radius: 8px;
+  background: rgba(109,186,138,0.15);
+  border: 1px solid rgba(109,186,138,0.3);
+  color: var(--green);
+  font-family: inherit;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+.btnAccept:hover { background: rgba(109,186,138,0.25); }
+
+.btnReject {
+  padding: 7px 12px;
+  border-radius: 8px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  color: var(--text-dim);
+  font-family: inherit;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+.btnReject:hover { border-color: #e88080; color: #e88080; }
+
+.btnRemove {
+  padding: 6px 12px;
+  border-radius: 8px;
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text-dim);
+  font-family: inherit;
+  font-size: 0.78rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+.btnRemove:hover { border-color: #e88080; color: #e88080; }
+
+.empty {
+  font-size: 0.88rem;
+  color: var(--text-dim);
+  text-align: center;
+  padding: 20px 0;
+  line-height: 1.6;
+}
+
+.back {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  text-decoration: none;
+  text-align: center;
+  transition: color 0.2s;
+}
+.back:hover { color: var(--text); }
+
+@media (max-width: 680px) {
+  .card { padding: 24px 16px; }
+  .searchRow { flex-direction: column; }
+}
