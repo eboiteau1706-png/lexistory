@@ -84,7 +84,7 @@ export default function Nav() {
   }
 
   const level = getLevel(xp);
-  const { pct } = getXpProgress(xp);
+  const { pct, current, needed } = getXpProgress(xp);
 
   return (
     <>
@@ -96,10 +96,13 @@ export default function Nav() {
           {ready && user && (
             <>
               <div className={styles.streak}>🔥 {streak} jour{streak > 1 ? "s" : ""}</div>
-              <div className={styles.levelBadge} title={`${xp} XP`}>
+              <div className={styles.levelBadge}>
                 <span>{level.emoji} {level.name}</span>
-                <div className={styles.xpBar}>
-                  <div className={styles.xpFill} style={{ width: `${pct}%` }} />
+                <div className={styles.xpBarRow}>
+                  <div className={styles.xpBar}>
+                    <div className={styles.xpFill} style={{ width: `${pct}%` }} />
+                  </div>
+                  <span className={styles.xpText}>{current}/{needed} XP</span>
                 </div>
               </div>
             </>
@@ -128,13 +131,13 @@ export default function Nav() {
 
       {menuOpen && (
         <div className={styles.mobileMenu}>
-            <button className={styles.mobileBtn} onClick={() => { setMenuOpen(false); router.push("/rangs"); }}>
-              🏆 Rangs
-            </button>
+          <button className={styles.mobileBtn} onClick={() => { setMenuOpen(false); router.push("/rangs"); }}>
+            🏆 Rangs
+          </button>
           {ready && user && (
-            <>
-              <div className={styles.mobileStreak}>🔥 {streak} jour{streak > 1 ? "s" : ""} · {level.emoji} {level.name}</div>
-            </>
+            <div className={styles.mobileStreak}>
+              🔥 {streak} jour{streak > 1 ? "s" : ""} · {level.emoji} {level.name} · {xp} XP
+            </div>
           )}
           {ready && (
             <button className={styles.mobileBtn} onClick={() => { setMenuOpen(false); router.push(user ? "/profile" : "/login"); }}>
