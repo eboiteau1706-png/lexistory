@@ -1,7 +1,7 @@
 "use client";
 import { useState, useCallback, useEffect, useRef } from "react";
 import { createClient } from "@/lib/supabase";
-import { getStoryXp, getStreakBonus, getLevel } from "@/lib/xp";
+import { getStoryXp, getStreakBonus } from "@/lib/xp";
 import WordPopup from "./WordPopup";
 import ClickableText from "./ClickableText";
 import styles from "./StoryCard.module.css";
@@ -35,67 +35,69 @@ export default function StoryCard({ story }: Props) {
     });
   }, []);
 
-  // Marque l'histoire comme lue + donne XP après 5 secondes
   useEffect(() => {
     if (!userId || !story.slug || storyReadRef.current) return;
     const timer = setTimeout(async () => {
       if (storyReadRef.current) return;
       storyReadRef.current = true;
 
-      const { data } = await supabase
+      // Vérifie si déjà lue
+      const { data: existing } = await supabase
         .from("stories_read")
         .select("id")
         .eq("user_id", userId)
         .eq("story_slug", story.slug)
         .single();
 
-      if (!data) {
-        await supabase.from("stories_read").insert({
-          user_id: userId,
-          story_slug: story.slug,
-          story_level: story.level,
-        });
+      if (existing) return; // Déjà lue, pas d'XP
 
-        // Calcule le streak
-        const { data: reads } = await supabase
-          .from("stories_read")
-          .select("read_at")
-          .eq("user_id", userId)
-          .order("read_at", { ascending: false });
+      // Insère l'histoire lue
+      await supabase.from("stories_read").insert({
+        user_id: userId,
+        story_slug: story.slug,
+        story_level: story.level,
+      });
 
-        let streak = 1;
-        if (reads && reads.length > 1) {
-          const dates = [...new Set(reads.map((d: any) => new Date(d.read_at).toDateString()))];
-          for (let i = 1; i < dates.length; i++) {
-            const diff = (new Date(dates[i-1]).getTime() - new Date(dates[i]).getTime()) / 86400000;
-            if (diff === 1) streak++; else break;
-          }
+      // Calcule le streak APRÈS l'insert
+      const { data: reads } = await supabase
+        .from("stories_read")
+        .select("read_at")
+        .eq("user_id", userId)
+        .order("read_at", { ascending: false });
+
+      // Streak minimum = 1 (la lecture qu'on vient de faire)
+      let streak = 1;
+      if (reads && reads.length > 1) {
+        const dates = [...new Set(reads.map((d: any) => new Date(d.read_at).toDateString()))];
+        for (let i = 1; i < dates.length; i++) {
+          const diff = (new Date(dates[i-1]).getTime() - new Date(dates[i]).getTime()) / 86400000;
+          if (diff === 1) streak++; else break;
         }
-
-        // Calcule l'XP total
-        const storyXp   = getStoryXp(isPremium);
-        const bonusXp   = getStreakBonus(streak, isPremium);
-        const totalXp   = storyXp + bonusXp;
-
-        // Met à jour l'XP dans Supabase
-        const { data: profile } = await supabase
-          .from("profiles")
-          .select("xp")
-          .eq("id", userId)
-          .single();
-
-        const currentXp = profile?.xp ?? 0;
-        await supabase
-          .from("profiles")
-          .update({ xp: currentXp + totalXp })
-          .eq("id", userId);
-
-        setXpGained(totalXp);
-        setTimeout(() => setXpGained(null), 3000);
-
-        window.dispatchEvent(new CustomEvent("lexistory:story-read"));
       }
-    }, 5000);
+
+      // Calcule l'XP
+      const storyXp = getStoryXp(isPremium);
+      const bonusXp = getStreakBonus(streak, isPremium);
+      const totalXp = storyXp + bonusXp;
+
+      // Récupère l'XP actuel et met à jour
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("xp")
+        .eq("id", userId)
+        .single();
+
+      const currentXp = profile?.xp ?? 0;
+      await supabase
+        .from("profiles")
+        .update({ xp: currentXp + totalXp })
+        .eq("id", userId);
+
+      setXpGained(totalXp);
+      setTimeout(() => setXpGained(null), 3000);
+      window.dispatchEvent(new CustomEvent("lexistory:story-read"));
+
+    }, 10000);
     return () => clearTimeout(timer);
   }, [userId, story.slug, isPremium]);
 
@@ -159,7 +161,6 @@ export default function StoryCard({ story }: Props) {
         </div>
       </div>
 
-      {/* Popup XP gagné */}
       {xpGained !== null && (
         <div className={styles.xpPopup}>
           +{xpGained} XP ✨{isPremium ? " (x1.5 Premium)" : ""}
