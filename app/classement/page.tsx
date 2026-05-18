@@ -12,21 +12,15 @@ interface Player {
 }
 
 export default function ClassementPage() {
-  const [players, setPlayers]     = useState<Player[]>([]);
-  const [friends, setFriends]     = useState<Player[]>([]);
-  const [myId, setMyId]           = useState<string | null>(null);
-  const [loading, setLoading]     = useState(true);
-  const [tab, setTab]             = useState<"global" | "amis">("global");
+  const [players, setPlayers]   = useState<Player[]>([]);
+  const [friends, setFriends]   = useState<Player[]>([]);
+  const [myId, setMyId]         = useState<string | null>(null);
+  const [loading, setLoading]   = useState(true);
+  const [tab, setTab]           = useState<"global" | "amis">("global");
   const supabase = createClient();
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session?.user) {
-        setMyId(session.user.id);
-        loadFriends(session.user.id);
-      }
-    });
-
+    // Charge le classement global
     supabase
       .from("profiles")
       .select("id, username, xp, is_premium")
@@ -34,34 +28,47 @@ export default function ClassementPage() {
       .order("xp", { ascending: false })
       .limit(50)
       .then(({ data }) => {
-        setPlayers(data ?? []);
+        setPlayers((data as Player[]) ?? []);
         setLoading(false);
       });
+
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user) {
+        setMyId(session.user.id);
+        loadFriends(session.user.id);
+      }
+    });
   }, []);
 
   async function loadFriends(uid: string) {
-    const { data: f1 } = await supabase
+    // Récupère toutes les friendships acceptées
+    const { data: allF } = await supabase
       .from("friendships")
-      .select("profiles!friendships_friend_id_fkey(id, username, xp, is_premium)")
-      .eq("user_id", uid).eq("status", "accepted");
+      .select("user_id, friend_id")
+      .or(`user_id.eq.${uid},friend_id.eq.${uid}`)
+      .eq("status", "accepted");
 
-    const { data: f2 } = await supabase
-      .from("friendships")
-      .select("profiles!friendships_user_id_fkey(id, username, xp, is_premium)")
-      .eq("friend_id", uid).eq("status", "accepted");
+    if (!allF || allF.length === 0) {
+      // Ajoute quand même soi-même
+      const { data: me } = await supabase
+        .from("profiles").select("id, username, xp, is_premium").eq("id", uid).single();
+      if (me) setFriends([me as Player]);
+      return;
+    }
 
-    const allFriends = [
-      ...((f1 as any) ?? []).map((f: any) => f.profiles),
-      ...((f2 as any) ?? []).map((f: any) => f.profiles),
-    ].filter(Boolean).sort((a: any, b: any) => b.xp - a.xp);
+    // Récupère les IDs des amis
+    const friendIds = allF.map(f => f.user_id === uid ? f.friend_id : f.user_id);
+    friendIds.push(uid); // Ajoute soi-même
 
-    // Ajoute soi-même
-    const { data: me } = await supabase
-      .from("profiles").select("id, username, xp, is_premium").eq("id", uid).single();
-    if (me) allFriends.push(me);
-    allFriends.sort((a: any, b: any) => b.xp - a.xp);
+    // Charge les profils
+    const { data: profiles } = await supabase
+      .from("profiles")
+      .select("id, username, xp, is_premium")
+      .in("id", friendIds)
+      .not("username", "is", null)
+      .order("xp", { ascending: false });
 
-    setFriends(allFriends as Player[]);
+    setFriends((profiles as Player[]) ?? []);
   }
 
   const list = tab === "global" ? players : friends;
@@ -72,7 +79,6 @@ export default function ClassementPage() {
       <div className={styles.card}>
         <h1 className={styles.title}>🏆 Classement</h1>
 
-        {/* Tabs */}
         <div className={styles.tabs}>
           <button
             className={`${styles.tab} ${tab === "global" ? styles.tabActive : ""}`}

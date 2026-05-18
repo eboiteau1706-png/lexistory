@@ -49,8 +49,10 @@ export default function AmisPage() {
 
   async function loadFriendships(uid: string) {
     setLoading(true);
+    setPending([]);
+    setSent([]);
+    setFriends([]);
 
-    // Toutes les friendships qui concernent cet user
     const { data: allF } = await supabase
       .from("friendships")
       .select("*")
@@ -71,10 +73,8 @@ export default function AmisPage() {
         friendList.push(profile);
       } else if (f.status === "pending") {
         if (f.friend_id === uid) {
-          // Demande reçue
           pendingList.push({ friendship: f, profile });
         } else {
-          // Demande envoyée
           sentList.push({ friendship: f, profile });
         }
       }
@@ -102,7 +102,6 @@ export default function AmisPage() {
     if (!data) { setSearchError("Aucun joueur trouvé avec ce pseudo."); return; }
     if (data.id === myId) { setSearchError("C'est toi ! 😄"); return; }
 
-    // Vérifie si déjà ami ou demande en cours
     const { data: existing } = await supabase
       .from("friendships")
       .select("id, status")
