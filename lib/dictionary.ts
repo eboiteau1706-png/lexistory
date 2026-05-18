@@ -507,6 +507,11 @@ const DICT: Record<string, Definition> = {
   "neuf":        { etym: "Du latin novem", defOrig: "Nombre entier entre huit et dix.", defSimple: "Le chiffre 9." },
   "dix":         { etym: "Du latin decem", defOrig: "Nombre entier entre neuf et onze.", defSimple: "Le chiffre 10." },
 
+  "de":      { etym: "Du latin de", defOrig: "Préposition indiquant l'appartenance, l'origine, la matière ou la cause.", defSimple: "Mot très courant qui relie deux mots. 'La maison de Paul' = la maison qui appartient à Paul." },
+  "à":       { etym: "Du latin ad", defOrig: "Préposition indiquant le lieu, le temps, le but ou l'appartenance.", defSimple: "Mot qui indique où on va ou à qui appartient quelque chose. 'Aller à Paris' = se rendre à Paris." },
+  "ne":      { etym: "Du latin non", defOrig: "Adverbe de négation utilisé avec 'pas', 'plus', 'jamais'.", defSimple: "Mot qui sert à faire une phrase négative. 'Je ne sais pas' = je ne sais pas." },
+  "pas":     { etym: "Du latin passus, pas", defOrig: "Adverbe de négation utilisé avec 'ne'.", defSimple: "Mot qui exprime la négation. 'Je ne veux pas' = refus de vouloir quelque chose." },
+
 };
 
 function normalize(str: string): string {
