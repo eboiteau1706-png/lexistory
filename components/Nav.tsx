@@ -92,6 +92,7 @@ export default function Nav() {
         <a href="/" className={styles.logo}>Lexi<span>Story</span></a>
 
         <div className={styles.desktopRight}>
+          <a href="/rangs" className={styles.btnGhost}>🏆 Rangs</a>
           {ready && user && (
             <>
               <div className={styles.streak}>🔥 {streak} jour{streak > 1 ? "s" : ""}</div>
@@ -127,6 +128,9 @@ export default function Nav() {
 
       {menuOpen && (
         <div className={styles.mobileMenu}>
+            <button className={styles.mobileBtn} onClick={() => { setMenuOpen(false); router.push("/rangs"); }}>
+              🏆 Rangs
+            </button>
           {ready && user && (
             <>
               <div className={styles.mobileStreak}>🔥 {streak} jour{streak > 1 ? "s" : ""} · {level.emoji} {level.name}</div>
