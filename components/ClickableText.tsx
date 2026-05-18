@@ -7,22 +7,19 @@ interface Props {
   onWordClick: (word: string) => void;
 }
 
-// Normalise un mot pour la clé de dictionnaire
 function toKey(raw: string): string {
   return raw
-    
     .replace(/^[«».,;:!?()'"\u2026\u2014\u2013\u2019\u201c\u201d'\-]+|[«».,;:!?()'"\u2026\u2014\u2013\u2019\u201c\u201d'\-]+$/g, "")
+    .replace(/^[ldmjnstcLDMJNSTC][''\u2019]/i, "")
     .toLowerCase();
 }
 
 export default function ClickableText({ text, seenWords, onWordClick }: Props) {
-  // Sépare le texte en tokens (mots + espaces)
   const tokens = text.split(/(\s+)/);
 
   return (
     <>
       {tokens.map((token, i) => {
-        // Espace → texte brut
         if (/^\s+$/.test(token)) return token;
 
         const key = toKey(token);

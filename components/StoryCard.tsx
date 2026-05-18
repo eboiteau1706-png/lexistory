@@ -110,10 +110,9 @@ export default function StoryCard({ story }: Props) {
       }
 
       // XP total = histoire + streak + bonus 100%
-      const storyXp  = getStoryXp(isPremium);
-      const bonusXp  = getStreakBonus(streak, isPremium);
-      const readBonus = isPremium ? 8 : 5;
-      const totalXp  = storyXp + bonusXp + readBonus;
+const storyXp = getStoryXp(isPremium);
+const bonusXp = getStreakBonus(streak, isPremium);
+const totalXp = storyXp + bonusXp;
 
       const { data: profile } = await supabase
         .from("profiles").select("xp").eq("id", userId).single();
