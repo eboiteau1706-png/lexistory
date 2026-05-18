@@ -1,5 +1,5 @@
 "use client";
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { createClient } from "@/lib/supabase";
 import WordPopup from "./WordPopup";
 import ClickableText from "./ClickableText";
@@ -9,10 +9,19 @@ import type { Story } from "@/lib/stories";
 interface Props { story: Story; }
 
 export default function StoryCard({ story }: Props) {
+  // Réinitialise les mots vus à chaque changement d'histoire
   const [seenWords, setSeenWords]   = useState<Set<string>>(new Set());
   const [activeWord, setActiveWord] = useState<string | null>(null);
   const [userId, setUserId]         = useState<string | null>(null);
+  const storyReadRef                = useRef(false);
   const supabase = createClient();
+
+  // Reset quand l'histoire change
+  useEffect(() => {
+    setSeenWords(new Set());
+    setActiveWord(null);
+    storyReadRef.current = false;
+  }, [story.slug]);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -20,29 +29,34 @@ export default function StoryCard({ story }: Props) {
     });
   }, []);
 
-  // Marque l'histoire comme lue
+  // Marque l'histoire comme lue après 5 secondes
   useEffect(() => {
-  if (!userId || !story.slug) return;
-  supabase.from("stories_read")
-    .select("id")
-    .eq("user_id", userId)
-    .eq("story_slug", story.slug)
-    .single()
-    .then(({ data }) => {
+    if (!userId || !story.slug || storyReadRef.current) return;
+    const timer = setTimeout(async () => {
+      if (storyReadRef.current) return;
+      storyReadRef.current = true;
+      const { data } = await supabase
+        .from("stories_read")
+        .select("id")
+        .eq("user_id", userId)
+        .eq("story_slug", story.slug)
+        .single();
       if (!data) {
-        supabase.from("stories_read").insert({
+        await supabase.from("stories_read").insert({
           user_id: userId,
           story_slug: story.slug,
           story_level: story.level,
         });
       }
-    });
-}, [userId, story.slug]);
+    }, 5000);
+    return () => clearTimeout(timer);
+  }, [userId, story.slug]);
 
+  // Quand on clique sur un mot → ouvre popup ET sauvegarde immédiatement
   const handleWordClick = useCallback(async (word: string) => {
     setSeenWords(prev => new Set(prev).add(word));
     setActiveWord(word);
-    // Sauvegarde le mot vu
+    // Sauvegarde immédiate dès que la définition s'ouvre
     if (userId) {
       await supabase.from("words_seen").upsert(
         { user_id: userId, word },
@@ -51,7 +65,9 @@ export default function StoryCard({ story }: Props) {
     }
   }, [userId]);
 
-  const pct = Math.min(100, Math.round((seenWords.size / 15) * 100));
+  // Barre de progression basée sur les mots de CETTE histoire uniquement
+  const totalWords = story.paragraphs.join(" ").split(/\s+/).length;
+  const pct = Math.min(100, Math.round((seenWords.size / Math.max(totalWords * 0.3, 10)) * 100));
 
   return (
     <>
