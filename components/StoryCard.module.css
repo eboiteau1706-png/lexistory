@@ -88,12 +88,20 @@
 /* Hint */
 .hint {
   display: flex;
-  align-items: center;
-  gap: 10px;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 12px 16px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
   font-size: 0.82rem;
   color: var(--text-dim);
-  padding: 14px 32px;
-  border-top: 1px solid var(--border);
+  line-height: 1.6;
+}
+
+.hint svg {
+  flex-shrink: 0;
+  margin-top: 2px;
 }
 
 @media (max-width: 680px) {
