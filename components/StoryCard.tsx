@@ -10,59 +10,28 @@ import type { Story } from "@/lib/stories";
 interface Props { story: Story; }
 
 export default function StoryCard({ story }: Props) {
-  const [seenWords, setSeenWords]   = useState<Set<string>>(new Set());
-  const [activeWord, setActiveWord] = useState<string | null>(null);
-  const [userId, setUserId]         = useState<string | null>(null);
-  const [isPremium, setIsPremium]   = useState(false);
-  const [xpGained, setXpGained]     = useState<number | null>(null);
-  const [readPct, setReadPct]       = useState(0);
-  const storyReadRef                = useRef(false);
-  const intervalRef                 = useRef<NodeJS.Timeout | null>(null);
+  const [seenWords, setSeenWords]       = useState<Set<string>>(new Set());
+  const [activeWord, setActiveWord]     = useState<string | null>(null);
+  const [userId, setUserId]             = useState<string | null>(null);
+  const [isPremium, setIsPremium]       = useState(false);
+  const [xpGained, setXpGained]         = useState<number | null>(null);
+  const [readPct, setReadPct]           = useState(0);
+  const [alreadyCompleted, setAlreadyCompleted] = useState(false);
+  const storyReadRef  = useRef(false);
+  const fullReadRef   = useRef(false);
+  const intervalRef   = useRef<NodeJS.Timeout | null>(null);
   const supabase = createClient();
 
-const fullReadRef = useRef(false);
+  // Reset + démarrage barre quand l'histoire change
+  useEffect(() => {
+    setSeenWords(new Set());
+    setActiveWord(null);
+    storyReadRef.current = false;
+    fullReadRef.current  = false;
+    setXpGained(null);
+    setReadPct(0);
+    setAlreadyCompleted(false);
 
-// Reset quand l'histoire change
-useEffect(() => {
-  setSeenWords(new Set());
-  setActiveWord(null);
-  storyReadRef.current = false;
-  fullReadRef.current = false;  // ← juste ça ici
-  setXpGained(null);
-  setReadPct(0);
-
-  if (intervalRef.current) clearInterval(intervalRef.current);
-  intervalRef.current = setInterval(() => {
-    setReadPct(prev => {
-      if (prev >= 100) {
-        if (intervalRef.current) clearInterval(intervalRef.current);
-        return 100;
-      }
-      return prev + 1;
-    });
-  }, 1000);
-
-  return () => {
-    if (intervalRef.current) clearInterval(intervalRef.current);
-  };
-}, [story.slug]);
-
-// XP bonus à 100% de lecture — useEffect SÉPARÉ
-useEffect(() => {
-  if (readPct >= 100 && !fullReadRef.current && userId) {
-    fullReadRef.current = true;
-    const bonus = isPremium ? 8 : 5;
-    supabase.from("profiles").select("xp").eq("id", userId).single()
-      .then(({ data }) => {
-        const currentXp = data?.xp ?? 0;
-        supabase.from("profiles").update({ xp: currentXp + bonus }).eq("id", userId);
-        setXpGained(bonus);
-        setTimeout(() => setXpGained(null), 3000);
-        window.dispatchEvent(new CustomEvent("lexistory:story-read"));
-      });
-  }
-
-    // Barre de progression basée sur le temps — 100 secondes pour 100%
     if (intervalRef.current) clearInterval(intervalRef.current);
     intervalRef.current = setInterval(() => {
       setReadPct(prev => {
@@ -79,16 +48,41 @@ useEffect(() => {
     };
   }, [story.slug]);
 
+  // Chargement session + vérification si déjà complétée
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session?.user) {
         setUserId(session.user.id);
         supabase.from("profiles").select("is_premium").eq("id", session.user.id).single()
           .then(({ data }) => { if (data?.is_premium) setIsPremium(true); });
+        // Vérifie si l'histoire a déjà été lue
+        supabase.from("stories_read")
+          .select("id")
+          .eq("user_id", session.user.id)
+          .eq("story_slug", story.slug)
+          .single()
+          .then(({ data }) => { if (data) setAlreadyCompleted(true); });
       }
     });
-  }, []);
+  }, [story.slug]);
 
+  // XP bonus à 100% de lecture
+  useEffect(() => {
+    if (readPct >= 100 && !fullReadRef.current && userId && !alreadyCompleted) {
+      fullReadRef.current = true;
+      const bonus = isPremium ? 8 : 5;
+      supabase.from("profiles").select("xp").eq("id", userId).single()
+        .then(({ data }) => {
+          const currentXp = data?.xp ?? 0;
+          supabase.from("profiles").update({ xp: currentXp + bonus }).eq("id", userId);
+          setXpGained(bonus);
+          setTimeout(() => setXpGained(null), 3000);
+          window.dispatchEvent(new CustomEvent("lexistory:story-read"));
+        });
+    }
+  }, [readPct, userId, isPremium, alreadyCompleted]);
+
+  // Marque l'histoire comme lue après 10 secondes + XP principal
   useEffect(() => {
     if (!userId || !story.slug || storyReadRef.current) return;
     const timer = setTimeout(async () => {
@@ -102,7 +96,7 @@ useEffect(() => {
         .eq("story_slug", story.slug)
         .single();
 
-      if (existing) return;
+      if (existing) { setAlreadyCompleted(true); return; }
 
       await supabase.from("stories_read").insert({
         user_id: userId,
@@ -130,16 +124,10 @@ useEffect(() => {
       const totalXp = storyXp + bonusXp;
 
       const { data: profile } = await supabase
-        .from("profiles")
-        .select("xp")
-        .eq("id", userId)
-        .single();
+        .from("profiles").select("xp").eq("id", userId).single();
 
       const currentXp = profile?.xp ?? 0;
-      await supabase
-        .from("profiles")
-        .update({ xp: currentXp + totalXp })
-        .eq("id", userId);
+      await supabase.from("profiles").update({ xp: currentXp + totalXp }).eq("id", userId);
 
       setXpGained(totalXp);
       setTimeout(() => setXpGained(null), 3000);
@@ -161,6 +149,8 @@ useEffect(() => {
     }
   }, [userId]);
 
+  const displayPct = alreadyCompleted ? 100 : readPct;
+
   return (
     <>
       <div className={styles.card}>
@@ -180,7 +170,13 @@ useEffect(() => {
 
         <div className={styles.progressWrap}>
           <div className={styles.progressBar}>
-            <div className={styles.progressFill} style={{ width: `${readPct}%` }} />
+            <div
+              className={styles.progressFill}
+              style={{
+                width: `${displayPct}%`,
+                background: alreadyCompleted ? "var(--green)" : undefined,
+              }}
+            />
           </div>
           <div className={styles.progressLabel}>
             <span>
@@ -188,7 +184,10 @@ useEffect(() => {
                : seenWords.size === 1 ? "1 mot consulté"
                : `${seenWords.size} mots consultés`}
             </span>
-            <span>{readPct}%</span>
+            {alreadyCompleted
+              ? <span style={{ color: "var(--green)", fontWeight: 700 }}>✅ Complétée</span>
+              : <span>{readPct}%</span>
+            }
           </div>
         </div>
 
