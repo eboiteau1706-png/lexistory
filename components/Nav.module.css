@@ -240,3 +240,16 @@
   from { opacity: 1; }
   to   { opacity: 0; }
 }
+
+.xpBarRow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.xpText {
+  font-size: 0.65rem;
+  color: var(--text-dim);
+  white-space: nowrap;
+  font-weight: 500;
+}
