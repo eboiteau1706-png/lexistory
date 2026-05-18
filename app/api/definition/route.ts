@@ -61,9 +61,17 @@ function getVariants(word: string): string[] {
   const w = word.toLowerCase();
   const variants = [w];
 
-  // Essaie sans accents
+  // Sans accents
   const withoutAccents = w.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
   if (withoutAccents !== w) variants.push(withoutAccents);
+
+  // Sans accents ET sans s final
+  if (withoutAccents.endsWith("s") && withoutAccents.length > 3) {
+    variants.push(withoutAccents.slice(0, -1));
+  }
+  if (withoutAccents.endsWith("ments")) {
+    variants.push(withoutAccents.slice(0, -1)); // evenements → evenement
+  }
 
   if (w.endsWith("eulent")) variants.push(w.slice(0, -6) + "oir");
   if (w.endsWith("ulent"))  variants.push(w.slice(0, -5) + "oir");
