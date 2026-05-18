@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 
 async function fetchWikt(word: string): Promise<string | null> {
   try {
-    const url = `https://fr.wiktionary.org/w/api.php?action=query&titles=${encodeURIComponent(word)}&prop=revisions&rvprop=content&format=json&formatversion=2`;
+    const normalized = word.normalize("NFC");
+const url = `https://fr.wiktionary.org/w/api.php?action=query&titles=${encodeURIComponent(normalized)}&prop=revisions&rvprop=content&format=json&formatversion=2`;
     const res = await fetch(url, {
       headers: { "User-Agent": "LexiStory/1.0 (contact: e.boiteau1706@gmail.com)" },
       next: { revalidate: 3600 }
