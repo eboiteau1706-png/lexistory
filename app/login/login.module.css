@@ -121,7 +121,8 @@
 
 /* Tabs mode connexion */
 .tabs {
-  display: flex;
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
   gap: 4px;
   background: var(--surface2);
   border: 1px solid var(--border);
@@ -131,17 +132,18 @@
 }
 
 .tab {
-  flex: 1;
-  padding: 8px;
+  padding: 8px 4px;
   border-radius: 8px;
   border: none;
   background: transparent;
   color: var(--text-dim);
   font-family: inherit;
-  font-size: 0.82rem;
+  font-size: 0.78rem;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s;
+  text-align: center;
+  white-space: nowrap;
 }
 
 .tabActive {
@@ -191,3 +193,20 @@
   transition: all 0.2s;
 }
 .btnSecondary:hover { color: var(--text); }
+
+.btnPrimary {
+  width: 100%;
+  padding: 13px;
+  border-radius: 12px;
+  background: var(--accent);
+  border: none;
+  color: var(--bg);
+  font-family: inherit;
+  font-size: 0.95rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+  letter-spacing: 0.3px;
+}
+.btnPrimary:hover:not(:disabled) { background: var(--accent2); transform: translateY(-1px); }
+.btnPrimary:disabled { opacity: 0.4; cursor: not-allowed; }
