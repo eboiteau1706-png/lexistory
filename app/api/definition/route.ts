@@ -57,8 +57,12 @@ function extractBaseWord(def: string): string | null {
 }
 
 function getVariants(word: string): string[] {
+  
   const w = word.toLowerCase();
   const variants = [w];
+  // Essaie aussi sans accents
+const withoutAccents = w.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+if (withoutAccents !== w) variants.push(withoutAccents);
 
   if (w.endsWith("eulent")) variants.push(w.slice(0, -6) + "oir");
   if (w.endsWith("ulent"))  variants.push(w.slice(0, -5) + "oir");
