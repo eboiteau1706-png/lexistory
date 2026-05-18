@@ -91,10 +91,12 @@ export default function Sidebar() {
   }
 
   const levelStories  = STORIES.filter(s => s.level === level);
-  const reference     = new Date("2026-05-17");
-  const today         = new Date();
-  const diffDays      = Math.floor((today.getTime() - reference.getTime()) / 86400000);
-  const currentIndex  = diffDays % levelStories.length;
+const reference     = new Date("2026-05-17");
+const today         = new Date();
+const diffDays      = Math.floor((today.getTime() - reference.getTime()) / 86400000);
+const currentIndex  = diffDays % levelStories.length;
+// Seulement les histoires déjà passées + aujourd'hui
+const availableStories = levelStories.slice(0, currentIndex + 1);
 
   if (!ready) return null;
 
@@ -143,13 +145,14 @@ export default function Sidebar() {
           </button>
           {showHistory && (
             <div className={styles.historyList}>
-              {levelStories.map((s, i) => (
+              {availableStories.map((s, i) => (
                 <button
                   key={s.slug}
                   className={`${styles.historyItem} ${i === currentIndex ? styles.historyItemActive : ""}`}
                   onClick={() => router.push(`/?level=${level}&day=${i}`)}
                 >
-                  <span className={styles.historyDay}>Jour {i + 1}</span>
+                  <span className={styles.historyDot} />
+                  <span className={styles.historyDay}>J{i + 1}</span>
                   <span className={styles.historyTitle}>{s.title}</span>
                 </button>
               ))}
