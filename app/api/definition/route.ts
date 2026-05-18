@@ -8,27 +8,39 @@ export async function GET(request: NextRequest) {
 
   try {
     const res = await fetch(
-      `https://fr.wiktionary.org/w/api.php?action=query&titles=${encodeURIComponent(word)}&prop=extracts&exintro=true&explaintext=true&format=json&origin=*`,
-      { headers: { "Accept": "application/json" } }
+      `https://fr.wiktionary.org/w/api.php?action=parse&page=${encodeURIComponent(word)}&prop=wikitext&format=json&origin=*`
     );
 
     const data = await res.json();
-    const pages = data.query?.pages;
-    if (!pages) return NextResponse.json({ found: false });
+    const wikitext = data.parse?.wikitext?.["*"] || "";
 
-    const page = Object.values(pages)[0] as any;
-    if (!page || page.missing !== undefined) {
-      return NextResponse.json({ found: false });
+    if (!wikitext) return NextResponse.json({ found: false });
+
+    // Cherche les définitions dans le wikitext (format # définition)
+    const lines = wikitext.split("\n");
+    const defs: string[] = [];
+
+    for (const line of lines) {
+      if (line.startsWith("# ") && !line.startsWith("## ")) {
+        const clean = line
+          .replace(/^# /, "")
+          .replace(/\[\[([^\]|]+)\|?[^\]]*\]\]/g, "$1")
+          .replace(/\{\{[^}]*\}\}/g, "")
+          .replace(/'{2,3}/g, "")
+          .replace(/<[^>]*>/g, "")
+          .trim();
+        if (clean.length > 10) defs.push(clean);
+        if (defs.length >= 2) break;
+      }
     }
 
-    // Extrait la première définition du texte
-    const text = page.extract || "";
-    const lines = text.split("\n").filter((l: string) => l.trim().length > 20);
-    const defOrig = lines[0] || "";
+    if (defs.length === 0) return NextResponse.json({ found: false });
 
-    if (!defOrig) return NextResponse.json({ found: false });
-
-    return NextResponse.json({ found: true, word, defOrig });
+    return NextResponse.json({
+      found: true,
+      word,
+      defOrig: defs[0],
+    });
 
   } catch (err) {
     return NextResponse.json({ found: false });
