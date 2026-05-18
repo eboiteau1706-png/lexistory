@@ -361,3 +361,72 @@
   font-weight: 700;
   margin-bottom: 4px;
 }
+
+/* XP Card dans le profil */
+.xpCard {
+  width: 100%;
+  background: linear-gradient(135deg, #1e1a0e, #2a2210);
+  border: 1px solid rgba(232,201,122,0.25);
+  border-radius: 16px;
+  padding: 18px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.xpHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.xpLevel {
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: var(--accent);
+}
+
+.xpTotal {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--text-muted);
+}
+
+.xpBarWrap {
+  height: 8px;
+  background: rgba(255,255,255,0.08);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.xpBarFill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent2), var(--accent));
+  border-radius: 4px;
+  transition: width 0.8s ease;
+}
+
+.xpFooter {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.72rem;
+  color: var(--text-dim);
+}
+
+.xpBoost {
+  font-size: 0.72rem;
+  color: var(--accent);
+  font-weight: 600;
+  text-align: center;
+  padding: 4px 0 0;
+}
+
+.rangsLink {
+  font-size: 0.85rem;
+  color: var(--accent);
+  text-decoration: none;
+  text-align: center;
+  font-weight: 600;
+  transition: color 0.2s;
+}
+.rangsLink:hover { color: var(--accent2); }

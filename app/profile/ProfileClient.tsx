@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
+import { getLevel, getXpProgress, LEVELS } from "@/lib/xp";
 import type { User } from "@supabase/supabase-js";
 import styles from "./profile.module.css";
 
@@ -9,23 +10,25 @@ export default function ProfileClient({ user }: { user: User }) {
   const supabase = createClient();
   const router   = useRouter();
 
-  const [username, setUsername]       = useState("");
-  const [editing, setEditing]         = useState(false);
-  const [newUsername, setNewUsername] = useState("");
-  const [saving, setSaving]           = useState(false);
-  const [error, setError]             = useState("");
-  const [isPremium, setIsPremium]     = useState(false);
-  const [wordsCount, setWordsCount]   = useState(0);
+  const [username, setUsername]         = useState("");
+  const [editing, setEditing]           = useState(false);
+  const [newUsername, setNewUsername]   = useState("");
+  const [saving, setSaving]             = useState(false);
+  const [error, setError]               = useState("");
+  const [isPremium, setIsPremium]       = useState(false);
+  const [xp, setXp]                     = useState(0);
+  const [wordsCount, setWordsCount]     = useState(0);
   const [storiesCount, setStoriesCount] = useState(0);
-  const [streak, setStreak]           = useState(0);
-  const [topWords, setTopWords]       = useState<string[]>([]);
+  const [streak, setStreak]             = useState(0);
+  const [topWords, setTopWords]         = useState<string[]>([]);
   const [levelBreakdown, setLevelBreakdown] = useState<Record<string, number>>({});
 
   useEffect(() => {
-    supabase.from("profiles").select("username, is_premium").eq("id", user.id).single()
+    supabase.from("profiles").select("username, is_premium, xp").eq("id", user.id).single()
       .then(({ data }) => {
         if (data?.username) setUsername(data.username);
         if (data?.is_premium) setIsPremium(data.is_premium);
+        setXp(data?.xp ?? 0);
       });
 
     supabase.from("words_seen").select("word", { count: "exact" }).eq("user_id", user.id)
@@ -39,9 +42,7 @@ export default function ProfileClient({ user }: { user: User }) {
         setStoriesCount(count ?? 0);
         if (data) {
           const breakdown: Record<string, number> = {};
-          data.forEach((d: any) => {
-            breakdown[d.story_level] = (breakdown[d.story_level] || 0) + 1;
-          });
+          data.forEach((d: any) => { breakdown[d.story_level] = (breakdown[d.story_level] || 0) + 1; });
           setLevelBreakdown(breakdown);
         }
       });
@@ -79,7 +80,10 @@ export default function ProfileClient({ user }: { user: User }) {
     if (data.url) window.location.href = data.url;
   }
 
-  const initial = (username?.[0] || user.email?.[0] || "?").toUpperCase();
+  const initial  = (username?.[0] || user.email?.[0] || "?").toUpperCase();
+  const level    = getLevel(xp);
+  const { current, needed, pct } = getXpProgress(xp);
+  const nextLevel = LEVELS.find(l => l.level === level.level + 1);
   const levelEmoji: Record<string, string> = { "Curieux": "🌱", "Lecteur": "📖", "Érudit": "🎓" };
   const maxStories = Math.max(...Object.values(levelBreakdown), 1);
 
@@ -118,7 +122,26 @@ export default function ProfileClient({ user }: { user: User }) {
           })}
         </div>
 
-        {/* Stats de base — tout le monde */}
+        {/* Niveau XP */}
+        <div className={styles.xpCard}>
+          <div className={styles.xpHeader}>
+            <div className={styles.xpLevel}>{level.emoji} Niveau {level.level} — {level.name}</div>
+            <div className={styles.xpTotal}>{xp} XP{isPremium ? " ✨" : ""}</div>
+          </div>
+          <div className={styles.xpBarWrap}>
+            <div className={styles.xpBarFill} style={{ width: `${pct}%` }} />
+          </div>
+          <div className={styles.xpFooter}>
+            <span>{current} / {needed} XP</span>
+            {nextLevel && <span>Prochain : {nextLevel.emoji} {nextLevel.name}</span>}
+            {!nextLevel && <span>👑 Niveau maximum !</span>}
+          </div>
+          {isPremium && (
+            <div className={styles.xpBoost}>⚡ Boost Premium x1.5 actif</div>
+          )}
+        </div>
+
+        {/* Stats de base */}
         <div className={styles.stats}>
           <div className={styles.statBox}>
             <div className={styles.statNum}>{streak}</div>
@@ -134,60 +157,52 @@ export default function ProfileClient({ user }: { user: User }) {
           </div>
         </div>
 
-        {/* Stats avancées Premium */}
+        {/* Stats avancées */}
         <div className={`${styles.advancedStats} ${!isPremium ? styles.blurred : ""}`}>
           <div className={styles.advancedTitle}>
             📊 Stats détaillées
             {!isPremium && <span className={styles.premiumTag}>Premium</span>}
           </div>
 
-          {/* Histoires par niveau */}
           <div className={styles.breakdown}>
             <div className={styles.breakdownTitle}>Histoires lues par niveau</div>
-            {["Curieux", "Lecteur", "Érudit"].map(level => (
-              <div key={level} className={styles.breakdownRow}>
-                <span className={styles.breakdownLabel}>{levelEmoji[level]} {level}</span>
+            {["Curieux", "Lecteur", "Érudit"].map(lvl => (
+              <div key={lvl} className={styles.breakdownRow}>
+                <span className={styles.breakdownLabel}>{levelEmoji[lvl]} {lvl}</span>
                 <div className={styles.barWrap}>
-                  <div
-                    className={styles.bar}
-                    style={{ width: `${((levelBreakdown[level] || 0) / maxStories) * 100}%` }}
-                  />
+                  <div className={styles.bar} style={{ width: `${((levelBreakdown[lvl] || 0) / maxStories) * 100}%` }} />
                 </div>
-                <span className={styles.breakdownVal}>{levelBreakdown[level] || 0}</span>
+                <span className={styles.breakdownVal}>{levelBreakdown[lvl] || 0}</span>
               </div>
             ))}
           </div>
 
-          {/* Derniers mots appris */}
           {topWords.length > 0 && (
             <div className={styles.topWords}>
               <div className={styles.breakdownTitle}>Derniers mots consultés</div>
               <div className={styles.wordChips}>
-                {topWords.map(w => (
-                  <span key={w} className={styles.wordChip}>{w}</span>
-                ))}
+                {topWords.map(w => <span key={w} className={styles.wordChip}>{w}</span>)}
               </div>
             </div>
           )}
 
-          {/* Moyenne par jour */}
           <div className={styles.avgStat}>
             <span className={styles.avgLabel}>Moyenne</span>
-            <span className={styles.avgVal}>
-              {streak > 0 ? (wordsCount / Math.max(streak, 1)).toFixed(1) : 0} mots/jour
-            </span>
+            <span className={styles.avgVal}>{streak > 0 ? (wordsCount / Math.max(streak, 1)).toFixed(1) : 0} mots/jour</span>
           </div>
         </div>
 
-        {/* Bouton upgrade si pas premium */}
         {!isPremium && (
           <div className={styles.plan}>
             <span className={styles.planBadge}>Plan Gratuit</span>
             <button className={styles.upgradeBtn} onClick={handlePremium}>
-              Débloquer les stats — 1,99€/mois ✨
+              Passer Premium — 1,99€/mois ✨
             </button>
           </div>
         )}
+
+        {/* Lien vers les rangs */}
+        <a href="/rangs" className={styles.rangsLink}>🏆 Voir tous les rangs →</a>
 
         <div className={styles.actions}>
           <a href="/" className={styles.backBtn}>← Retour aux histoires</a>
