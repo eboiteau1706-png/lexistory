@@ -17,6 +17,7 @@ export default function StoryCard({ story }: Props) {
   const [xpGained, setXpGained]                 = useState<number | null>(null);
   const [readPct, setReadPct]                   = useState(0);
   const [alreadyCompleted, setAlreadyCompleted] = useState(false);
+  const [showInfo, setShowInfo]                 = useState(false);
   const doneRef     = useRef(false);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const supabase = createClient();
@@ -30,7 +31,7 @@ export default function StoryCard({ story }: Props) {
     setAlreadyCompleted(false);
     doneRef.current = false;
 
-    if (!userId) return; // ← ajoute ça
+    if (!userId) return;
 
     if (intervalRef.current) clearInterval(intervalRef.current);
     intervalRef.current = setInterval(() => {
@@ -46,7 +47,7 @@ export default function StoryCard({ story }: Props) {
     return () => {
       if (intervalRef.current) clearInterval(intervalRef.current);
     };
-  }, [story.slug]);
+  }, [story.slug, userId]);
 
   // Chargement session
   useEffect(() => {
@@ -59,7 +60,7 @@ export default function StoryCard({ story }: Props) {
     });
   }, []);
 
-  // Vérifie si CETTE histoire spécifique est déjà complétée
+  // Vérifie si déjà complétée
   useEffect(() => {
     if (!userId) return;
     setAlreadyCompleted(false);
@@ -77,27 +78,24 @@ export default function StoryCard({ story }: Props) {
       });
   }, [userId, story.slug]);
 
-  // Quand barre = 100% → marque comme lue + donne XP (tout en un)
+  // Quand barre = 100% → marque comme lue + XP
   useEffect(() => {
     if (readPct < 100 || !userId || doneRef.current) return;
     doneRef.current = true;
 
     const markRead = async () => {
-      // Double vérif Supabase
       const { data: existing } = await supabase
         .from("stories_read").select("id")
         .eq("user_id", userId).eq("story_slug", story.slug).single();
 
       if (existing) { setAlreadyCompleted(true); return; }
 
-      // Insère
       await supabase.from("stories_read").insert({
         user_id: userId,
         story_slug: story.slug,
         story_level: story.level,
       });
 
-      // Calcule streak
       const { data: reads } = await supabase
         .from("stories_read").select("read_at")
         .eq("user_id", userId).order("read_at", { ascending: false });
@@ -111,10 +109,9 @@ export default function StoryCard({ story }: Props) {
         }
       }
 
-      // XP total = histoire + streak + bonus 100%
-const storyXp = getStoryXp(isPremium);
-const bonusXp = getStreakBonus(streak, isPremium);
-const totalXp = storyXp + bonusXp;
+      const storyXp = getStoryXp(isPremium);
+      const bonusXp = getStreakBonus(streak, isPremium);
+      const totalXp = storyXp + bonusXp;
 
       const { data: profile } = await supabase
         .from("profiles").select("xp").eq("id", userId).single();
@@ -147,25 +144,25 @@ const totalXp = storyXp + bonusXp;
   return (
     <>
       <div className={styles.card}>
-  <div className={styles.header}>
-    <div className={styles.meta}>
-      <span className={styles.tag}>{story.category}</span>
-      <h1 className={styles.title}>{story.title}</h1>
-      <p className={styles.readTime}>
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-          <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
-        </svg>
-        {story.readTime} · Clique sur n&apos;importe quel mot
-        <span
-          title="LexiStory s'améliore chaque jour ! Si une définition est manquante, incorrecte, ou si un nom propre n'est pas reconnu, c'est normal — notre dictionnaire local et notre système en ligne sont en constante évolution. Merci de votre compréhension 😊"
-          style={{ cursor: "help", opacity: 0.5, fontSize: "0.85rem", marginLeft: "6px" }}
-        >
-          ℹ️
-        </span>
-      </p>
-    </div>
-    <span className={styles.levelPill}>{story.level}</span>
-  </div>
+        <div className={styles.header}>
+          <div className={styles.meta}>
+            <span className={styles.tag}>{story.category}</span>
+            <h1 className={styles.title}>{story.title}</h1>
+            <p className={styles.readTime}>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+              </svg>
+              {story.readTime} · Clique sur n&apos;importe quel mot
+              <span
+                onClick={() => setShowInfo(true)}
+                style={{ cursor: "pointer", opacity: 0.6, fontSize: "0.85rem", marginLeft: "6px" }}
+              >
+                ℹ️
+              </span>
+            </p>
+          </div>
+          <span className={styles.levelPill}>{story.level}</span>
+        </div>
 
         <div className={styles.progressWrap}>
           <div className={styles.progressBar}>
@@ -204,12 +201,55 @@ const totalXp = storyXp + bonusXp;
         </div>
       </div>
 
+      {/* Popup XP */}
       {xpGained !== null && (
         <div className={styles.xpPopup}>
           +{xpGained} XP ✨{isPremium ? " (x1.5 Premium)" : ""}
         </div>
       )}
 
+      {/* Popup info dictionnaire */}
+      {showInfo && (
+        <div
+          onClick={() => setShowInfo(false)}
+          style={{
+            position: "fixed", inset: 0, zIndex: 300,
+            display: "flex", alignItems: "center", justifyContent: "center",
+            background: "rgba(0,0,0,0.5)", backdropFilter: "blur(4px)",
+            padding: "24px",
+          }}
+        >
+          <div
+            onClick={e => e.stopPropagation()}
+            style={{
+              background: "var(--surface)",
+              border: "1px solid var(--border)",
+              borderRadius: "16px",
+              padding: "28px",
+              maxWidth: "360px",
+              width: "100%",
+            }}
+          >
+            <div style={{ fontSize: "1.8rem", marginBottom: "12px" }}>ℹ️</div>
+            <p style={{ fontSize: "0.9rem", color: "var(--text-muted)", lineHeight: "1.7" }}>
+              LexiStory s&apos;améliore chaque jour ! Si une définition est manquante, incorrecte, ou si un nom propre n&apos;est pas reconnu, c&apos;est normal — notre dictionnaire est en constante évolution. Merci de votre compréhension 😊
+            </p>
+            <button
+              style={{
+                marginTop: "16px", width: "100%", padding: "10px",
+                borderRadius: "10px", background: "var(--surface2)",
+                border: "1px solid var(--border)", color: "var(--text-muted)",
+                cursor: "pointer", fontFamily: "inherit", fontSize: "0.88rem",
+              }}
+              onClick={() => setShowInfo(false)}
+            >
+              Fermer
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Popup définition mot */}
       {activeWord && (
         <WordPopup word={activeWord} seenCount={seenWords.size} onClose={() => setActiveWord(null)} />
       )}
