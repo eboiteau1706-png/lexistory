@@ -20,7 +20,7 @@ export default function StoryCard({ story }: Props) {
   const [showInfo, setShowInfo]                 = useState(false);
   const doneRef     = useRef(false);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
-  const supabase = createClient();
+  const supabase    = createClient();
 
   // Chargement session une seule fois
   useEffect(() => {
@@ -35,7 +35,6 @@ export default function StoryCard({ story }: Props) {
 
   // Reset + vérif + démarrage barre quand histoire OU userId change
   useEffect(() => {
-    // Reset immédiat
     setSeenWords(new Set());
     setActiveWord(null);
     setXpGained(null);
@@ -49,7 +48,6 @@ export default function StoryCard({ story }: Props) {
 
     if (!userId) return;
 
-    // Capture le slug courant pour éviter les race conditions
     const currentSlug = story.slug;
 
     supabase.from("stories_read").select("id")
@@ -57,8 +55,7 @@ export default function StoryCard({ story }: Props) {
       .eq("story_slug", currentSlug)
       .maybeSingle()
       .then(({ data }) => {
-        // Vérifie qu'on est toujours sur la même histoire
-        if (currentSlug !== story.slug) return;
+        if (currentSlug !== story.slug) return; // race condition guard
 
         if (data) {
           setAlreadyCompleted(true);
@@ -102,6 +99,7 @@ export default function StoryCard({ story }: Props) {
         story_level: story.level,
       });
 
+      // Calcul streak
       const { data: reads } = await supabase
         .from("stories_read").select("read_at")
         .eq("user_id", userId).order("read_at", { ascending: false });
@@ -115,8 +113,20 @@ export default function StoryCard({ story }: Props) {
         }
       }
 
+      // Vérifie si le bonus streak a déjà été donné aujourd'hui
+      // On compte combien d'histoires ont été lues aujourd'hui (heure Paris)
+      const parisToday = new Date(new Date().toLocaleString("en-US", { timeZone: "Europe/Paris" }));
+      const todayStr = parisToday.toDateString();
+      const readsTodayCount = reads
+        ? reads.filter((d: any) => new Date(d.read_at).toDateString() === todayStr).length
+        : 0;
+
+      // Le bonus streak ne s'applique qu'à la PREMIÈRE histoire lue aujourd'hui
+      // readsTodayCount inclut déjà l'histoire qu'on vient d'insérer
+      const isFirstTodayRead = readsTodayCount <= 1;
+
       const storyXp = getStoryXp(isPremium);
-      const bonusXp = getStreakBonus(streak, isPremium);
+      const bonusXp = isFirstTodayRead ? getStreakBonus(streak, isPremium) : 0;
       const totalXp = storyXp + bonusXp;
 
       const { data: profile } = await supabase
