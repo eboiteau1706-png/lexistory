@@ -30,6 +30,8 @@ export default function StoryCard({ story }: Props) {
     setAlreadyCompleted(false);
     doneRef.current = false;
 
+    if (!userId) return; // ← ajoute ça
+
     if (intervalRef.current) clearInterval(intervalRef.current);
     intervalRef.current = setInterval(() => {
       setReadPct(prev => {
