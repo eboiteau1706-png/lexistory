@@ -129,20 +129,22 @@ export default function ProfileClient({ user }: { user: User }) {
     finally { setPortalLoading(false); }
   }
 
-  async function handleDeleteAccount() {
-    setDeleting(true);
-    try {
-      await supabase.from("words_seen").delete().eq("user_id", user.id);
-      await supabase.from("stories_read").delete().eq("user_id", user.id);
-      await supabase.from("friendships").delete().or(`user_id.eq.${user.id},friend_id.eq.${user.id}`);
-      await supabase.from("profiles").delete().eq("id", user.id);
+async function handleDeleteAccount() {
+  setDeleting(true);
+  try {
+    const res = await fetch("/api/delete-account", { method: "POST" });
+    const data = await res.json();
+    if (data.success) {
       await supabase.auth.signOut();
       router.push("/");
-    } catch {
+    } else {
       alert("Erreur lors de la suppression. Contacte-nous à contact@lexistory.fr");
-      setDeleting(false);
     }
+  } catch {
+    alert("Erreur lors de la suppression. Contacte-nous à contact@lexistory.fr");
   }
+  finally { setDeleting(false); }
+}
 
   const initial   = (username?.[0] || user.email?.[0] || "?").toUpperCase();
   const level     = getLevel(xp);
