@@ -26,6 +26,9 @@ export default function ProfileClient({ user }: { user: User }) {
   const [myRank, setMyRank]                 = useState<number | null>(null);
   const [topWords, setTopWords]             = useState<string[]>([]);
   const [levelBreakdown, setLevelBreakdown] = useState<Record<string, number>>({});
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleting, setDeleting]             = useState(false);
+  const [portalLoading, setPortalLoading]   = useState(false);
 
   useEffect(() => {
     supabase.from("profiles").select("username, is_premium, xp").eq("id", user.id).single()
@@ -51,13 +54,11 @@ export default function ProfileClient({ user }: { user: User }) {
         }
       });
 
-    // Streak actuel + record
     supabase.from("stories_read").select("read_at").eq("user_id", user.id).order("read_at", { ascending: false })
       .then(({ data }) => {
         if (!data || data.length === 0) return;
         const dates = [...new Set(data.map((d: any) => new Date(d.read_at).toDateString()))];
 
-        // Streak actuel
         let s = 1;
         for (let i = 1; i < dates.length; i++) {
           const diff = (new Date(dates[i-1]).getTime() - new Date(dates[i]).getTime()) / 86400000;
@@ -65,32 +66,24 @@ export default function ProfileClient({ user }: { user: User }) {
         }
         setStreak(s);
 
-        // Streak record (max streak jamais atteint)
         let maxStreak = 1;
         let currentStreak = 1;
         for (let i = 1; i < dates.length; i++) {
           const diff = (new Date(dates[i-1]).getTime() - new Date(dates[i]).getTime()) / 86400000;
-          if (diff === 1) {
-            currentStreak++;
-            if (currentStreak > maxStreak) maxStreak = currentStreak;
-          } else {
-            currentStreak = 1;
-          }
+          if (diff === 1) { currentStreak++; if (currentStreak > maxStreak) maxStreak = currentStreak; }
+          else { currentStreak = 1; }
         }
         setStreakRecord(Math.max(maxStreak, s));
 
-        // XP cette semaine (7 derniers jours)
         const oneWeekAgo = new Date(Date.now() - 7 * 86400000);
         const recentStories = data.filter((d: any) => new Date(d.read_at) > oneWeekAgo);
         setXpThisWeek(recentStories.length * 10);
 
-        // Taux de complétion (stories_read / histoires disponibles × 100)
         if (data.length > 0 && s > 0) {
           setCompletionRate(Math.min(100, Math.round((data.length / Math.max(s, 1)) * 100)));
         }
       });
 
-    // Rang dans le classement
     supabase.from("profiles").select("id", { count: "exact" }).gt("xp", 0).then(async ({ count }) => {
       if (!count) return;
       const { data: profile } = await supabase.from("profiles").select("xp").eq("id", user.id).single();
@@ -121,6 +114,32 @@ export default function ProfileClient({ user }: { user: User }) {
     const res  = await fetch("/api/checkout", { method: "POST" });
     const data = await res.json();
     if (data.url) window.location.href = data.url;
+  }
+
+  async function handlePortal() {
+    setPortalLoading(true);
+    try {
+      const res  = await fetch("/api/portal", { method: "POST" });
+      const data = await res.json();
+      if (data.url) window.location.href = data.url;
+      else alert("Erreur, réessaie.");
+    } catch { alert("Erreur, réessaie."); }
+    finally { setPortalLoading(false); }
+  }
+
+  async function handleDeleteAccount() {
+    setDeleting(true);
+    try {
+      await supabase.from("words_seen").delete().eq("user_id", user.id);
+      await supabase.from("stories_read").delete().eq("user_id", user.id);
+      await supabase.from("friendships").delete().or(`user_id.eq.${user.id},friend_id.eq.${user.id}`);
+      await supabase.from("profiles").delete().eq("id", user.id);
+      await supabase.auth.signOut();
+      router.push("/");
+    } catch {
+      alert("Erreur lors de la suppression. Contacte-nous à contact@lexistory.fr");
+      setDeleting(false);
+    }
   }
 
   const initial   = (username?.[0] || user.email?.[0] || "?").toUpperCase();
@@ -179,9 +198,7 @@ export default function ProfileClient({ user }: { user: User }) {
             {nextLevel && <span>Prochain : {nextLevel.emoji} {nextLevel.name}</span>}
             {!nextLevel && <span>👑 Niveau maximum !</span>}
           </div>
-          {isPremium && (
-            <div className={styles.xpBoost}>⚡ Boost Premium x1.5 actif</div>
-          )}
+          {isPremium && <div className={styles.xpBoost}>⚡ Boost Premium x1.5 actif</div>}
         </div>
 
         {/* Stats de base */}
@@ -206,8 +223,6 @@ export default function ProfileClient({ user }: { user: User }) {
             📊 Stats détaillées
             {!isPremium && <span className={styles.premiumTag}>Premium</span>}
           </div>
-
-          {/* Rang + Record streak */}
           <div className={styles.statGrid}>
             <div className={styles.statGridBox}>
               <div className={styles.statGridNum}>#{myRank ?? "—"}</div>
@@ -226,8 +241,6 @@ export default function ProfileClient({ user }: { user: User }) {
               <div className={styles.statGridLabel}>✅ Assiduité</div>
             </div>
           </div>
-
-          {/* Histoires par niveau */}
           <div className={styles.breakdown}>
             <div className={styles.breakdownTitle}>Histoires lues par niveau</div>
             {["Curieux", "Lecteur", "Érudit"].map(lvl => (
@@ -240,8 +253,6 @@ export default function ProfileClient({ user }: { user: User }) {
               </div>
             ))}
           </div>
-
-          {/* Derniers mots */}
           {topWords.length > 0 && (
             <div className={styles.topWords}>
               <div className={styles.breakdownTitle}>Derniers mots consultés</div>
@@ -252,7 +263,12 @@ export default function ProfileClient({ user }: { user: User }) {
           )}
         </div>
 
-        {!isPremium && (
+        {/* Gestion abonnement Premium */}
+        {isPremium ? (
+          <button className={styles.portalBtn} onClick={handlePortal} disabled={portalLoading}>
+            {portalLoading ? "Chargement..." : "⚙️ Gérer mon abonnement"}
+          </button>
+        ) : (
           <div className={styles.plan}>
             <span className={styles.planBadge}>Plan Gratuit</span>
             <button className={styles.upgradeBtn} onClick={handlePremium}>
@@ -270,7 +286,77 @@ export default function ProfileClient({ user }: { user: User }) {
           <a href="/" className={styles.backBtn}>← Retour aux histoires</a>
           <button className={styles.logoutBtn} onClick={handleLogout}>Se déconnecter</button>
         </div>
+
+        {/* Zone danger */}
+        <div className={styles.dangerZone}>
+          <p className={styles.dangerTitle}>Zone de danger</p>
+          <button className={styles.deleteBtn} onClick={() => setShowDeleteConfirm(true)}>
+            Supprimer mon compte
+          </button>
+        </div>
       </div>
+
+      {/* Modal confirmation suppression */}
+      {showDeleteConfirm && (
+        <div
+          onClick={() => setShowDeleteConfirm(false)}
+          style={{
+            position: "fixed", inset: 0, zIndex: 300,
+            display: "flex", alignItems: "center", justifyContent: "center",
+            background: "rgba(0,0,0,0.6)", backdropFilter: "blur(4px)",
+            padding: "24px",
+          }}
+        >
+          <div
+            onClick={e => e.stopPropagation()}
+            style={{
+              background: "var(--surface)",
+              border: "1px solid #e07070",
+              borderRadius: "16px",
+              padding: "28px",
+              maxWidth: "360px",
+              width: "100%",
+              display: "flex",
+              flexDirection: "column",
+              gap: "14px",
+            }}
+          >
+            <div style={{ fontSize: "1.8rem" }}>⚠️</div>
+            <p style={{ fontFamily: "var(--font-playfair)", fontSize: "1.1rem", fontWeight: 700, color: "var(--text)" }}>
+              Supprimer mon compte ?
+            </p>
+            <p style={{ fontSize: "0.88rem", color: "var(--text-muted)", lineHeight: 1.6 }}>
+              Cette action est irréversible. Toutes tes données seront supprimées : progression, mots appris, histoires lues, amis.
+              {isPremium && " Si tu as un abonnement Premium actif, résilie-le d'abord depuis 'Gérer mon abonnement'."}
+            </p>
+            <div style={{ display: "flex", gap: "8px" }}>
+              <button
+                style={{
+                  flex: 1, padding: "10px", borderRadius: "10px",
+                  background: "var(--surface2)", border: "1px solid var(--border)",
+                  color: "var(--text-muted)", cursor: "pointer", fontFamily: "inherit", fontSize: "0.88rem",
+                }}
+                onClick={() => setShowDeleteConfirm(false)}
+              >
+                Annuler
+              </button>
+              <button
+                style={{
+                  flex: 1, padding: "10px", borderRadius: "10px",
+                  background: "#e07070", border: "none",
+                  color: "white", cursor: "pointer", fontFamily: "inherit",
+                  fontSize: "0.88rem", fontWeight: 700,
+                  opacity: deleting ? 0.6 : 1,
+                }}
+                onClick={handleDeleteAccount}
+                disabled={deleting}
+              >
+                {deleting ? "Suppression..." : "Supprimer"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
