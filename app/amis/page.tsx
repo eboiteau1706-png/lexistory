@@ -126,7 +126,7 @@ export default function AmisPage() {
 
   async function acceptRequest(friendshipId: string) {
   await supabase.from("friendships").update({ status: "accepted" }).eq("id", friendshipId);
-  window.dispatchEvent(new CustomEvent("lexistory:friend-accepted"));
+  window.dispatchEvent(new CustomEvent("lexistory:friend-accepted")); // ← ajoute ça
   if (myId) loadFriendships(myId);
 }
 
