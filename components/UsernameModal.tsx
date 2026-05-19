@@ -20,9 +20,13 @@ export default function UsernameModal() {
     });
   }, []);
 
-  async function handleSave() {
-    if (!username.trim()) return;
-    setSaving(true); setError("");
+ async function handleSave() {
+  if (!username.trim()) return;
+  if (!/^[a-zA-Z0-9_-]{2,20}$/.test(username.trim())) {
+    setError("Pseudo invalide. Lettres, chiffres, - ou _ uniquement.");
+    return;
+  }
+  setSaving(true); setError("");
     const { data: { session } } = await supabase.auth.getSession();
     if (!session?.user) return;
     const { error } = await supabase.from("profiles")

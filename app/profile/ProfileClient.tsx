@@ -61,8 +61,12 @@ export default function ProfileClient({ user }: { user: User }) {
   }, []);
 
   async function handleSaveUsername() {
-    if (!newUsername.trim()) return;
-    setSaving(true); setError("");
+  if (!newUsername.trim()) return;
+  if (!/^[a-zA-Z0-9_-]{2,20}$/.test(newUsername.trim())) {
+    setError("Pseudo invalide. Lettres, chiffres, - ou _ uniquement.");
+    return;
+  }
+  setSaving(true); setError("");
     const { error } = await supabase.from("profiles").upsert({ id: user.id, username: newUsername.trim() });
     setSaving(false);
     if (error) setError(error.message.includes("unique") ? "Ce pseudo est déjà pris !" : "Erreur, réessaie.");
