@@ -297,6 +297,7 @@ export default function JeuxPage() {
       {xpGained !== null && (
         <div className={styles.xpPopup}>+{xpGained} XP ✨{isPremium ? " (x1.5 Premium)" : ""}</div>
       )}
+      <a href="/" className={styles.back}>← Retour aux histoires</a>
     </div>
   );
 }

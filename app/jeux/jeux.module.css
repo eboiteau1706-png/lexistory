@@ -284,3 +284,14 @@
   .cardWide { grid-column: span 1; }
   .page { padding: 90px 16px 60px; }
 }
+
+.back {
+  display: block;
+  text-align: center;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  text-decoration: none;
+  margin-top: 8px;
+  transition: color 0.2s;
+}
+.back:hover { color: var(--text); }
