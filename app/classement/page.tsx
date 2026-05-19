@@ -119,11 +119,11 @@ export default function ClassementPage() {
                       {medal || <span className={styles.rankNum}>#{i + 1}</span>}
                     </div>
                     <div className={styles.playerInfo}>
-                      <div className={styles.playerName}>
-                        {player.username}
-                        {player.is_premium && <span className={styles.premiumTag}>✨</span>}
-                        {isMe && <span className={styles.meTag}>toi</span>}
-                      </div>
+                      <a href={`/joueur/${player.username}`} className={styles.playerName} style={{ textDecoration: "none", color: "inherit" }}>
+  {player.username}
+  {player.is_premium && <span className={styles.premiumTag}>✨</span>}
+  {isMe && <span className={styles.meTag}>toi</span>}
+</a>
                       <div className={styles.playerLevel}>{level.emoji} {level.name}</div>
                     </div>
                     <div className={styles.xp}>{player.xp} XP</div>

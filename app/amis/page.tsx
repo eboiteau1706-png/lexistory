@@ -224,10 +224,10 @@ export default function AmisPage() {
                 <div key={f.id} className={styles.friendRow}>
                   <div className={styles.rank}>#{i + 1}</div>
                   <div className={styles.playerInfo}>
-                    <div className={styles.playerName}>
-                      {f.username}
-                      {f.is_premium && <span className={styles.premiumTag}>✨</span>}
-                    </div>
+                    <a href={`/joueur/${f.username}`} className={styles.playerName} style={{ textDecoration: "none", color: "inherit" }}>
+  {f.username}
+  {f.is_premium && <span className={styles.premiumTag}>✨</span>}
+</a>
                     <div className={styles.playerLevel}>{level.emoji} {level.name} · {f.xp} XP</div>
                   </div>
                   <button className={styles.btnRemove} onClick={() => removeFriend(f.id)}>Retirer</button>
