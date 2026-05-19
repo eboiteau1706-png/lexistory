@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase";
 import { getLevel, getXpProgress } from "@/lib/xp";
-import styles from "../profile/profile.module.css";
+import styles from "../../profile/profile.module.css";
 
 export default function ProfilPublicPage({ params }: { params: { username: string } }) {
   const supabase = createClient();
