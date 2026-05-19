@@ -36,6 +36,40 @@ const GAME_WORDS = [
   { word: "qualia", def: "La façon dont les choses nous semblent ressenties de l'intérieur. Le rouge de ta vision, la douleur que tu sens.", etym: "Du latin qualis, de quelle nature" },
 ];
 
+// Mots Premium — plus rares et difficiles
+const PREMIUM_WORDS = [
+  { word: "apophtegme", def: "Une courte parole mémorable d'un personnage célèbre, souvent pleine de sagesse.", etym: "Du grec apophthegma, sentence" },
+  { word: "bathyscaphe", def: "Un engin submersible capable de plonger à de très grandes profondeurs océaniques.", etym: "Du grec bathys (profond) + skaphos (bateau)" },
+  { word: "chiasme", def: "Une figure de style qui inverse l'ordre des éléments dans deux propositions parallèles.", etym: "Du grec khiasmos, disposition en croix" },
+  { word: "diastole", def: "La phase de relaxation du cœur pendant laquelle il se remplit de sang.", etym: "Du grec diastolê, dilatation" },
+  { word: "épistémologie", def: "La branche de la philosophie qui étudie la nature et les limites de la connaissance humaine.", etym: "Du grec episteme (connaissance) + logos (discours)" },
+  { word: "funambule", def: "Un acrobate qui marche et fait des exercices sur un fil tendu en hauteur.", etym: "Du latin funis (corde) + ambulare (marcher)" },
+  { word: "glossolalie", def: "Le fait de parler une langue inconnue ou incompréhensible, souvent dans un contexte religieux.", etym: "Du grec glossa (langue) + lalein (parler)" },
+  { word: "hégémonie", def: "La domination politique, culturelle ou militaire d'un État ou d'un groupe sur les autres.", etym: "Du grec hegemonia, commandement" },
+  { word: "iconoclaste", def: "Quelqu'un qui remet en question les idées reçues et les conventions établies.", etym: "Du grec eikon (image) + klastes (briseur)" },
+  { word: "jactance", def: "Une façon de parler de soi avec trop de fierté et de se vanter excessivement.", etym: "Du latin jactantia, arrogance" },
+  { word: "kénose", def: "En théologie, l'acte par lequel Dieu s'est dépouillé de sa puissance divine en s'incarnant.", etym: "Du grec kenosis, vidage" },
+  { word: "logorrhée", def: "Un flux de paroles excessif et incontrôlé, souvent difficile à arrêter.", etym: "Du grec logos (parole) + rhein (couler)" },
+  { word: "mnémotechnique", def: "Une technique ou un procédé qui aide à mémoriser des informations plus facilement.", etym: "Du grec mneme (mémoire) + tekhne (art)" },
+  { word: "néologisme", def: "Un mot nouveau créé dans une langue pour désigner une réalité nouvelle.", etym: "Du grec neos (nouveau) + logos (mot)" },
+  { word: "ontologie", def: "La branche de la philosophie qui étudie la nature de l'être et de l'existence.", etym: "Du grec ontos (être) + logos (discours)" },
+  { word: "palimpseste", def: "Un manuscrit dont on a effacé l'écriture pour écrire à nouveau, mais dont des traces subsistent.", etym: "Du grec palimpsestos, gratté de nouveau" },
+  { word: "quaternaire", def: "La dernière période géologique, commençant il y a 2,6 millions d'années et incluant l'ère actuelle.", etym: "Du latin quaternarius, groupe de quatre" },
+  { word: "réification", def: "Le fait de traiter une abstraction ou une personne comme si c'était une chose matérielle.", etym: "Du latin res (chose) + facere (faire)" },
+  { word: "syllogisme", def: "Un raisonnement logique en trois étapes : deux prémisses et une conclusion qui en découle.", etym: "Du grec syllogismos, calcul" },
+  { word: "tautologie", def: "Une répétition inutile de la même idée avec des mots différents, sans rien ajouter.", etym: "Du grec tauto (même) + logos (parole)" },
+  { word: "ubiquité", def: "La capacité d'être présent partout en même temps ou en de nombreux endroits simultanément.", etym: "Du latin ubique, partout" },
+  { word: "véridique", def: "Qui dit la vérité, qui est conforme à la réalité et aux faits réels.", etym: "Du latin veridicus, qui dit vrai" },
+  { word: "xénophilie", def: "L'attrait et l'affection pour les étrangers, les cultures et les coutumes étrangères.", etym: "Du grec xenos (étranger) + philos (ami)" },
+  { word: "zeugme", def: "Une figure de style qui relie un verbe à deux compléments de nature ou de sens très différents.", etym: "Du grec zeugma, lien" },
+  { word: "acméisme", def: "Un mouvement poétique russe du début du XXe siècle prônant la clarté et la précision du langage.", etym: "Du grec akme, sommet" },
+  { word: "bovarysme", def: "La tendance à se percevoir autrement qu'on est réellement et à idéaliser sa propre existence.", etym: "Du personnage Emma Bovary de Flaubert" },
+  { word: "catharsis", def: "La purification émotionnelle que ressent le spectateur devant une œuvre tragique.", etym: "Du grec katharsis, purification" },
+  { word: "doxologie", def: "Une formule liturgique de louange à Dieu, souvent chantée à la fin d'une prière.", etym: "Du grec doxa (gloire) + logos (parole)" },
+  { word: "eschatologie", def: "La partie de la théologie qui traite des dernières fins de l'homme et de l'univers.", etym: "Du grec eskhatos (dernier) + logos (discours)" },
+  { word: "frugalité", def: "La qualité de celui qui se contente de peu et évite les dépenses et les plaisirs excessifs.", etym: "Du latin frugalitas, sobriété" },
+];
+
 const CITATIONS = [
   { text: "Il est des souvenirs que le temps semble incapable d'effacer : le jour d'un accident, une déclaration d'amour inattendue, l'annonce d'un ***.", answer: "deuil", choices: ["deuil", "voyage", "rêve", "oubli"] },
   { text: "La lumière du soleil semble blanche, mais en réalité elle contient toutes les couleurs de l'***.", answer: "arc-en-ciel", choices: ["arc-en-ciel", "horizon", "atmosphère", "prisme"] },
@@ -69,19 +103,53 @@ const CITATIONS = [
   { text: "Aristote distinguait deux formes de bien-être : l'hédoné, le plaisir immédiat, et l'***, le bonheur comme épanouissement.", answer: "eudaimonia", choices: ["eudaimonia", "ataraxia", "aponia", "sophia"] },
 ];
 
+// Citations Premium — plus complexes
+const PREMIUM_CITATIONS = [
+  { text: "L'art est une *** qui nous permet de réaliser notre vérité.", answer: "mensonge", choices: ["mensonge", "vérité", "illusion", "réalité"] },
+  { text: "La conscience est le seul endroit au monde où la *** ne peut pas entrer.", answer: "médiocrité", choices: ["médiocrité", "beauté", "vérité", "douleur"] },
+  { text: "L'homme est condamné à être ***.", answer: "libre", choices: ["libre", "mortel", "seul", "heureux"] },
+  { text: "Ce qui ne me tue pas me rend ***.", answer: "plus fort", choices: ["plus fort", "plus sage", "plus calme", "différent"] },
+  { text: "La philosophie est un exercice pour la ***.", answer: "mort", choices: ["mort", "vie", "vérité", "raison"] },
+  { text: "Le doute est le commencement de la ***.", answer: "sagesse", choices: ["sagesse", "folie", "science", "vérité"] },
+  { text: "L'imagination est plus importante que la ***.", answer: "connaissance", choices: ["connaissance", "raison", "mémoire", "logique"] },
+  { text: "Les mots sont la forme la plus puissante de la *** humaine.", answer: "magie", choices: ["magie", "pensée", "communication", "violence"] },
+  { text: "La *** est le silence de la raison.", answer: "passion", choices: ["passion", "beauté", "folie", "création"] },
+  { text: "Penser, c'est déjà vouloir une *** du monde.", answer: "réforme", choices: ["réforme", "image", "copie", "description"] },
+  { text: "L'art de vivre consiste à savoir ce qu'on doit sacrifier et ce qu'on doit ***.", answer: "conserver", choices: ["conserver", "ignorer", "partager", "détruire"] },
+  { text: "La *** est la forme la plus haute de l'intelligence.", answer: "simplicité", choices: ["simplicité", "complexité", "créativité", "logique"] },
+  { text: "Toute grande vérité commence par être une ***.", answer: "hérésie", choices: ["hérésie", "erreur", "hypothèse", "utopie"] },
+  { text: "Le propre de l'homme est de penser sans en être ***.", answer: "conscient", choices: ["conscient", "capable", "sûr", "libre"] },
+  { text: "La *** est la politesse du désespoir.", answer: "ironie", choices: ["ironie", "beauté", "raison", "vertu"] },
+  { text: "On ne voit bien qu'avec le cœur. L'essentiel est *** pour les yeux.", answer: "invisible", choices: ["invisible", "visible", "lointain", "caché"] },
+  { text: "La liberté des uns s'arrête là où commence la *** des autres.", answer: "liberté", choices: ["liberté", "dignité", "souffrance", "volonté"] },
+  { text: "Le génie, c'est 1% d'inspiration et 99% de ***.", answer: "transpiration", choices: ["transpiration", "réflexion", "persévérance", "méthode"] },
+  { text: "L'enfer, c'est les ***.", answer: "autres", choices: ["autres", "vivants", "regrets", "illusions"] },
+  { text: "La *** est l'art de rendre supportable l'insupportable.", answer: "philosophie", choices: ["philosophie", "religion", "musique", "poésie"] },
+  { text: "Ce que nous savons est une goutte, ce que nous ignorons est un ***.", answer: "océan", choices: ["océan", "désert", "mystère", "abîme"] },
+  { text: "La *** est une chose trop sérieuse pour être laissée aux militaires.", answer: "guerre", choices: ["guerre", "paix", "politique", "nation"] },
+  { text: "Mieux vaut une tête bien faite qu'une tête bien ***.", answer: "pleine", choices: ["pleine", "vide", "formée", "savante"] },
+  { text: "La *** est la plus haute forme de la générosité.", answer: "gratitude", choices: ["gratitude", "bonté", "sagesse", "vertu"] },
+  { text: "L'éducation est l'arme la plus puissante qu'on puisse utiliser pour changer le ***.", answer: "monde", choices: ["monde", "système", "futur", "destin"] },
+  { text: "Le courage n'est pas l'absence de peur, mais le jugement que *** est plus important.", answer: "autre chose", choices: ["autre chose", "la victoire", "l'honneur", "la vérité"] },
+  { text: "La *** est le remède à tous les maux.", answer: "lecture", choices: ["lecture", "sagesse", "patience", "vertu"] },
+  { text: "Celui qui n'a pas de mémoire risque de *** ses erreurs.", answer: "répéter", choices: ["répéter", "oublier", "corriger", "vivre"] },
+  { text: "La *** commence là où finit la certitude.", answer: "pensée", choices: ["pensée", "science", "foi", "liberté"] },
+  { text: "Connais-toi *** et tu connaîtras l'univers et les dieux.", answer: "toi-même", choices: ["toi-même", "par l'étude", "par l'autre", "par l'expérience"] },
+];
+
 function getParisDateKey() {
-  // Retourne la date Paris au format YYYY-MM-DD — change à minuit heure Paris
   const paris = new Date(new Date().toLocaleString("en-US", { timeZone: "Europe/Paris" }));
-  return paris.toISOString().slice(0, 10);
+  const y = paris.getFullYear();
+  const m = String(paris.getMonth() + 1).padStart(2, "0");
+  const d = String(paris.getDate()).padStart(2, "0");
+  return `${y}-${m}-${d}`;
 }
 
 function getDayIndex(arr: any[]) {
-  const ref = new Date("2026-05-17T00:00:00");
   const paris = new Date(new Date().toLocaleString("en-US", { timeZone: "Europe/Paris" }));
-  // Reset à minuit Paris : on compare les dates Paris
-  const refParis = new Date("2026-05-17");
+  const refParis = new Date(new Date("2026-05-17T00:00:00").toLocaleString("en-US", { timeZone: "Europe/Paris" }));
   const diffDays = Math.floor((paris.getTime() - refParis.getTime()) / 86400000);
-  return diffDays % arr.length;
+  return Math.abs(diffDays) % arr.length;
 }
 
 function shuffle<T>(arr: T[], seed: number): T[] {
@@ -108,33 +176,49 @@ function getAnagramme(word: string, seed: number): string {
 
 export default function JeuxPage() {
   const supabase = createClient();
-  const [userId, setUserId]         = useState<string | null>(null);
-  const [isPremium, setIsPremium]   = useState(false);
-  const [defAnswer, setDefAnswer]   = useState<string | null>(null);
-  const [anagAnswer, setAnagAnswer] = useState("");
-  const [anagResult, setAnagResult] = useState<boolean | null>(null);
-  const [citAnswer, setCitAnswer]   = useState<string | null>(null);
-  const [xpGained, setXpGained]     = useState<number | null>(null);
+  const [userId, setUserId]                 = useState<string | null>(null);
+  const [isPremium, setIsPremium]           = useState(false);
+  const [defAnswer, setDefAnswer]           = useState<string | null>(null);
+  const [anagAnswer, setAnagAnswer]         = useState("");
+  const [anagResult, setAnagResult]         = useState<boolean | null>(null);
+  const [citAnswer, setCitAnswer]           = useState<string | null>(null);
+  const [pDefAnswer, setPDefAnswer]         = useState<string | null>(null);
+  const [pAnagAnswer, setPAnagAnswer]       = useState("");
+  const [pAnagResult, setPAnagResult]       = useState<boolean | null>(null);
+  const [pCitAnswer, setPCitAnswer]         = useState<string | null>(null);
+  const [xpGained, setXpGained]             = useState<number | null>(null);
 
   const todayKey = getParisDateKey();
   const dayIdx   = getDayIndex(GAME_WORDS);
+  const pDayIdx  = getDayIndex(PREMIUM_WORDS);
 
+  // Gratuit
   const wordOfDay = GAME_WORDS[dayIdx];
   const defWord   = GAME_WORDS[(dayIdx + 1) % GAME_WORDS.length];
   const anagWord  = GAME_WORDS[(dayIdx + 2) % GAME_WORDS.length];
   const citation  = CITATIONS[getDayIndex(CITATIONS)];
   const anagramme = getAnagramme(anagWord.word, dayIdx * 31337);
-
   const wrongChoices = GAME_WORDS.filter(w => w.word !== defWord.word).slice(0, 3).map(w => w.word);
   const defChoices   = shuffle([defWord.word, ...wrongChoices], dayIdx * 99991);
 
-  // Clés localStorage avec userId pour isoler par compte
+  // Premium
+  const pWordOfDay = PREMIUM_WORDS[pDayIdx];
+  const pDefWord   = PREMIUM_WORDS[(pDayIdx + 1) % PREMIUM_WORDS.length];
+  const pAnagWord  = PREMIUM_WORDS[(pDayIdx + 2) % PREMIUM_WORDS.length];
+  const pCitation  = PREMIUM_CITATIONS[getDayIndex(PREMIUM_CITATIONS)];
+  const pAnagramme = getAnagramme(pAnagWord.word, pDayIdx * 73331);
+  const pWrongChoices = PREMIUM_WORDS.filter(w => w.word !== pDefWord.word).slice(0, 3).map(w => w.word);
+  const pDefChoices   = shuffle([pDefWord.word, ...pWrongChoices], pDayIdx * 11117);
+
   function getKeys(uid: string | null) {
     const prefix = uid ? `${uid}_` : "guest_";
     return {
       defKey:  `lx_def_${prefix}${todayKey}`,
       anagKey: `lx_anag_${prefix}${todayKey}`,
       citKey:  `lx_cit_${prefix}${todayKey}`,
+      pDefKey:  `lx_pdef_${prefix}${todayKey}`,
+      pAnagKey: `lx_panag_${prefix}${todayKey}`,
+      pCitKey:  `lx_pcit_${prefix}${todayKey}`,
     };
   }
 
@@ -146,15 +230,19 @@ export default function JeuxPage() {
         supabase.from("profiles").select("is_premium").eq("id", uid).single()
           .then(({ data }) => { if (data?.is_premium) setIsPremium(true); });
       }
-
-      // Charge les réponses sauvegardées avec les bonnes clés
-      const { defKey, anagKey, citKey } = getKeys(uid);
+      const { defKey, anagKey, citKey, pDefKey, pAnagKey, pCitKey } = getKeys(uid);
       const savedDef  = localStorage.getItem(defKey);
       const savedAnag = localStorage.getItem(anagKey);
       const savedCit  = localStorage.getItem(citKey);
+      const savedPDef  = localStorage.getItem(pDefKey);
+      const savedPAnag = localStorage.getItem(pAnagKey);
+      const savedPCit  = localStorage.getItem(pCitKey);
       if (savedDef)  setDefAnswer(savedDef);
       if (savedAnag) { setAnagResult(savedAnag === "true"); setAnagAnswer(anagWord.word); }
       if (savedCit)  setCitAnswer(savedCit);
+      if (savedPDef)  setPDefAnswer(savedPDef);
+      if (savedPAnag) { setPAnagResult(savedPAnag === "true"); setPAnagAnswer(pAnagWord.word); }
+      if (savedPCit)  setPCitAnswer(savedPCit);
     });
   }, []);
 
@@ -193,18 +281,45 @@ export default function JeuxPage() {
     if (choice === citation.answer) addXp(3);
   }
 
-  const citParts = citation.text.split("***");
+  function handlePDefAnswer(choice: string) {
+    if (!isPremium || pDefAnswer) return;
+    setPDefAnswer(choice);
+    const { pDefKey } = getKeys(userId);
+    localStorage.setItem(pDefKey, choice);
+    if (choice === pDefWord.word) addXp(3);
+  }
+
+  function handlePAnagSubmit() {
+    if (!isPremium || pAnagResult !== null) return;
+    const correct = pAnagAnswer.toLowerCase().trim() === pAnagWord.word.toLowerCase();
+    setPAnagResult(correct);
+    const { pAnagKey } = getKeys(userId);
+    localStorage.setItem(pAnagKey, correct.toString());
+    if (correct) addXp(3);
+  }
+
+  function handlePCitAnswer(choice: string) {
+    if (!isPremium || pCitAnswer) return;
+    setPCitAnswer(choice);
+    const { pCitKey } = getKeys(userId);
+    localStorage.setItem(pCitKey, choice);
+    if (choice === pCitation.answer) addXp(3);
+  }
+
+  const citParts  = citation.text.split("***");
+  const pCitParts = pCitation.text.split("***");
 
   return (
     <div className={styles.page}>
       <div className={styles.header}>
         <h1 className={styles.title}>🎮 Jeux du jour</h1>
-        <p className={styles.subtitle}>4 mini-jeux renouvelés chaque jour à minuit — heure de Paris</p>
+        <p className={styles.subtitle}>Renouvelés chaque jour à minuit — heure de Paris · Jour {dayIdx + 1}/30</p>
       </div>
 
+      {/* ── SECTION GRATUITE ── */}
+      <div className={styles.sectionTitle}>📚 Jeux du jour</div>
       <div className={styles.grid}>
 
-        {/* MOT DU JOUR */}
         <div className={`${styles.card} ${styles.cardWide}`}>
           <div className={styles.cardTag}>📖 Mot du jour</div>
           <div className={styles.motDuJour}>
@@ -214,25 +329,15 @@ export default function JeuxPage() {
           </div>
         </div>
 
-        {/* DÉFINITION MYSTÈRE */}
         <div className={styles.card}>
           <div className={styles.cardTag}>🔍 Définition mystère</div>
           <p className={styles.cardDesc}>Quel mot correspond à cette définition ?</p>
           <div className={styles.defBox}>{defWord.def}</div>
           <div className={styles.choices}>
             {defChoices.map(choice => (
-              <button
-                key={choice}
-                className={`${styles.choiceBtn} ${
-                  defAnswer
-                    ? choice === defWord.word ? styles.correct
-                    : choice === defAnswer ? styles.wrong
-                    : styles.disabled
-                    : ""
-                }`}
-                onClick={() => handleDefAnswer(choice)}
-                disabled={!!defAnswer}
-              >
+              <button key={choice}
+                className={`${styles.choiceBtn} ${defAnswer ? choice === defWord.word ? styles.correct : choice === defAnswer ? styles.wrong : styles.disabled : ""}`}
+                onClick={() => handleDefAnswer(choice)} disabled={!!defAnswer}>
                 {choice}
               </button>
             ))}
@@ -245,26 +350,17 @@ export default function JeuxPage() {
           {!userId && <div className={styles.loginHint}>Connecte-toi pour gagner des XP !</div>}
         </div>
 
-        {/* ANAGRAMME */}
         <div className={styles.card}>
           <div className={styles.cardTag}>🔤 Anagramme</div>
           <p className={styles.cardDesc}>Retrouve le mot mélangé :</p>
           <div className={styles.anagramme}>
-            {anagramme.split("").map((l, i) => (
-              <span key={i} className={styles.letter}>{l}</span>
-            ))}
+            {anagramme.split("").map((l, i) => <span key={i} className={styles.letter}>{l}</span>)}
           </div>
           <div className={styles.anagHint}>{anagWord.def}</div>
           {anagResult === null ? (
             <div className={styles.anagInput}>
-              <input
-                className={styles.input}
-                value={anagAnswer}
-                onChange={e => setAnagAnswer(e.target.value)}
-                onKeyDown={e => e.key === "Enter" && handleAnagSubmit()}
-                placeholder="Ta réponse..."
-                maxLength={30}
-              />
+              <input className={styles.input} value={anagAnswer} onChange={e => setAnagAnswer(e.target.value)}
+                onKeyDown={e => e.key === "Enter" && handleAnagSubmit()} placeholder="Ta réponse..." maxLength={30} />
               <button className={styles.submitBtn} onClick={handleAnagSubmit}>→</button>
             </div>
           ) : (
@@ -275,33 +371,21 @@ export default function JeuxPage() {
           {!userId && <div className={styles.loginHint}>Connecte-toi pour gagner des XP !</div>}
         </div>
 
-        {/* CITATION DU JOUR */}
         <div className={`${styles.card} ${styles.cardWide}`}>
           <div className={styles.cardTag}>💬 Citation du jour</div>
           <p className={styles.cardDesc}>Quel mot manque dans cette citation ?</p>
           <div className={styles.citText}>
             {citParts[0]}
-            <span className={citAnswer
-              ? citAnswer === citation.answer ? styles.citBlankCorrect : styles.citBlankWrong
-              : styles.citBlank}>
+            <span className={citAnswer ? citAnswer === citation.answer ? styles.citBlankCorrect : styles.citBlankWrong : styles.citBlank}>
               {citAnswer ? citation.answer : "_ _ _ _ _"}
             </span>
             {citParts[1]}
           </div>
           <div className={styles.choices}>
             {citation.choices.map(choice => (
-              <button
-                key={choice}
-                className={`${styles.choiceBtn} ${
-                  citAnswer
-                    ? choice === citation.answer ? styles.correct
-                    : choice === citAnswer ? styles.wrong
-                    : styles.disabled
-                    : ""
-                }`}
-                onClick={() => handleCitAnswer(choice)}
-                disabled={!!citAnswer}
-              >
+              <button key={choice}
+                className={`${styles.choiceBtn} ${citAnswer ? choice === citation.answer ? styles.correct : choice === citAnswer ? styles.wrong : styles.disabled : ""}`}
+                onClick={() => handleCitAnswer(choice)} disabled={!!citAnswer}>
                 {choice}
               </button>
             ))}
@@ -313,8 +397,97 @@ export default function JeuxPage() {
           )}
           {!userId && <div className={styles.loginHint}>Connecte-toi pour gagner des XP !</div>}
         </div>
-
       </div>
+
+      {/* ── SECTION PREMIUM ── */}
+      <div className={styles.sectionTitle}>
+        ✨ Jeux Premium <span className={styles.premiumBadge}>Premium</span>
+      </div>
+      <div className={`${styles.grid} ${!isPremium ? styles.blurredSection : ""}`}>
+
+        <div className={`${styles.card} ${styles.cardWide} ${styles.premiumCard}`}>
+          <div className={styles.cardTag}>📖 Mot Premium du jour</div>
+          <div className={styles.motDuJour}>
+            <div className={styles.mot}>{pWordOfDay.word}</div>
+            <div className={styles.motEtym}>{pWordOfDay.etym}</div>
+            <div className={styles.motDef}>{pWordOfDay.def}</div>
+          </div>
+        </div>
+
+        <div className={`${styles.card} ${styles.premiumCard}`}>
+          <div className={styles.cardTag}>🔍 Définition Expert</div>
+          <p className={styles.cardDesc}>Quel mot savant correspond à cette définition ?</p>
+          <div className={styles.defBox}>{pDefWord.def}</div>
+          <div className={styles.choices}>
+            {pDefChoices.map(choice => (
+              <button key={choice}
+                className={`${styles.choiceBtn} ${pDefAnswer ? choice === pDefWord.word ? styles.correct : choice === pDefAnswer ? styles.wrong : styles.disabled : ""}`}
+                onClick={() => handlePDefAnswer(choice)} disabled={!!pDefAnswer || !isPremium}>
+                {choice}
+              </button>
+            ))}
+          </div>
+          {pDefAnswer && (
+            <div className={pDefAnswer === pDefWord.word ? styles.resultOk : styles.resultKo}>
+              {pDefAnswer === pDefWord.word ? "✅ Bravo ! +3 XP" : `❌ C'était : ${pDefWord.word}`}
+            </div>
+          )}
+        </div>
+
+        <div className={`${styles.card} ${styles.premiumCard}`}>
+          <div className={styles.cardTag}>🔤 Anagramme Expert</div>
+          <p className={styles.cardDesc}>Retrouve ce mot difficile :</p>
+          <div className={styles.anagramme}>
+            {pAnagramme.split("").map((l, i) => <span key={i} className={styles.letter}>{l}</span>)}
+          </div>
+          <div className={styles.anagHint}>{pAnagWord.def}</div>
+          {pAnagResult === null ? (
+            <div className={styles.anagInput}>
+              <input className={styles.input} value={pAnagAnswer} onChange={e => setPAnagAnswer(e.target.value)}
+                onKeyDown={e => e.key === "Enter" && handlePAnagSubmit()} placeholder="Ta réponse..." maxLength={30}
+                disabled={!isPremium} />
+              <button className={styles.submitBtn} onClick={handlePAnagSubmit} disabled={!isPremium}>→</button>
+            </div>
+          ) : (
+            <div className={pAnagResult ? styles.resultOk : styles.resultKo}>
+              {pAnagResult ? "✅ Bravo ! +3 XP" : `❌ C'était : ${pAnagWord.word}`}
+            </div>
+          )}
+        </div>
+
+        <div className={`${styles.card} ${styles.cardWide} ${styles.premiumCard}`}>
+          <div className={styles.cardTag}>💬 Citation Philosophique</div>
+          <p className={styles.cardDesc}>Complète cette citation de philosophe :</p>
+          <div className={styles.citText}>
+            {pCitParts[0]}
+            <span className={pCitAnswer ? pCitAnswer === pCitation.answer ? styles.citBlankCorrect : styles.citBlankWrong : styles.citBlank}>
+              {pCitAnswer ? pCitation.answer : "_ _ _ _ _"}
+            </span>
+            {pCitParts[1]}
+          </div>
+          <div className={styles.choices}>
+            {pCitation.choices.map(choice => (
+              <button key={choice}
+                className={`${styles.choiceBtn} ${pCitAnswer ? choice === pCitation.answer ? styles.correct : choice === pCitAnswer ? styles.wrong : styles.disabled : ""}`}
+                onClick={() => handlePCitAnswer(choice)} disabled={!!pCitAnswer || !isPremium}>
+                {choice}
+              </button>
+            ))}
+          </div>
+          {pCitAnswer && (
+            <div className={pCitAnswer === pCitation.answer ? styles.resultOk : styles.resultKo}>
+              {pCitAnswer === pCitation.answer ? "✅ Bravo ! +3 XP" : `❌ C'était : ${pCitation.answer}`}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {!isPremium && (
+        <div className={styles.premiumCta}>
+          <p>Débloque les jeux Premium pour +9 XP supplémentaires par jour</p>
+          <a href="/profile" className={styles.premiumCtaBtn}>Passer Premium — 1,99€/mois →</a>
+        </div>
+      )}
 
       {xpGained !== null && (
         <div className={styles.xpPopup}>+{xpGained} XP ✨{isPremium ? " (x1.5 Premium)" : ""}</div>
@@ -323,3 +496,4 @@ export default function JeuxPage() {
     </div>
   );
 }
+/* Append to jeux.module.css */
