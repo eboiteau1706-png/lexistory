@@ -153,6 +153,12 @@ const totalXp = storyXp + bonusXp;
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
               </svg>
+              <span
+  title="LexiStory s'améliore chaque jour ! Si une définition est manquante, incorrecte, ou si un nom propre n'est pas reconnu, c'est normal — notre dictionnaire local et notre système en ligne sont en constante évolution. Merci de votre compréhension 😊"
+  style={{ cursor: "help", opacity: 0.5, fontSize: "0.85rem", marginLeft: "6px" }}
+>
+  ℹ️
+</span>
               {story.readTime} · Clique sur n&apos;importe quel mot
             </p>
           </div>
