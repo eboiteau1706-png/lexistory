@@ -28,6 +28,10 @@
   background: rgba(232, 201, 122, 0.12);
   color: var(--accent);
   border: 1px solid rgba(232, 201, 122, 0.2);
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .title {
@@ -44,6 +48,7 @@
   display: flex;
   align-items: center;
   gap: 5px;
+  flex-wrap: wrap;
 }
 
 .levelPill {
@@ -87,6 +92,7 @@
 
 /* Hint */
 .hint {
+  margin: 0 32px 24px;
   display: flex;
   align-items: center;
   gap: 8px;
@@ -99,19 +105,6 @@
   line-height: 1.6;
   flex-wrap: wrap;
 }
-
-.hint svg {
-  flex-shrink: 0;
-}
-
-@media (max-width: 680px) {
-  .header   { padding: 20px; flex-direction: column; }
-  .body     { padding: 20px; }
-  .title    { font-size: 1.3rem; }
-  .progressWrap { padding: 0 20px; }
-  .hint     { padding: 12px 20px; }
-}
-
 
 /* Badge abonné premium */
 .premiumBadge {
@@ -127,91 +120,7 @@
   letter-spacing: 0.5px;
 }
 
-/* Historique Premium */
-.historyBtn {
-  width: 100%;
-  padding: 10px;
-  border-radius: 10px;
-  background: var(--surface2);
-  border: 1px solid var(--border);
-  color: var(--text);
-  font-family: inherit;
-  font-size: 0.85rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s;
-  text-align: left;
-  margin-top: 4px;
-}
-.historyBtn:hover { border-color: var(--accent); color: var(--accent); }
-
-.historyList {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  margin-top: 10px;
-  max-height: 200px;
-  overflow-y: auto;
-}
-
-.historyItem {
-  width: 100%;
-  padding: 8px 12px;
-  border-radius: 8px;
-  background: var(--surface2);
-  border: 1px solid var(--border);
-  color: var(--text-muted);
-  font-family: inherit;
-  font-size: 0.78rem;
-  cursor: pointer;
-  text-align: left;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  transition: all 0.15s;
-}
-.historyItem:hover { border-color: var(--text-muted); color: var(--text); }
-
-.historyItemActive {
-  border-color: var(--accent) !important;
-  color: var(--accent) !important;
-  background: rgba(232,201,122,0.08);
-}
-
-.historyDay { font-size: 0.68rem; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.5px; }
-.historyTitle { font-weight: 600; }
-
-/* Niveau XP dans la Nav */
-.levelBadge {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  padding: 6px 14px;
-  background: var(--surface2);
-  border: 1px solid var(--border);
-  border-radius: 50px;
-  font-size: 0.8rem;
-  font-weight: 600;
-  color: var(--accent);
-  cursor: default;
-  min-width: 100px;
-}
-
-.xpBar {
-  height: 3px;
-  background: var(--border);
-  border-radius: 2px;
-  overflow: hidden;
-}
-
-.xpFill {
-  height: 100%;
-  background: linear-gradient(90deg, var(--accent2), var(--accent));
-  border-radius: 2px;
-  transition: width 0.5s ease;
-}
-
-/* Popup XP dans StoryCard */
+/* Popup XP */
 .xpPopup {
   position: fixed;
   bottom: 80px;
@@ -226,6 +135,7 @@
   z-index: 200;
   animation: popupIn 0.3s ease, popupOut 0.3s ease 2.7s forwards;
   box-shadow: 0 4px 20px rgba(232,201,122,0.3);
+  white-space: nowrap;
 }
 
 @keyframes popupIn {
@@ -235,4 +145,20 @@
 @keyframes popupOut {
   from { opacity: 1; }
   to   { opacity: 0; }
+}
+
+/* ── MOBILE ── */
+@media (max-width: 680px) {
+  .header {
+    padding: 16px;
+    flex-direction: row;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  .title    { font-size: 1.25rem; }
+  .levelPill { font-size: 0.7rem; padding: 4px 10px; }
+  .body     { padding: 16px; font-size: 1rem; line-height: 1.85; }
+  .progressWrap { padding: 0 16px; }
+  .hint     { margin: 0 16px 16px; padding: 10px 14px; font-size: 0.78rem; }
+  .xpPopup  { font-size: 0.8rem; padding: 8px 18px; bottom: 20px; }
 }

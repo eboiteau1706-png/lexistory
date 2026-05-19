@@ -1,8 +1,8 @@
 .wrap {
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
   gap: 10px;
   margin-bottom: 20px;
-  flex-wrap: wrap;
 }
 
 .btn {
@@ -18,38 +18,33 @@
   transition: all 0.2s;
   font-family: inherit;
   text-align: left;
-  min-width: 130px;
+  width: 100%;
 }
 
-.btn:hover {
-  border-color: var(--text-muted);
-}
+.btn:hover { border-color: var(--text-muted); }
 
 .active {
   border-color: var(--accent) !important;
   background: rgba(232, 201, 122, 0.08);
 }
 
-.emoji {
-  font-size: 1.2rem;
-  margin-bottom: 2px;
-}
+.emoji { font-size: 1.1rem; margin-bottom: 2px; }
 
 .label {
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   font-weight: 600;
   color: var(--text);
 }
 
-.active .label {
-  color: var(--accent);
-}
+.active .label { color: var(--accent); }
 
 .desc {
-  font-size: 0.72rem;
+  font-size: 0.68rem;
   color: var(--text-dim);
 }
 
 @media (max-width: 680px) {
-  .btn { min-width: 100px; }
+  .btn { padding: 10px 12px; }
+  .label { font-size: 0.82rem; }
+  .desc { font-size: 0.65rem; }
 }

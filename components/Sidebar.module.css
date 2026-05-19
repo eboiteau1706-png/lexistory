@@ -47,22 +47,25 @@
 .gold      { color: var(--accent); }
 .green     { color: var(--green); }
 
-/* Mots consultés chips */
-.wordsList {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  margin-top: 10px;
-  max-height: 110px;
-  overflow-y: auto;
+/* XP bar sidebar */
+.xpBarSidebar {
+  height: 4px;
+  background: var(--border);
+  border-radius: 2px;
+  overflow: hidden;
+  margin-top: 6px;
 }
-.wordChip {
-  font-size: 0.75rem;
-  padding: 3px 10px;
-  border-radius: 50px;
-  background: rgba(109, 186, 138, 0.1);
-  color: var(--green);
-  border: 1px solid rgba(109, 186, 138, 0.2);
+.xpBarFillSidebar {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent2), var(--accent));
+  border-radius: 2px;
+  transition: width 0.5s ease;
+}
+.xpLabelSidebar {
+  font-size: 0.7rem;
+  color: var(--text-dim);
+  text-align: right;
+  margin-top: 3px;
 }
 
 /* Premium */
@@ -141,22 +144,18 @@
   align-items: center;
   gap: 10px;
 }
-
 .loginIcon { font-size: 2rem; }
-
 .loginTitle {
   font-family: var(--font-playfair), serif;
   font-size: 1rem;
   font-weight: 700;
   color: var(--text);
 }
-
 .loginText {
   font-size: 0.82rem;
   color: var(--text-muted);
   line-height: 1.55;
 }
-
 .loginBtn {
   width: 100%;
   padding: 10px;
@@ -173,7 +172,7 @@
 }
 .loginBtn:hover { border-color: var(--accent); color: var(--accent); }
 
-/* ── HISTORIQUE PREMIUM ── */
+/* Historique Premium */
 .historyBtn {
   width: 100%;
   margin-top: 8px;
@@ -187,7 +186,6 @@
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s;
-  letter-spacing: 0.2px;
 }
 .historyBtn:hover { background: rgba(232,201,122,0.13); }
 
@@ -222,30 +220,24 @@
   border-color: var(--border);
   color: var(--text-muted);
 }
-
 .historyItemActive {
   background: rgba(232,201,122,0.06) !important;
   border-color: rgba(232,201,122,0.25) !important;
   color: var(--text) !important;
 }
-
 .historyDot {
-  width: 5px;
-  height: 5px;
+  width: 5px; height: 5px;
   border-radius: 50%;
   background: var(--border);
   flex-shrink: 0;
-  transition: background 0.15s;
 }
 .historyItemActive .historyDot { background: var(--accent); }
-
 .historyContent {
   display: flex;
   flex-direction: column;
   gap: 1px;
   min-width: 0;
 }
-
 .historyDay {
   font-size: 0.65rem;
   color: var(--text-dim);
@@ -254,7 +246,6 @@
   font-weight: 600;
 }
 .historyItemActive .historyDay { color: var(--accent); }
-
 .historyTitle {
   font-size: 0.78rem;
   font-weight: 500;
@@ -262,25 +253,25 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  color: inherit;
 }
 
-.xpBarSidebar {
-  height: 4px;
-  background: var(--border);
-  border-radius: 2px;
-  overflow: hidden;
-  margin-top: 6px;
-}
-.xpBarFillSidebar {
-  height: 100%;
-  background: linear-gradient(90deg, var(--accent2), var(--accent));
-  border-radius: 2px;
-  transition: width 0.5s ease;
-}
-.xpLabelSidebar {
-  font-size: 0.7rem;
-  color: var(--text-dim);
-  text-align: right;
-  margin-top: 3px;
+/* ── MOBILE ── */
+@media (max-width: 680px) {
+  .sidebar {
+    /* Sur mobile la sidebar vient APRÈS le StoryCard */
+    order: 2;
+  }
+
+  /* Sur mobile on affiche la sidebar en grille horizontale compacte */
+  .card {
+    padding: 16px;
+  }
+
+  .streakNum { font-size: 2.2rem; }
+
+  /* Stats en ligne sur mobile */
+  .statRow { font-size: 0.82rem; }
+
+  /* Cache le streak card et les stats sur mobile — trop verbeux */
+  .lockedCard { display: none; }
 }
