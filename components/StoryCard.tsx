@@ -22,34 +22,7 @@ export default function StoryCard({ story }: Props) {
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const supabase = createClient();
 
-  // Reset complet quand l'histoire change
-  useEffect(() => {
-    setSeenWords(new Set());
-    setActiveWord(null);
-    setXpGained(null);
-    setReadPct(0);
-    setAlreadyCompleted(false);
-    doneRef.current = false;
-
-    if (!userId) return;
-
-    if (intervalRef.current) clearInterval(intervalRef.current);
-    intervalRef.current = setInterval(() => {
-      setReadPct(prev => {
-        if (prev >= 100) {
-          if (intervalRef.current) clearInterval(intervalRef.current);
-          return 100;
-        }
-        return prev + 1;
-      });
-    }, 600);
-
-    return () => {
-      if (intervalRef.current) clearInterval(intervalRef.current);
-    };
-  }, [story.slug, userId]);
-
-  // Chargement session
+  // Chargement session une seule fois
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session?.user) {
@@ -60,23 +33,56 @@ export default function StoryCard({ story }: Props) {
     });
   }, []);
 
-  // Vérifie si déjà complétée
+  // Reset + vérif + démarrage barre quand histoire OU userId change
   useEffect(() => {
-    if (!userId) return;
+    // Reset immédiat
+    setSeenWords(new Set());
+    setActiveWord(null);
+    setXpGained(null);
+    setReadPct(0);
     setAlreadyCompleted(false);
     doneRef.current = false;
-    supabase.from("stories_read")
-      .select("id")
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+      intervalRef.current = null;
+    }
+
+    if (!userId) return;
+
+    // Capture le slug courant pour éviter les race conditions
+    const currentSlug = story.slug;
+
+    supabase.from("stories_read").select("id")
       .eq("user_id", userId)
-      .eq("story_slug", story.slug)
-      .single()
+      .eq("story_slug", currentSlug)
+      .maybeSingle()
       .then(({ data }) => {
+        // Vérifie qu'on est toujours sur la même histoire
+        if (currentSlug !== story.slug) return;
+
         if (data) {
           setAlreadyCompleted(true);
           doneRef.current = true;
+        } else {
+          intervalRef.current = setInterval(() => {
+            setReadPct(prev => {
+              if (prev >= 100) {
+                if (intervalRef.current) clearInterval(intervalRef.current);
+                return 100;
+              }
+              return prev + 1;
+            });
+          }, 600);
         }
       });
-  }, [userId, story.slug]);
+
+    return () => {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+        intervalRef.current = null;
+      }
+    };
+  }, [story.slug, userId]);
 
   // Quand barre = 100% → marque comme lue + XP
   useEffect(() => {
@@ -86,7 +92,7 @@ export default function StoryCard({ story }: Props) {
     const markRead = async () => {
       const { data: existing } = await supabase
         .from("stories_read").select("id")
-        .eq("user_id", userId).eq("story_slug", story.slug).single();
+        .eq("user_id", userId).eq("story_slug", story.slug).maybeSingle();
 
       if (existing) { setAlreadyCompleted(true); return; }
 
@@ -201,14 +207,12 @@ export default function StoryCard({ story }: Props) {
         </div>
       </div>
 
-      {/* Popup XP */}
       {xpGained !== null && (
         <div className={styles.xpPopup}>
           +{xpGained} XP ✨{isPremium ? " (x1.5 Premium)" : ""}
         </div>
       )}
 
-      {/* Popup info dictionnaire */}
       {showInfo && (
         <div
           onClick={() => setShowInfo(false)}
@@ -249,7 +253,6 @@ export default function StoryCard({ story }: Props) {
         </div>
       )}
 
-      {/* Popup définition mot */}
       {activeWord && (
         <WordPopup word={activeWord} seenCount={seenWords.size} onClose={() => setActiveWord(null)} />
       )}
