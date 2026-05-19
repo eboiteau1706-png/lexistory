@@ -10,17 +10,21 @@ export default function ProfileClient({ user }: { user: User }) {
   const supabase = createClient();
   const router   = useRouter();
 
-  const [username, setUsername]         = useState("");
-  const [editing, setEditing]           = useState(false);
-  const [newUsername, setNewUsername]   = useState("");
-  const [saving, setSaving]             = useState(false);
-  const [error, setError]               = useState("");
-  const [isPremium, setIsPremium]       = useState(false);
-  const [xp, setXp]                     = useState(0);
-  const [wordsCount, setWordsCount]     = useState(0);
-  const [storiesCount, setStoriesCount] = useState(0);
-  const [streak, setStreak]             = useState(0);
-  const [topWords, setTopWords]         = useState<string[]>([]);
+  const [username, setUsername]             = useState("");
+  const [editing, setEditing]               = useState(false);
+  const [newUsername, setNewUsername]       = useState("");
+  const [saving, setSaving]                 = useState(false);
+  const [error, setError]                   = useState("");
+  const [isPremium, setIsPremium]           = useState(false);
+  const [xp, setXp]                         = useState(0);
+  const [wordsCount, setWordsCount]         = useState(0);
+  const [storiesCount, setStoriesCount]     = useState(0);
+  const [streak, setStreak]                 = useState(0);
+  const [streakRecord, setStreakRecord]     = useState(0);
+  const [xpThisWeek, setXpThisWeek]         = useState(0);
+  const [completionRate, setCompletionRate] = useState(0);
+  const [myRank, setMyRank]                 = useState<number | null>(null);
+  const [topWords, setTopWords]             = useState<string[]>([]);
   const [levelBreakdown, setLevelBreakdown] = useState<Record<string, number>>({});
 
   useEffect(() => {
@@ -47,26 +51,61 @@ export default function ProfileClient({ user }: { user: User }) {
         }
       });
 
+    // Streak actuel + record
     supabase.from("stories_read").select("read_at").eq("user_id", user.id).order("read_at", { ascending: false })
       .then(({ data }) => {
         if (!data || data.length === 0) return;
-        let s = 1;
         const dates = [...new Set(data.map((d: any) => new Date(d.read_at).toDateString()))];
+
+        // Streak actuel
+        let s = 1;
         for (let i = 1; i < dates.length; i++) {
           const diff = (new Date(dates[i-1]).getTime() - new Date(dates[i]).getTime()) / 86400000;
           if (diff === 1) s++; else break;
         }
         setStreak(s);
+
+        // Streak record (max streak jamais atteint)
+        let maxStreak = 1;
+        let currentStreak = 1;
+        for (let i = 1; i < dates.length; i++) {
+          const diff = (new Date(dates[i-1]).getTime() - new Date(dates[i]).getTime()) / 86400000;
+          if (diff === 1) {
+            currentStreak++;
+            if (currentStreak > maxStreak) maxStreak = currentStreak;
+          } else {
+            currentStreak = 1;
+          }
+        }
+        setStreakRecord(Math.max(maxStreak, s));
+
+        // XP cette semaine (7 derniers jours)
+        const oneWeekAgo = new Date(Date.now() - 7 * 86400000);
+        const recentStories = data.filter((d: any) => new Date(d.read_at) > oneWeekAgo);
+        setXpThisWeek(recentStories.length * 10);
+
+        // Taux de complétion (stories_read / histoires disponibles × 100)
+        if (data.length > 0 && s > 0) {
+          setCompletionRate(Math.min(100, Math.round((data.length / Math.max(s, 1)) * 100)));
+        }
       });
+
+    // Rang dans le classement
+    supabase.from("profiles").select("id", { count: "exact" }).gt("xp", 0).then(async ({ count }) => {
+      if (!count) return;
+      const { data: profile } = await supabase.from("profiles").select("xp").eq("id", user.id).single();
+      const { count: above } = await supabase.from("profiles").select("id", { count: "exact" }).gt("xp", profile?.xp ?? 0);
+      setMyRank((above ?? 0) + 1);
+    });
   }, []);
 
   async function handleSaveUsername() {
-  if (!newUsername.trim()) return;
-  if (!/^[a-zA-Z0-9_-]{2,20}$/.test(newUsername.trim())) {
-    setError("Pseudo invalide. Lettres, chiffres, - ou _ uniquement.");
-    return;
-  }
-  setSaving(true); setError("");
+    if (!newUsername.trim()) return;
+    if (!/^[a-zA-Z0-9_-]{2,20}$/.test(newUsername.trim())) {
+      setError("Pseudo invalide. Lettres, chiffres, - ou _ uniquement.");
+      return;
+    }
+    setSaving(true); setError("");
     const { error } = await supabase.from("profiles").upsert({ id: user.id, username: newUsername.trim() });
     setSaving(false);
     if (error) setError(error.message.includes("unique") ? "Ce pseudo est déjà pris !" : "Erreur, réessaie.");
@@ -168,6 +207,27 @@ export default function ProfileClient({ user }: { user: User }) {
             {!isPremium && <span className={styles.premiumTag}>Premium</span>}
           </div>
 
+          {/* Rang + Record streak */}
+          <div className={styles.statGrid}>
+            <div className={styles.statGridBox}>
+              <div className={styles.statGridNum}>#{myRank ?? "—"}</div>
+              <div className={styles.statGridLabel}>🏆 Classement</div>
+            </div>
+            <div className={styles.statGridBox}>
+              <div className={styles.statGridNum}>{streakRecord}j</div>
+              <div className={styles.statGridLabel}>🔥 Record série</div>
+            </div>
+            <div className={styles.statGridBox}>
+              <div className={styles.statGridNum}>+{xpThisWeek}</div>
+              <div className={styles.statGridLabel}>⚡ XP cette semaine</div>
+            </div>
+            <div className={styles.statGridBox}>
+              <div className={styles.statGridNum}>{completionRate}%</div>
+              <div className={styles.statGridLabel}>✅ Assiduité</div>
+            </div>
+          </div>
+
+          {/* Histoires par niveau */}
           <div className={styles.breakdown}>
             <div className={styles.breakdownTitle}>Histoires lues par niveau</div>
             {["Curieux", "Lecteur", "Érudit"].map(lvl => (
@@ -181,6 +241,7 @@ export default function ProfileClient({ user }: { user: User }) {
             ))}
           </div>
 
+          {/* Derniers mots */}
           {topWords.length > 0 && (
             <div className={styles.topWords}>
               <div className={styles.breakdownTitle}>Derniers mots consultés</div>
@@ -189,11 +250,6 @@ export default function ProfileClient({ user }: { user: User }) {
               </div>
             </div>
           )}
-
-          <div className={styles.avgStat}>
-            <span className={styles.avgLabel}>Moyenne</span>
-            <span className={styles.avgVal}>{streak > 0 ? (wordsCount / Math.max(streak, 1)).toFixed(1) : 0} mots/jour</span>
-          </div>
         </div>
 
         {!isPremium && (
@@ -205,7 +261,6 @@ export default function ProfileClient({ user }: { user: User }) {
           </div>
         )}
 
-        {/* Liens classement et rangs */}
         <div className={styles.linksRow}>
           <a href="/classement" className={styles.linkBtn}>🏆 Classement →</a>
           <a href="/rangs" className={styles.linkBtn}>⭐ Rangs & XP →</a>
