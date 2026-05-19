@@ -1,6 +1,4 @@
-import { MetadataRoute } from "next";
-
-export default function sitemap(): MetadataRoute.Sitemap {
+export default function sitemap() {
   return [
     { url: "https://lexistory.fr", lastModified: new Date(), changeFrequency: "daily", priority: 1 },
     { url: "https://lexistory.fr/classement", lastModified: new Date(), changeFrequency: "daily", priority: 0.8 },
