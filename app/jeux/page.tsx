@@ -53,7 +53,7 @@ const CITATIONS = [
   { text: "Les larmes émotionnelles contiennent des *** du stress.", answer: "hormones", choices: ["hormones", "vitamines", "protéines", "minéraux"] },
   { text: "Les Mayas et les Aztèques utilisaient le cacao lors des *** religieux.", answer: "rituels", choices: ["rituels", "repas", "marchés", "voyages"] },
   { text: "Isaac Newton observa une pomme tomber dans son verger, ce qui l'amena à s'interroger sur la nature de la force qui l'attirait vers le ***.", answer: "sol", choices: ["sol", "ciel", "mur", "bas"] },
-  { word: "bioluminescentes", text: "Des créatures ***, des poissons aux dents translucides prospèrent dans les abysses.", answer: "bioluminescentes", choices: ["bioluminescentes", "transparentes", "géantes", "venimeuses"] },
+  { text: "Des créatures ***, des poissons aux dents translucides prospèrent dans les abysses.", answer: "bioluminescentes", choices: ["bioluminescentes", "transparentes", "géantes", "venimeuses"] },
   { text: "La peau se ride dans l'eau car les rides créent des *** comme les pneus d'une voiture.", answer: "rainures", choices: ["rainures", "bulles", "couches", "marques"] },
   { text: "Nous en savons plus sur la surface de la Lune que sur les fonds *** de notre propre planète.", answer: "marins", choices: ["marins", "rocheux", "glacés", "sombres"] },
   { text: "Le café est la deuxième marchandise la plus échangée dans le monde après le ***.", answer: "pétrole", choices: ["pétrole", "blé", "or", "coton"] },
@@ -69,11 +69,19 @@ const CITATIONS = [
   { text: "Aristote distinguait deux formes de bien-être : l'hédoné, le plaisir immédiat, et l'***, le bonheur comme épanouissement.", answer: "eudaimonia", choices: ["eudaimonia", "ataraxia", "aponia", "sophia"] },
 ];
 
+function getParisDateKey() {
+  // Retourne la date Paris au format YYYY-MM-DD — change à minuit heure Paris
+  const paris = new Date(new Date().toLocaleString("en-US", { timeZone: "Europe/Paris" }));
+  return paris.toISOString().slice(0, 10);
+}
+
 function getDayIndex(arr: any[]) {
-  const ref = new Date("2026-05-17");
-  const now = new Date(new Date().toLocaleString("en-US", { timeZone: "Europe/Paris" }));
-  const diff = Math.floor((now.getTime() - ref.getTime()) / 86400000);
-  return diff % arr.length;
+  const ref = new Date("2026-05-17T00:00:00");
+  const paris = new Date(new Date().toLocaleString("en-US", { timeZone: "Europe/Paris" }));
+  // Reset à minuit Paris : on compare les dates Paris
+  const refParis = new Date("2026-05-17");
+  const diffDays = Math.floor((paris.getTime() - refParis.getTime()) / 86400000);
+  return diffDays % arr.length;
 }
 
 function shuffle<T>(arr: T[], seed: number): T[] {
@@ -108,7 +116,9 @@ export default function JeuxPage() {
   const [citAnswer, setCitAnswer]   = useState<string | null>(null);
   const [xpGained, setXpGained]     = useState<number | null>(null);
 
-  const dayIdx    = getDayIndex(GAME_WORDS);
+  const todayKey = getParisDateKey();
+  const dayIdx   = getDayIndex(GAME_WORDS);
+
   const wordOfDay = GAME_WORDS[dayIdx];
   const defWord   = GAME_WORDS[(dayIdx + 1) % GAME_WORDS.length];
   const anagWord  = GAME_WORDS[(dayIdx + 2) % GAME_WORDS.length];
@@ -118,25 +128,34 @@ export default function JeuxPage() {
   const wrongChoices = GAME_WORDS.filter(w => w.word !== defWord.word).slice(0, 3).map(w => w.word);
   const defChoices   = shuffle([defWord.word, ...wrongChoices], dayIdx * 99991);
 
-  const todayKey = new Date(new Date().toLocaleString("en-US", { timeZone: "Europe/Paris" })).toISOString().slice(0, 10);
-  const defKey   = `lx_def_${todayKey}`;
-  const anagKey  = `lx_anag_${todayKey}`;
-  const citKey   = `lx_cit_${todayKey}`;
+  // Clés localStorage avec userId pour isoler par compte
+  function getKeys(uid: string | null) {
+    const prefix = uid ? `${uid}_` : "guest_";
+    return {
+      defKey:  `lx_def_${prefix}${todayKey}`,
+      anagKey: `lx_anag_${prefix}${todayKey}`,
+      citKey:  `lx_cit_${prefix}${todayKey}`,
+    };
+  }
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session?.user) {
-        setUserId(session.user.id);
-        supabase.from("profiles").select("is_premium").eq("id", session.user.id).single()
+      const uid = session?.user?.id ?? null;
+      if (uid) {
+        setUserId(uid);
+        supabase.from("profiles").select("is_premium").eq("id", uid).single()
           .then(({ data }) => { if (data?.is_premium) setIsPremium(true); });
       }
+
+      // Charge les réponses sauvegardées avec les bonnes clés
+      const { defKey, anagKey, citKey } = getKeys(uid);
+      const savedDef  = localStorage.getItem(defKey);
+      const savedAnag = localStorage.getItem(anagKey);
+      const savedCit  = localStorage.getItem(citKey);
+      if (savedDef)  setDefAnswer(savedDef);
+      if (savedAnag) { setAnagResult(savedAnag === "true"); setAnagAnswer(anagWord.word); }
+      if (savedCit)  setCitAnswer(savedCit);
     });
-    const savedDef  = localStorage.getItem(defKey);
-    const savedAnag = localStorage.getItem(anagKey);
-    const savedCit  = localStorage.getItem(citKey);
-    if (savedDef)  setDefAnswer(savedDef);
-    if (savedAnag) { setAnagResult(savedAnag === "true"); setAnagAnswer(anagWord.word); }
-    if (savedCit)  setCitAnswer(savedCit);
   }, []);
 
   async function addXp(amount: number) {
@@ -152,6 +171,7 @@ export default function JeuxPage() {
   function handleDefAnswer(choice: string) {
     if (defAnswer) return;
     setDefAnswer(choice);
+    const { defKey } = getKeys(userId);
     localStorage.setItem(defKey, choice);
     if (choice === defWord.word) addXp(3);
   }
@@ -160,6 +180,7 @@ export default function JeuxPage() {
     if (anagResult !== null) return;
     const correct = anagAnswer.toLowerCase().trim() === anagWord.word.toLowerCase();
     setAnagResult(correct);
+    const { anagKey } = getKeys(userId);
     localStorage.setItem(anagKey, correct.toString());
     if (correct) addXp(3);
   }
@@ -167,6 +188,7 @@ export default function JeuxPage() {
   function handleCitAnswer(choice: string) {
     if (citAnswer) return;
     setCitAnswer(choice);
+    const { citKey } = getKeys(userId);
     localStorage.setItem(citKey, choice);
     if (choice === citation.answer) addXp(3);
   }
