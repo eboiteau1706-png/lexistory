@@ -6,13 +6,13 @@ import { getLevel, getXpProgress } from "@/lib/xp";
 import styles from "./Nav.module.css";
 
 export default function Nav() {
-  const [loading, setLoading]         = useState(false);
-  const [user, setUser]               = useState<any>(null);
-  const [ready, setReady]             = useState(false);
-  const [isPremium, setIsPremium]     = useState(false);
-  const [streak, setStreak]           = useState(0);
-  const [xp, setXp]                   = useState(0);
-  const [menuOpen, setMenuOpen]       = useState(false);
+  const [loading, setLoading]           = useState(false);
+  const [user, setUser]                 = useState<any>(null);
+  const [ready, setReady]               = useState(false);
+  const [isPremium, setIsPremium]       = useState(false);
+  const [streak, setStreak]             = useState(0);
+  const [xp, setXp]                     = useState(0);
+  const [menuOpen, setMenuOpen]         = useState(false);
   const [pendingCount, setPendingCount] = useState(0);
   const supabase = createClient();
   const router   = useRouter();
@@ -49,7 +49,6 @@ export default function Nav() {
       }
     }
 
-    // Compte les demandes d'amis en attente
     const { count } = await supabase
       .from("friendships")
       .select("id", { count: "exact" })
@@ -74,10 +73,17 @@ export default function Nav() {
         if (session?.user) loadUserData(session.user.id);
       });
     };
+    const onFriendAccepted = () => {
+      supabase.auth.getSession().then(({ data: { session } }) => {
+        if (session?.user) loadUserData(session.user.id);
+      });
+    };
     window.addEventListener("lexistory:story-read", onStoryRead);
+    window.addEventListener("lexistory:friend-accepted", onFriendAccepted);
     return () => {
       listener.subscription.unsubscribe();
       window.removeEventListener("lexistory:story-read", onStoryRead);
+      window.removeEventListener("lexistory:friend-accepted", onFriendAccepted);
     };
   }, [pathname]);
 
@@ -104,8 +110,8 @@ export default function Nav() {
 
         <div className={styles.desktopRight}>
           {ready && user && (
-<div className={styles.userStats}>
-  <div className={styles.levelPill} onClick={() => router.push("/rangs")} style={{ cursor: "pointer" }}>
+            <div className={styles.userStats}>
+              <div className={styles.levelPill} onClick={() => router.push("/rangs")} style={{ cursor: "pointer" }}>
                 <span className={styles.levelText}>{level.emoji} {level.name}</span>
                 <div className={styles.xpBarRow}>
                   <div className={styles.xpBar}>
@@ -119,7 +125,6 @@ export default function Nav() {
 
           <a href="/classement" className={styles.btnGhost}>🏆 Classement</a>
 
-          {/* Bouton Amis avec badge */}
           <a href="/amis" className={styles.btnGhost} style={{ position: "relative" }}>
             👥 Amis
             {pendingCount > 0 && (

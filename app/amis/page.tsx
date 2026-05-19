@@ -125,9 +125,10 @@ export default function AmisPage() {
   }
 
   async function acceptRequest(friendshipId: string) {
-    await supabase.from("friendships").update({ status: "accepted" }).eq("id", friendshipId);
-    if (myId) loadFriendships(myId);
-  }
+  await supabase.from("friendships").update({ status: "accepted" }).eq("id", friendshipId);
+  window.dispatchEvent(new CustomEvent("lexistory:friend-accepted"));
+  if (myId) loadFriendships(myId);
+}
 
   async function rejectRequest(friendshipId: string) {
     await supabase.from("friendships").delete().eq("id", friendshipId);
