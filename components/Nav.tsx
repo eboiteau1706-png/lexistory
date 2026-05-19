@@ -6,13 +6,14 @@ import { getLevel, getXpProgress } from "@/lib/xp";
 import styles from "./Nav.module.css";
 
 export default function Nav() {
-  const [loading, setLoading]     = useState(false);
-  const [user, setUser]           = useState<any>(null);
-  const [ready, setReady]         = useState(false);
-  const [isPremium, setIsPremium] = useState(false);
-  const [streak, setStreak]       = useState(0);
-  const [xp, setXp]               = useState(0);
-  const [menuOpen, setMenuOpen]   = useState(false);
+  const [loading, setLoading]         = useState(false);
+  const [user, setUser]               = useState<any>(null);
+  const [ready, setReady]             = useState(false);
+  const [isPremium, setIsPremium]     = useState(false);
+  const [streak, setStreak]           = useState(0);
+  const [xp, setXp]                   = useState(0);
+  const [menuOpen, setMenuOpen]       = useState(false);
+  const [pendingCount, setPendingCount] = useState(0);
   const supabase = createClient();
   const router   = useRouter();
   const pathname = usePathname();
@@ -32,17 +33,29 @@ export default function Nav() {
       .eq("user_id", userId)
       .order("read_at", { ascending: false });
 
-    if (!reads || reads.length === 0) { setStreak(0); return; }
-    const dates = [...new Set(reads.map((d: any) => new Date(d.read_at).toDateString()))];
-    const today = new Date().toDateString();
-    const yesterday = new Date(Date.now() - 86400000).toDateString();
-    if (dates[0] !== today && dates[0] !== yesterday) { setStreak(0); return; }
-    let s = 1;
-    for (let i = 1; i < dates.length; i++) {
-      const diff = (new Date(dates[i-1]).getTime() - new Date(dates[i]).getTime()) / 86400000;
-      if (diff === 1) s++; else break;
+    if (!reads || reads.length === 0) { setStreak(0); }
+    else {
+      const dates = [...new Set(reads.map((d: any) => new Date(d.read_at).toDateString()))];
+      const today = new Date().toDateString();
+      const yesterday = new Date(Date.now() - 86400000).toDateString();
+      if (dates[0] !== today && dates[0] !== yesterday) { setStreak(0); }
+      else {
+        let s = 1;
+        for (let i = 1; i < dates.length; i++) {
+          const diff = (new Date(dates[i-1]).getTime() - new Date(dates[i]).getTime()) / 86400000;
+          if (diff === 1) s++; else break;
+        }
+        setStreak(s);
+      }
     }
-    setStreak(s);
+
+    // Compte les demandes d'amis en attente
+    const { count } = await supabase
+      .from("friendships")
+      .select("id", { count: "exact" })
+      .eq("friend_id", userId)
+      .eq("status", "pending");
+    setPendingCount(count ?? 0);
   }
 
   useEffect(() => {
@@ -54,7 +67,7 @@ export default function Nav() {
     const { data: listener } = supabase.auth.onAuthStateChange((_e, session) => {
       setUser(session?.user ?? null);
       if (session?.user) loadUserData(session.user.id);
-      else { setIsPremium(false); setStreak(0); setXp(0); }
+      else { setIsPremium(false); setStreak(0); setXp(0); setPendingCount(0); }
     });
     const onStoryRead = () => {
       supabase.auth.getSession().then(({ data: { session } }) => {
@@ -90,32 +103,53 @@ export default function Nav() {
         <a href="/" className={styles.logo}>Lexi<span>Story</span></a>
 
         <div className={styles.desktopRight}>
-          {/* Stats utilisateur connecté */}
           {ready && user && (
-            
-<div className={styles.userStats}>
-  <span className={styles.streakPill}>🔥 {streak}j</span>
-  <div className={styles.levelPill} onClick={() => router.push("/rangs")} style={{ cursor: "pointer" }}>
-    <span className={styles.levelText}>{level.emoji} {level.name}</span>
-    <div className={styles.xpBarRow}>
-      <div className={styles.xpBar}>
-        <div className={styles.xpFill} style={{ width: `${pct}%` }} />
-      </div>
-      <span className={styles.xpText}>{current}/{needed}</span>
-    </div>
-  </div>
-</div>
+            <div className={styles.userStats}>
+              <span className={styles.streakPill}>🔥 {streak}j</span>
+              <div className={styles.levelPill} onClick={() => router.push("/rangs")} style={{ cursor: "pointer" }}>
+                <span className={styles.levelText}>{level.emoji} {level.name}</span>
+                <div className={styles.xpBarRow}>
+                  <div className={styles.xpBar}>
+                    <div className={styles.xpFill} style={{ width: `${pct}%` }} />
+                  </div>
+                  <span className={styles.xpText}>{current}/{needed}</span>
+                </div>
+              </div>
+            </div>
           )}
- <a href="/classement" className={styles.btnGhost}>🏆 Classement</a>
- <a href="/amis" className={styles.btnGhost}>👥 Amis</a>
-          {/* Liens nav */}
+
+          <a href="/classement" className={styles.btnGhost}>🏆 Classement</a>
+
+          {/* Bouton Amis avec badge */}
+          <a href="/amis" className={styles.btnGhost} style={{ position: "relative" }}>
+            👥 Amis
+            {pendingCount > 0 && (
+              <span style={{
+                position: "absolute",
+                top: "-6px",
+                right: "-6px",
+                background: "#e88080",
+                color: "white",
+                borderRadius: "50%",
+                width: "18px",
+                height: "18px",
+                fontSize: "0.65rem",
+                fontWeight: 700,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}>
+                {pendingCount}
+              </span>
+            )}
+          </a>
+
           {ready && (
             <button className={styles.btnGhost} onClick={() => router.push(user ? "/profile" : "/login")}>
               {user ? "Mon profil" : "Connexion"}
             </button>
           )}
 
-          {/* Premium ou badge */}
           {ready && !isPremium && (
             <button className={styles.btnPrimary} onClick={handlePremium} disabled={loading}>
               {loading ? "..." : "Premium — 1,99€/mois"}
@@ -145,8 +179,8 @@ export default function Nav() {
             🏆 Classement
           </button>
           <button className={styles.mobileBtn} onClick={() => { setMenuOpen(false); router.push("/amis"); }}>
-  👥 Amis
-</button>
+            👥 Amis {pendingCount > 0 && `(${pendingCount})`}
+          </button>
           <button className={styles.mobileBtn} onClick={() => { setMenuOpen(false); router.push("/rangs"); }}>
             ⭐ Rangs & XP
           </button>
