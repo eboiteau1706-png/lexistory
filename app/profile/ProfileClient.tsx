@@ -116,16 +116,18 @@ export default function ProfileClient({ user }: { user: User }) {
     if (data.url) window.location.href = data.url;
   }
 
-  async function handlePortal() {
-    setPortalLoading(true);
-    try {
-      const res  = await fetch("/api/portal", { method: "POST" });
-      const data = await res.json();
-      if (data.url) window.location.href = data.url;
-      else alert("Erreur, réessaie.");
-    } catch { alert("Erreur, réessaie."); }
-    finally { setPortalLoading(false); }
+async function handlePortal() {
+  setPortalLoading(true);
+  try {
+    const res  = await fetch("/api/portal", { method: "POST" });
+    const data = await res.json();
+    if (data.url) window.location.href = data.url;
+    else alert(data.error); // ← change ça pour voir l'erreur exacte
+  } catch (e) { 
+    alert("Fetch error"); 
   }
+  finally { setPortalLoading(false); }
+}
 
   async function handleDeleteAccount() {
     setDeleting(true);
