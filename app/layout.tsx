@@ -5,6 +5,7 @@ import Footer from "@/components/Footer";
 import AdBanner from "@/components/AdBanner";
 import UsernameModal from "@/components/UsernameModal";
 import "./globals.css";
+import OnboardingPopup from "@/components/OnboardingPopup";
 
 const playfair = Playfair_Display({
   subsets: ["latin"],
@@ -60,12 +61,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         />
       </head>
       <body className={`${playfair.variable} ${dmSans.variable}`}>
-        <Nav />
-        <UsernameModal />
-        {children}
-        <AdBanner />
-        <Footer />
-      </body>
+  <Nav />
+  <OnboardingPopup />
+  <UsernameModal />
+  {children}
+  <AdBanner />
+  <Footer />
+</body>
     </html>
   );
 }

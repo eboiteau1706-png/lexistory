@@ -10,7 +10,7 @@ export default function LoginPage() {
 
   const [email, setEmail]       = useState("");
   const [password, setPassword] = useState("");
-  const [mode, setMode]         = useState<"magic" | "password" | "signup">("magic");
+  const [mode, setMode]         = useState<"login" | "signup">("login");
   const [sent, setSent]         = useState(false);
   const [loading, setLoading]   = useState(false);
   const [error, setError]       = useState("");
@@ -20,18 +20,6 @@ export default function LoginPage() {
       provider: "google",
       options: { redirectTo: `${window.location.origin}/api/auth-callback` },
     });
-  }
-
-  async function handleMagicLink() {
-    if (!email) return;
-    setLoading(true); setError("");
-    const { error } = await supabase.auth.signInWithOtp({
-      email,
-      options: { emailRedirectTo: `${window.location.origin}/api/auth-callback` },
-    });
-    setLoading(false);
-    if (error) setError("Erreur, vérifie ton adresse email.");
-    else setSent(true);
   }
 
   async function handlePassword() {
@@ -64,14 +52,7 @@ export default function LoginPage() {
           <div className={styles.logo}>Lexi<span>Story</span></div>
           <div className={styles.sentIcon}>📬</div>
           <h1 className={styles.title}>Vérifie tes emails !</h1>
-          <p className={styles.subtitle}>
-            {mode === "signup"
-              ? "Un lien de confirmation a été envoyé à ton adresse email."
-              : "Un lien de connexion a été envoyé à ton adresse email."}
-          </p>
-          <p className={styles.hint}>
-            💡 Ouvre le mail sur <strong>le même appareil</strong> que celui où tu veux te connecter.
-          </p>
+          <p className={styles.subtitle}>Un lien de confirmation a été envoyé à ton adresse email.</p>
           <button className={styles.btnSecondary} onClick={() => setSent(false)}>← Retour</button>
         </div>
       </div>
@@ -85,6 +66,11 @@ export default function LoginPage() {
         <h1 className={styles.title}>
           {mode === "signup" ? "Créer un compte" : "Connexion"}
         </h1>
+        <p className={styles.subtitle}>
+          {mode === "signup"
+            ? "Rejoins LexiStory pour suivre ta progression et gagner des XP."
+            : "Content de te revoir sur LexiStory !"}
+        </p>
 
         {/* Google */}
         <button className={styles.googleBtn} onClick={handleGoogle}>
@@ -99,72 +85,44 @@ export default function LoginPage() {
 
         <div className={styles.divider}><span>ou</span></div>
 
-        {/* Tabs */}
-        <div className={styles.tabs}>
-          <button
-            className={`${styles.tab} ${mode === "magic" ? styles.tabActive : ""}`}
-            onClick={() => { setMode("magic"); setError(""); }}
-          >
-            Lien magique
-          </button>
-          <button
-            className={`${styles.tab} ${mode === "password" ? styles.tabActive : ""}`}
-            onClick={() => { setMode("password"); setError(""); }}
-          >
-            Mot de passe
-          </button>
-          <button
-            className={`${styles.tab} ${mode === "signup" ? styles.tabActive : ""}`}
-            onClick={() => { setMode("signup"); setError(""); }}
-          >
-            S&apos;inscrire
-          </button>
-        </div>
-
         <input
           className={styles.input}
           type="email"
           placeholder="ton@email.com"
           value={email}
           onChange={e => setEmail(e.target.value)}
-          onKeyDown={e => e.key === "Enter" && (mode === "magic" ? handleMagicLink() : mode === "password" ? handlePassword() : handleSignup())}
+          onKeyDown={e => e.key === "Enter" && (mode === "login" ? handlePassword() : handleSignup())}
         />
 
-        {(mode === "password" || mode === "signup") && (
-          <input
-            className={styles.input}
-            type="password"
-            placeholder="Mot de passe"
-            value={password}
-            onChange={e => setPassword(e.target.value)}
-            onKeyDown={e => e.key === "Enter" && (mode === "password" ? handlePassword() : handleSignup())}
-          />
-        )}
+        <input
+          className={styles.input}
+          type="password"
+          placeholder="Mot de passe"
+          value={password}
+          onChange={e => setPassword(e.target.value)}
+          onKeyDown={e => e.key === "Enter" && (mode === "login" ? handlePassword() : handleSignup())}
+        />
 
         {error && <p className={styles.error}>{error}</p>}
 
         <button
           className={styles.btnPrimary}
-          onClick={mode === "magic" ? handleMagicLink : mode === "password" ? handlePassword : handleSignup}
-          disabled={loading || !email || ((mode === "password" || mode === "signup") && !password)}
+          onClick={mode === "login" ? handlePassword : handleSignup}
+          disabled={loading || !email || !password}
         >
-          {loading ? "Chargement..." :
-           mode === "magic" ? "Recevoir un lien de connexion 📧" :
-           mode === "password" ? "Se connecter" :
-           "Créer mon compte"}
+          {loading ? "Chargement..." : mode === "login" ? "Se connecter" : "Créer mon compte"}
         </button>
 
-        {mode === "magic" && (
-          <p className={styles.magicHint}>
-            💡 Ouvre le mail sur <strong>le même appareil</strong> que celui-ci pour te connecter directement ici.
-          </p>
-        )}
-
-        {mode === "magic" && (
-  <p className={styles.footer}>
-    Pas de mot de passe — on t&apos;envoie un lien magique par email.
-  </p>
-)}
+        <p className={styles.switchMode}>
+          {mode === "login" ? "Pas encore de compte ?" : "Déjà un compte ?"}
+          {" "}
+          <button
+            className={styles.switchBtn}
+            onClick={() => { setMode(mode === "login" ? "signup" : "login"); setError(""); }}
+          >
+            {mode === "login" ? "S'inscrire" : "Se connecter"}
+          </button>
+        </p>
       </div>
     </div>
   );
