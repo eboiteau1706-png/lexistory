@@ -525,3 +525,15 @@
   transition: all 0.2s;
 }
 .deleteBtn:hover { background: rgba(224,112,112,0.1); border-color: #e07070; }
+
+.portalInfo {
+  width: 100%;
+  padding: 12px;
+  border-radius: 10px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  text-align: center;
+}
+.portalInfo a { color: var(--accent); text-decoration: none; }

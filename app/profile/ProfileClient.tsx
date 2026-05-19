@@ -16,6 +16,7 @@ export default function ProfileClient({ user }: { user: User }) {
   const [saving, setSaving]                 = useState(false);
   const [error, setError]                   = useState("");
   const [isPremium, setIsPremium]           = useState(false);
+  const [stripeCustomerId, setStripeCustomerId] = useState<string | null>(null);
   const [xp, setXp]                         = useState(0);
   const [wordsCount, setWordsCount]         = useState(0);
   const [storiesCount, setStoriesCount]     = useState(0);
@@ -31,11 +32,12 @@ export default function ProfileClient({ user }: { user: User }) {
   const [portalLoading, setPortalLoading]   = useState(false);
 
   useEffect(() => {
-    supabase.from("profiles").select("username, is_premium, xp").eq("id", user.id).single()
+    supabase.from("profiles").select("username, is_premium, xp, stripe_customer_id").eq("id", user.id).single()
       .then(({ data }) => {
         if (data?.username) setUsername(data.username);
         if (data?.is_premium) setIsPremium(data.is_premium);
         setXp(data?.xp ?? 0);
+        setStripeCustomerId(data?.stripe_customer_id ?? null);
       });
 
     supabase.from("words_seen").select("word", { count: "exact" }).eq("user_id", user.id).order("seen_at", { ascending: false })
@@ -116,18 +118,16 @@ export default function ProfileClient({ user }: { user: User }) {
     if (data.url) window.location.href = data.url;
   }
 
-async function handlePortal() {
-  setPortalLoading(true);
-  try {
-    const res  = await fetch("/api/portal", { method: "POST" });
-    const data = await res.json();
-    if (data.url) window.location.href = data.url;
-    else alert(data.error); // ← change ça pour voir l'erreur exacte
-  } catch (e) { 
-    alert("Fetch error"); 
+  async function handlePortal() {
+    setPortalLoading(true);
+    try {
+      const res  = await fetch("/api/portal", { method: "POST" });
+      const data = await res.json();
+      if (data.url) window.location.href = data.url;
+      else alert("Erreur, réessaie.");
+    } catch { alert("Erreur, réessaie."); }
+    finally { setPortalLoading(false); }
   }
-  finally { setPortalLoading(false); }
-}
 
   async function handleDeleteAccount() {
     setDeleting(true);
@@ -157,7 +157,6 @@ async function handlePortal() {
         <div className={styles.avatar}>{initial}</div>
         {isPremium && <div className={styles.premiumBadge}>✨ Premium</div>}
 
-        {/* Pseudo */}
         {editing ? (
           <div className={styles.editWrap}>
             <input className={styles.input} placeholder="Choisis un pseudo..." value={newUsername}
@@ -186,7 +185,6 @@ async function handlePortal() {
           })}
         </div>
 
-        {/* Niveau XP */}
         <div className={styles.xpCard}>
           <div className={styles.xpHeader}>
             <div className={styles.xpLevel}>{level.emoji} Niveau {level.level} — {level.name}</div>
@@ -203,7 +201,6 @@ async function handlePortal() {
           {isPremium && <div className={styles.xpBoost}>⚡ Boost Premium x1.5 actif</div>}
         </div>
 
-        {/* Stats de base */}
         <div className={styles.stats}>
           <div className={styles.statBox}>
             <div className={styles.statNum}>{streak}</div>
@@ -219,7 +216,6 @@ async function handlePortal() {
           </div>
         </div>
 
-        {/* Stats avancées Premium */}
         <div className={`${styles.advancedStats} ${!isPremium ? styles.blurred : ""}`}>
           <div className={styles.advancedTitle}>
             📊 Stats détaillées
@@ -265,11 +261,15 @@ async function handlePortal() {
           )}
         </div>
 
-        {/* Gestion abonnement Premium */}
-        {isPremium ? (
+        {/* Gestion abonnement */}
+        {isPremium && stripeCustomerId ? (
           <button className={styles.portalBtn} onClick={handlePortal} disabled={portalLoading}>
             {portalLoading ? "Chargement..." : "⚙️ Gérer mon abonnement"}
           </button>
+        ) : isPremium && !stripeCustomerId ? (
+          <div className={styles.portalInfo}>
+            Pour résilier, contacte-nous à <a href="mailto:contact@lexistory.fr">contact@lexistory.fr</a>
+          </div>
         ) : (
           <div className={styles.plan}>
             <span className={styles.planBadge}>Plan Gratuit</span>
@@ -289,7 +289,6 @@ async function handlePortal() {
           <button className={styles.logoutBtn} onClick={handleLogout}>Se déconnecter</button>
         </div>
 
-        {/* Zone danger */}
         <div className={styles.dangerZone}>
           <p className={styles.dangerTitle}>Zone de danger</p>
           <button className={styles.deleteBtn} onClick={() => setShowDeleteConfirm(true)}>
@@ -298,7 +297,6 @@ async function handlePortal() {
         </div>
       </div>
 
-      {/* Modal confirmation suppression */}
       {showDeleteConfirm && (
         <div
           onClick={() => setShowDeleteConfirm(false)}
@@ -329,7 +327,7 @@ async function handlePortal() {
             </p>
             <p style={{ fontSize: "0.88rem", color: "var(--text-muted)", lineHeight: 1.6 }}>
               Cette action est irréversible. Toutes tes données seront supprimées : progression, mots appris, histoires lues, amis.
-              {isPremium && " Si tu as un abonnement Premium actif, résilie-le d'abord depuis 'Gérer mon abonnement'."}
+              {isPremium && stripeCustomerId && " Résilie d'abord ton abonnement depuis 'Gérer mon abonnement'."}
             </p>
             <div style={{ display: "flex", gap: "8px" }}>
               <button
