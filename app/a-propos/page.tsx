@@ -22,7 +22,10 @@ export default function APropos() {
             Le site a été créé par <strong>Enzo Boiteau</strong>, depuis Osny, en France. L&apos;objectif était de créer un outil que même quelqu&apos;un qui n&apos;aime pas lire aurait envie d&apos;utiliser chaque matin.
           </p>
           <p>
-            Chaque jour, trois nouvelles histoires sont disponibles — une pour chaque niveau. On clique sur un mot qu&apos;on ne connaît pas, et on obtient sa définition officielle, une explication simple, et même son étymologie. Pas de mémorisation forcée, juste de la lecture.
+            Chaque jour, trois nouvelles histoires sont disponibles — une pour chaque niveau. On clique sur un mot qu&apos;on ne connaît pas, et on obtient sa définition. Pas de mémorisation forcée, juste de la lecture.
+          </p>
+          <p>
+            Avec le système de niveaux et de streaks, chaque lecture compte. Monte en rang, défie tes amis dans le classement, et suis ta progression jour après jour.
           </p>
         </div>
 
@@ -41,6 +44,11 @@ export default function APropos() {
             <div className={styles.valueIcon}>🎯</div>
             <div className={styles.valueName}>Adapté</div>
             <div className={styles.valueDesc}>Trois niveaux : Curieux, Lecteur, Érudit. Pour chaque âge et chaque niveau.</div>
+          </div>
+          <div className={styles.value}>
+            <div className={styles.valueIcon}>🏆</div>
+            <div className={styles.valueName}>Motivant</div>
+            <div className={styles.valueDesc}>XP, niveaux, streaks et classement entre amis pour rester régulier.</div>
           </div>
         </div>
 

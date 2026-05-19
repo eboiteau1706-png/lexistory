@@ -9,7 +9,7 @@ export default function MentionsLegales() {
     <div className={styles.page}>
       <div className={styles.card}>
         <h1 className={styles.title}>Mentions légales</h1>
-        <p className={styles.updated}>Dernière mise à jour : 17 mai 2026</p>
+        <p className={styles.updated}>Dernière mise à jour : 19 mai 2026</p>
 
         <section className={styles.section}>
           <h2>Éditeur du site</h2>
@@ -19,6 +19,7 @@ export default function MentionsLegales() {
             <li><strong>Statut :</strong> Particulier</li>
             <li><strong>Ville :</strong> Osny, Val-d&apos;Oise, France</li>
             <li><strong>Email :</strong> e.boiteau1706@gmail.com</li>
+            <li><strong>Site :</strong> https://lexistory.fr</li>
           </ul>
         </section>
 
@@ -32,13 +33,26 @@ export default function MentionsLegales() {
         </section>
 
         <section className={styles.section}>
+          <h2>Nom de domaine</h2>
+          <ul>
+            <li><strong>Registrar :</strong> OVHcloud</li>
+            <li><strong>Domaine :</strong> lexistory.fr</li>
+          </ul>
+        </section>
+
+        <section className={styles.section}>
+          <h2>Paiement</h2>
+          <p>Les paiements sont traités par <strong>Stripe Inc.</strong>, 354 Oyster Point Blvd, South San Francisco, CA 94080, USA. LexiStory ne stocke aucune donnée bancaire.</p>
+        </section>
+
+        <section className={styles.section}>
           <h2>Propriété intellectuelle</h2>
-          <p>L&apos;ensemble du contenu de ce site (textes, histoires, design, code) est la propriété exclusive d&apos;Enzo Boiteau. Toute reproduction, même partielle, est interdite sans autorisation préalable.</p>
+          <p>L&apos;ensemble du contenu de ce site (textes, histoires, design, code, système de gamification) est la propriété exclusive d&apos;Enzo Boiteau. Toute reproduction, même partielle, est interdite sans autorisation préalable.</p>
         </section>
 
         <section className={styles.section}>
           <h2>Contact</h2>
-          <p>Pour toute question : e.boiteau1706@gmail.com</p>
+          <p>Pour toute question : <a href="mailto:e.boiteau1706@gmail.com">e.boiteau1706@gmail.com</a></p>
         </section>
 
         <a href="/" className={styles.back}>← Retour à l&apos;accueil</a>

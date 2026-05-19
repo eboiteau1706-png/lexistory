@@ -9,7 +9,7 @@ export default function Confidentialite() {
     <div className={styles.page}>
       <div className={styles.card}>
         <h1 className={styles.title}>Politique de confidentialité</h1>
-        <p className={styles.updated}>Dernière mise à jour : 18 mai 2026</p>
+        <p className={styles.updated}>Dernière mise à jour : 19 mai 2026</p>
 
         <section className={styles.section}>
           <h2>Données collectées</h2>
@@ -18,6 +18,8 @@ export default function Confidentialite() {
             <li>Votre <strong>adresse email</strong> lors de la création de compte</li>
             <li>Votre <strong>pseudo</strong> si vous choisissez d&apos;en créer un</li>
             <li>Les <strong>mots consultés</strong> et <strong>histoires lues</strong> pour afficher vos statistiques</li>
+            <li>Votre <strong>XP et niveau</strong> pour le système de progression et le classement</li>
+            <li>Vos <strong>relations d&apos;amitié</strong> si vous utilisez la fonctionnalité amis</li>
             <li>Les <strong>données de paiement</strong> gérées exclusivement par Stripe — nous n&apos;y avons pas accès</li>
           </ul>
         </section>
@@ -27,7 +29,8 @@ export default function Confidentialite() {
           <p>Vos données sont utilisées uniquement pour :</p>
           <ul>
             <li>Gérer votre compte et votre connexion</li>
-            <li>Afficher vos statistiques de progression</li>
+            <li>Afficher vos statistiques de progression et votre niveau</li>
+            <li>Alimenter le classement global et le classement entre amis</li>
             <li>Traiter votre abonnement Premium</li>
             <li>Vous envoyer des emails de connexion (magic link)</li>
           </ul>
@@ -35,9 +38,14 @@ export default function Confidentialite() {
         </section>
 
         <section className={styles.section}>
+          <h2>Données publiques</h2>
+          <p>Si vous choisissez un pseudo, celui-ci ainsi que votre niveau et votre XP apparaissent dans le classement public. Vos statistiques détaillées (mots appris, histoires lues) ne sont visibles que par vos amis acceptés.</p>
+        </section>
+
+        <section className={styles.section}>
           <h2>Stockage des données</h2>
           <p>Vos données sont stockées de façon sécurisée via <strong>Supabase</strong>, sur des serveurs situés dans l&apos;Union européenne.</p>
-          <p>Les paiements sont traités par <strong>Stripe</strong>, dont les serveurs sont situés aux États-Unis. Stripe est certifié PCI DSS niveau 1, le plus haut niveau de sécurité pour les paiements en ligne.</p>
+          <p>Les paiements sont traités par <strong>Stripe</strong>, certifié PCI DSS niveau 1, le plus haut niveau de sécurité pour les paiements en ligne.</p>
         </section>
 
         <section className={styles.section}>
@@ -55,7 +63,7 @@ export default function Confidentialite() {
             <li><strong>Droit à l&apos;effacement</strong> : supprimer votre compte et vos données</li>
             <li><strong>Droit à la portabilité</strong> : récupérer vos données</li>
           </ul>
-          <p>Pour exercer ces droits : <strong>e.boiteau1706@gmail.com</strong></p>
+          <p>Pour exercer ces droits : <a href="mailto:e.boiteau1706@gmail.com">e.boiteau1706@gmail.com</a></p>
         </section>
 
         <a href="/" className={styles.back}>← Retour à l&apos;accueil</a>

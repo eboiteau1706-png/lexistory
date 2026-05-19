@@ -22,10 +22,14 @@ export default function Support() {
         <div className={styles.faqs}>
           <div className={styles.faqTitle}>Questions fréquentes</div>
           {[
-            { q: "Comment résilier mon abonnement Premium ?", a: "Tu peux résilier à tout moment depuis ton espace Stripe. L'accès Premium reste actif jusqu'à la fin du mois payé." },
-            { q: "Je n'arrive pas à me connecter.", a: "Vérifie tes spams pour le lien magique. Si le problème persiste, contacte-nous." },
-            { q: "Puis-je changer mon pseudo ?", a: "Oui, depuis ta page profil, clique sur ✏️ à côté de ton pseudo." },
-            { q: "Les histoires changent quand ?", a: "Une nouvelle histoire est disponible chaque jour à minuit. Les Premium peuvent accéder aux histoires passées." },
+            { q: "Comment résilier mon abonnement Premium ?", a: "Tu peux résilier à tout moment depuis ton espace client Stripe. L'accès Premium reste actif jusqu'à la fin de la période payée." },
+            { q: "Je n'arrive pas à me connecter.", a: "Tu peux te connecter avec Google, un lien magique par email, ou un mot de passe. Si le problème persiste, vérifie tes spams ou contacte-nous." },
+            { q: "Puis-je changer mon pseudo ?", a: "Oui, depuis ta page profil, clique sur ✏️ à côté de ton pseudo. Le pseudo doit contenir uniquement des lettres, chiffres, tirets ou underscores." },
+            { q: "Les histoires changent quand ?", a: "Une nouvelle histoire est disponible chaque jour à minuit (heure de Paris). Les Premium peuvent accéder à toutes les histoires passées." },
+            { q: "Comment fonctionne le système d'XP ?", a: "Tu gagnes 10 XP en lisant une histoire jusqu'au bout (barre à 100%). Des bonus XP sont accordés selon ton streak de jours consécutifs. Les Premium gagnent 1,5x plus d'XP." },
+            { q: "Comment ajouter des amis ?", a: "Va dans la page Amis, recherche le pseudo exact de ton ami et envoie-lui une demande. Une fois acceptée, vous apparaissez dans le classement amis l'un de l'autre." },
+            { q: "Puis-je voir le profil de n'importe quel joueur ?", a: "Non, les profils sont privés. Tu ne peux voir le profil d'un joueur que s'il est dans ta liste d'amis." },
+            { q: "Le Premium est-il sans engagement ?", a: "Oui, l'abonnement est mensuel et sans engagement. Tu peux résilier à tout moment depuis ton espace Stripe." },
           ].map((faq, i) => (
             <div key={i} className={styles.faq}>
               <div className={styles.faqQ}>❓ {faq.q}</div>
