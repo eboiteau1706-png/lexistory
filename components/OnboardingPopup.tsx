@@ -49,16 +49,13 @@ export default function OnboardingPopup() {
   const [step, setStep]           = useState(0);
   const [showLogin, setShowLogin] = useState(false);
   const [user, setUser]           = useState<any>(null);
-  const router  = useRouter();
+  const router   = useRouter();
   const supabase = createClient();
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null);
-      if (!session?.user) {
-        const seen = localStorage.getItem("lx_onboarding_done");
-        if (!seen) setShow(true);
-      }
+      if (!session?.user) setShow(true);
     });
   }, []);
 
@@ -68,17 +65,15 @@ export default function OnboardingPopup() {
   }
 
   function handleSkip() {
-    localStorage.setItem("lx_onboarding_done", "1");
     setShow(false);
+    router.push("/login");
   }
 
-  function handleSkipForever() {
-    localStorage.setItem("lx_onboarding_done", "forever");
+  function handleContinueWithout() {
     setShow(false);
   }
 
   function handleLogin() {
-    localStorage.setItem("lx_onboarding_done", "1");
     setShow(false);
     router.push("/login");
   }
@@ -92,7 +87,6 @@ export default function OnboardingPopup() {
       <div className={styles.modal}>
         {!showLogin ? (
           <>
-            {/* Dots */}
             <div className={styles.dots}>
               {STEPS.map((_, i) => (
                 <div key={i} className={`${styles.dot} ${i === step ? styles.dotActive : i < step ? styles.dotDone : ""}`} />
@@ -135,11 +129,8 @@ export default function OnboardingPopup() {
               <button className={styles.btnNext} onClick={handleLogin}>
                 Se connecter / S'inscrire →
               </button>
-              <button className={styles.btnSkip} onClick={handleSkip}>
+              <button className={styles.btnSkip} onClick={handleContinueWithout}>
                 Continuer sans compte
-              </button>
-              <button className={styles.btnSkipForever} onClick={handleSkipForever}>
-                Ne plus afficher ce message
               </button>
             </div>
           </>
