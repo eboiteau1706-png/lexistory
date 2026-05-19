@@ -123,6 +123,7 @@ export default function Nav() {
             </div>
           )}
 
+          <a href="/jeux" className={styles.btnGhost}>🎮 Jeux</a>
           <a href="/classement" className={styles.btnGhost}>🏆 Classement</a>
 
           <a href="/amis" className={styles.btnGhost} style={{ position: "relative" }}>
@@ -179,6 +180,9 @@ export default function Nav() {
               <span>{level.emoji} {level.name} · {xp} XP</span>
             </div>
           )}
+          <button className={styles.mobileBtn} onClick={() => { setMenuOpen(false); router.push("/jeux"); }}>
+            🎮 Jeux
+          </button>
           <button className={styles.mobileBtn} onClick={() => { setMenuOpen(false); router.push("/classement"); }}>
             🏆 Classement
           </button>
