@@ -193,18 +193,27 @@ export default function JeuxPage() {
   const pDayIdx  = getDayIndex(PREMIUM_WORDS);
 
   // Gratuit
-  const wordOfDay = GAME_WORDS[dayIdx];
-  const defWord   = GAME_WORDS[(dayIdx + 1) % GAME_WORDS.length];
-  const anagWord  = GAME_WORDS[(dayIdx + 2) % GAME_WORDS.length];
+ // Ordre aléatoire mais fixe — chaque jeu a sa propre permutation
+const shuffledForWord = shuffle([...Array(GAME_WORDS.length).keys()], 11111);
+const shuffledForDef  = shuffle([...Array(GAME_WORDS.length).keys()], 22222);
+const shuffledForAnag = shuffle([...Array(GAME_WORDS.length).keys()], 33333);
+
+const wordOfDay = GAME_WORDS[shuffledForWord[dayIdx % GAME_WORDS.length]];
+const defWord   = GAME_WORDS[shuffledForDef[dayIdx % GAME_WORDS.length]];
+const anagWord  = GAME_WORDS[shuffledForAnag[dayIdx % GAME_WORDS.length]];
   const citation  = CITATIONS[getDayIndex(CITATIONS)];
   const anagramme = getAnagramme(anagWord.word, dayIdx * 31337);
   const wrongChoices = GAME_WORDS.filter(w => w.word !== defWord.word).slice(0, 3).map(w => w.word);
   const defChoices   = shuffle([defWord.word, ...wrongChoices], dayIdx * 99991);
 
   // Premium
-  const pWordOfDay = PREMIUM_WORDS[pDayIdx];
-  const pDefWord   = PREMIUM_WORDS[(pDayIdx + 1) % PREMIUM_WORDS.length];
-  const pAnagWord  = PREMIUM_WORDS[(pDayIdx + 2) % PREMIUM_WORDS.length];
+  const pShuffledForWord = shuffle([...Array(PREMIUM_WORDS.length).keys()], 44444);
+const pShuffledForDef  = shuffle([...Array(PREMIUM_WORDS.length).keys()], 55555);
+const pShuffledForAnag = shuffle([...Array(PREMIUM_WORDS.length).keys()], 66666);
+
+const pWordOfDay = PREMIUM_WORDS[pShuffledForWord[pDayIdx % PREMIUM_WORDS.length]];
+const pDefWord   = PREMIUM_WORDS[pShuffledForDef[pDayIdx % PREMIUM_WORDS.length]];
+const pAnagWord  = PREMIUM_WORDS[pShuffledForAnag[pDayIdx % PREMIUM_WORDS.length]];
   const pCitation  = PREMIUM_CITATIONS[getDayIndex(PREMIUM_CITATIONS)];
   const pAnagramme = getAnagramme(pAnagWord.word, pDayIdx * 73331);
   const pWrongChoices = PREMIUM_WORDS.filter(w => w.word !== pDefWord.word).slice(0, 3).map(w => w.word);
