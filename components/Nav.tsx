@@ -104,9 +104,8 @@ export default function Nav() {
 
         <div className={styles.desktopRight}>
           {ready && user && (
-            <div className={styles.userStats}>
-              <span className={styles.streakPill}>🔥 {streak}j</span>
-              <div className={styles.levelPill} onClick={() => router.push("/rangs")} style={{ cursor: "pointer" }}>
+<div className={styles.userStats}>
+  <div className={styles.levelPill} onClick={() => router.push("/rangs")} style={{ cursor: "pointer" }}>
                 <span className={styles.levelText}>{level.emoji} {level.name}</span>
                 <div className={styles.xpBarRow}>
                   <div className={styles.xpBar}>

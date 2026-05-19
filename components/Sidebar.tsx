@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase";
 import { useRouter, useSearchParams } from "next/navigation";
 import { STORIES } from "@/lib/stories";
+import { getLevel, getXpProgress } from "@/lib/xp";
 import type { Story } from "@/lib/stories";
 import styles from "./Sidebar.module.css";
 
@@ -15,24 +16,24 @@ export default function Sidebar() {
   const [wordsCount, setWordsCount]     = useState(0);
   const [storiesCount, setStoriesCount] = useState(0);
   const [streak, setStreak]             = useState(0);
+  const [xp, setXp]                     = useState(0);
   const [showHistory, setShowHistory]   = useState(false);
   const supabase = createClient();
   const router   = useRouter();
   const searchParams = useSearchParams();
   const level = (searchParams.get("level") as Story["level"]) ?? "Lecteur";
-  const levelEmoji: Record<Story["level"], string> = { "Curieux": "🌱", "Lecteur": "📖", "Érudit": "🎓" };
 
-  // Calcul du jour actuel — même logique que page.tsx
-const reference    = new Date("2026-05-17T00:00:00");
-const parisNow     = new Date(new Date().toLocaleString("en-US", { timeZone: "Europe/Paris" }));
-const diffDays     = Math.floor((parisNow.getTime() - reference.getTime()) / (1000 * 60 * 60 * 24));
-const levelStories = STORIES.filter(s => s.level === level);
-const currentIndex = diffDays % levelStories.length;
-const availableStories = levelStories.slice(0, currentIndex + 1).reverse();
+  const reference    = new Date("2026-05-17T00:00:00");
+  const parisNow     = new Date(new Date().toLocaleString("en-US", { timeZone: "Europe/Paris" }));
+  const diffDays     = Math.floor((parisNow.getTime() - reference.getTime()) / (1000 * 60 * 60 * 24));
+  const levelStories = STORIES.filter(s => s.level === level);
+  const currentIndex = diffDays % levelStories.length;
+  const availableStories = levelStories.slice(0, currentIndex + 1).reverse();
 
   async function loadStats(uid: string) {
-    const { data: profile } = await supabase.from("profiles").select("is_premium").eq("id", uid).single();
+    const { data: profile } = await supabase.from("profiles").select("is_premium, xp").eq("id", uid).single();
     if (profile?.is_premium) setIsPremium(true);
+    setXp(profile?.xp ?? 0);
 
     const { count: wc } = await supabase.from("words_seen").select("word", { count: "exact" }).eq("user_id", uid);
     setWordsCount(wc ?? 0);
@@ -97,6 +98,9 @@ const availableStories = levelStories.slice(0, currentIndex + 1).reverse();
     finally { setLoading(false); }
   }
 
+  const lvl  = getLevel(xp);
+  const { pct, current, needed } = getXpProgress(xp);
+
   if (!ready) return null;
 
   return (
@@ -121,10 +125,18 @@ const availableStories = levelStories.slice(0, currentIndex + 1).reverse();
               <span className={styles.statLabel}>Histoires lues</span>
               <span className={styles.statVal}>{storiesCount}</span>
             </div>
-            <div className={styles.statRow}>
+            <div
+              className={styles.statRow}
+              style={{ cursor: "pointer" }}
+              onClick={() => router.push("/rangs")}
+            >
               <span className={styles.statLabel}>Niveau actuel</span>
-              <span className={`${styles.statVal} ${styles.gold}`}>{levelEmoji[level]} {level}</span>
+              <span className={`${styles.statVal} ${styles.gold}`}>{lvl.emoji} {lvl.name}</span>
             </div>
+            <div className={styles.xpBarSidebar}>
+              <div className={styles.xpBarFillSidebar} style={{ width: `${pct}%` }} />
+            </div>
+            <div className={styles.xpLabelSidebar}>{xp} XP · {current}/{needed}</div>
           </div>
         </>
       ) : (
