@@ -69,9 +69,6 @@ export default function LoginPage() {
               : "Un lien de confirmation a été envoyé à ton adresse email."}
           </p>
 
-<button className={styles.btnSecondary} onClick={() => { setSent(false); setMode("login"); }}>
-  ← Retour
-</button>
 <a href="/login" className={styles.btnPrimary} style={{ textDecoration: "none", textAlign: "center" }}>
   J'ai confirmé mon email → Se connecter
 </a>
