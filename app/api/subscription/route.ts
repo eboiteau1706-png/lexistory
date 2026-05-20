@@ -36,8 +36,10 @@ export async function GET() {
     const now = new Date();
     const daysLeft = Math.ceil((renewalDate.getTime() - now.getTime()) / 86400000);
     const renewalDateStr = renewalDate.toLocaleDateString("fr-FR", {
-      day: "numeric", month: "long",
-    });
+  day: "numeric",
+  month: "long",
+  timeZone: "Europe/Paris",
+});
 
     return NextResponse.json({ renewalDate: renewalDateStr, daysLeft });
   } catch (err: any) {

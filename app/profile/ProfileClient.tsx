@@ -257,9 +257,13 @@ export default function ProfileClient({ user }: { user: User }) {
             ) : (
               <>
                 <div className={styles.subscriptionInfo}>
-                  <span>✨ Premium actif</span>
-                  {renewalDate && <span className={styles.renewalDate}>Renouvellement le {renewalDate} ({daysLeft}j)</span>}
-                </div>
+  <span>✨ Premium actif</span>
+</div>
+{renewalDate && (
+  <div className={styles.renewalDate}>
+    🔄 Prochain renouvellement : <strong>{renewalDate}</strong> — {daysLeft} jour{daysLeft !== 1 ? "s" : ""} restant{daysLeft !== 1 ? "s" : ""}
+  </div>
+)}
                 <button className={styles.cancelBtn} onClick={() => setShowCancelConfirm(true)}>
                   Résilier mon abonnement
                 </button>
