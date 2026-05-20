@@ -46,8 +46,13 @@ export async function POST() {
     await supabaseAdmin.from("friendships").delete().or(`user_id.eq.${user.id},friend_id.eq.${user.id}`);
     await supabaseAdmin.from("profiles").delete().eq("id", user.id);
 
-    // Supprime le compte Auth
-    await supabaseAdmin.auth.admin.deleteUser(user.id);
+// Libère l'email original avant suppression
+await supabaseAdmin.auth.admin.updateUserById(user.id, {
+  email: `deleted_${user.id}@deleted.lexistory`,
+});
+
+// Supprime le compte Auth
+await supabaseAdmin.auth.admin.deleteUser(user.id);
 
     return NextResponse.json({ success: true });
   } catch (err: any) {
