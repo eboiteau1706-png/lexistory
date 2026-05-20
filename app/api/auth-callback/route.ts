@@ -32,8 +32,8 @@ export async function GET(request: NextRequest) {
       return NextResponse.redirect(`${origin}/compte-confirme`);
     }
     if (type === "recovery") {
-      return NextResponse.redirect(`${origin}/login`);
-    }
+  return NextResponse.redirect(`${origin}/reset-password`);
+}
   }
 
   if (code) {
