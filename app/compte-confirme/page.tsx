@@ -1,4 +1,20 @@
+"use client";
+import { useEffect } from "react";
+import { useSearchParams } from "next/navigation";
+import { createClient } from "@/lib/supabase";
+
 export default function CompteConfirmePage() {
+const searchParams = useSearchParams();
+  const supabase = createClient();
+
+  useEffect(() => {
+    const token_hash = searchParams.get("token_hash");
+    const type = searchParams.get("type");
+    if (token_hash && type) {
+      supabase.auth.verifyOtp({ token_hash, type: type as any });
+    }
+  }, []);
+
   return (
     <div style={{
       display: "flex",
