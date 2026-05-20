@@ -39,7 +39,7 @@ export default function Rangs() {
               <div>
                 <div className={styles.xpRuleName}>Mini-jeux Premium exclusifs</div>
                 <div className={styles.xpRuleVal}><span className={styles.premium}>+3 XP par jeu réussi (Premium)</span></div>
-                <div className={styles.xpRuleNote}>4 jeux exclusifs supplémentaires — jusqu&apos;à +12 XP/jour</div>
+                <div className={styles.xpRuleNote}>4 jeux exclusifs supplémentaires — jusqu&apos;à +9 XP/jour</div>
               </div>
             </div>
             <div className={styles.xpRule}>
