@@ -34,6 +34,7 @@ export default function ProfileClient({ user }: { user: User }) {
   const [cancelDone, setCancelDone]             = useState(false);
   const [renewalDate, setRenewalDate]           = useState<string | null>(null);
   const [daysLeft, setDaysLeft]                 = useState<number | null>(null);
+  const [cancelAtPeriodEnd, setCancelAtPeriodEnd] = useState(false);
 
   useEffect(() => {
     supabase.from("profiles").select("username, is_premium, xp, stripe_customer_id").eq("id", user.id).single()
@@ -46,6 +47,7 @@ export default function ProfileClient({ user }: { user: User }) {
           fetch("/api/subscription").then(r => r.json()).then(d => {
             if (d.renewalDate) setRenewalDate(d.renewalDate);
             if (d.daysLeft) setDaysLeft(d.daysLeft);
+            if (d.cancelAtPeriodEnd) setCancelAtPeriodEnd(true);
           });
         }
       });
@@ -127,15 +129,9 @@ export default function ProfileClient({ user }: { user: User }) {
         body: JSON.stringify({ cancel: true }),
       });
       const data = await res.json();
-      if (data.success) {
-        setCancelDone(true);
-        setShowCancelConfirm(false);
-      } else {
-        alert("Erreur, réessaie ou contacte e.boiteau1706@gmail.com");
-      }
-    } catch {
-      alert("Erreur, réessaie.");
-    }
+      if (data.success) { setCancelDone(true); setShowCancelConfirm(false); }
+      else alert("Erreur, réessaie ou contacte e.boiteau1706@gmail.com");
+    } catch { alert("Erreur, réessaie."); }
     finally { setCancelling(false); }
   }
 
@@ -150,13 +146,14 @@ export default function ProfileClient({ user }: { user: User }) {
     finally { setDeleting(false); }
   }
 
-  const initial   = (username?.[0] || user.email?.[0] || "?").toUpperCase();
-  const level     = getLevel(xp);
+  const initial    = (username?.[0] || user.email?.[0] || "?").toUpperCase();
+  const level      = getLevel(xp);
   const { current, needed, pct } = getXpProgress(xp);
-  const nextLevel = LEVELS.find(l => l.level === level.level + 1);
+  const nextLevel  = LEVELS.find(l => l.level === level.level + 1);
   const levelEmoji: Record<string, string> = { "Curieux": "🌱", "Lecteur": "📖", "Érudit": "🎓" };
   const maxStories = Math.max(...Object.values(levelBreakdown), 1);
   const isLifetime = isPremium && !stripeCustomerId;
+  const isCancelled = cancelAtPeriodEnd || cancelDone;
 
   return (
     <div className={styles.page}>
@@ -164,7 +161,7 @@ export default function ProfileClient({ user }: { user: User }) {
         <div className={styles.avatar}>{initial}</div>
         {isPremium && (
           <div className={`${styles.premiumBadge} ${isLifetime ? styles.premiumBadgeLifetime : ""}`}>
-            {isLifetime ? "✨ Premium à vie" : "✨ Premium"}
+            {isLifetime ? "✨ Premium à vie" : isCancelled ? "⏳ Premium (résilié)" : "✨ Premium"}
           </div>
         )}
 
@@ -250,24 +247,21 @@ export default function ProfileClient({ user }: { user: User }) {
         {/* Gestion abonnement */}
         {isPremium && stripeCustomerId ? (
           <div className={styles.subscriptionBox}>
-            {cancelDone ? (
-              <div className={styles.cancelDone}>
-                ✅ Résiliation confirmée — ton accès Premium reste actif jusqu'au {renewalDate ?? "fin de période"}.
+            <div className={styles.subscriptionInfo}>
+              <span>{isCancelled ? "⏳ Abonnement résilié" : "✨ Premium actif"}</span>
+            </div>
+            {renewalDate && (
+              <div className={styles.renewalDate}>
+                {isCancelled
+                  ? `Accès jusqu'au ${renewalDate} — ${daysLeft} jour${daysLeft !== 1 ? "s" : ""} restant${daysLeft !== 1 ? "s" : ""}`
+                  : `Renouvellement le ${renewalDate} — ${daysLeft} jour${daysLeft !== 1 ? "s" : ""} restant${daysLeft !== 1 ? "s" : ""}`
+                }
               </div>
-            ) : (
-              <>
-                <div className={styles.subscriptionInfo}>
-  <span>✨ Premium actif</span>
-</div>
-{renewalDate && (
-  <div className={styles.renewalDate}>
-    🔄 Prochain renouvellement : <strong>{renewalDate}</strong> — {daysLeft} jour{daysLeft !== 1 ? "s" : ""} restant{daysLeft !== 1 ? "s" : ""}
-  </div>
-)}
-                <button className={styles.cancelBtn} onClick={() => setShowCancelConfirm(true)}>
-                  Résilier mon abonnement
-                </button>
-              </>
+            )}
+            {!isCancelled && (
+              <button className={styles.cancelBtn} onClick={() => setShowCancelConfirm(true)}>
+                Résilier mon abonnement
+              </button>
             )}
           </div>
         ) : isPremium && !stripeCustomerId ? (
@@ -326,7 +320,7 @@ export default function ProfileClient({ user }: { user: User }) {
             <p style={{ fontFamily: "var(--font-playfair)", fontSize: "1.1rem", fontWeight: 700, color: "var(--text)" }}>Supprimer mon compte ?</p>
             <p style={{ fontSize: "0.88rem", color: "var(--text-muted)", lineHeight: 1.6 }}>
               Cette action est irréversible. Toutes tes données seront supprimées.
-              {isPremium && stripeCustomerId && !cancelDone && " Résilie d'abord ton abonnement."}
+              {isPremium && stripeCustomerId && !isCancelled && " Résilie d'abord ton abonnement."}
             </p>
             <div style={{ display: "flex", gap: "8px" }}>
               <button style={{ flex: 1, padding: "10px", borderRadius: "10px", background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text-muted)", cursor: "pointer", fontFamily: "inherit", fontSize: "0.88rem" }} onClick={() => setShowDeleteConfirm(false)}>Annuler</button>

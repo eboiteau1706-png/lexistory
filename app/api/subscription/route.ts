@@ -52,8 +52,9 @@ export async function GET() {
       timeZone: "Europe/Paris",
     });
 
-    return NextResponse.json({ renewalDate: renewalDateStr, daysLeft });
+    return NextResponse.json({ renewalDate: renewalDateStr, daysLeft,  cancelAtPeriodEnd: sub.cancel_at_period_end ?? false, });
   } catch (err: any) {
     return NextResponse.json({ error: err.message }, { status: 500 });
   }
+  
 }
