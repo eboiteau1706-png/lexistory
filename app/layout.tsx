@@ -4,8 +4,8 @@ import Nav from "@/components/Nav";
 import Footer from "@/components/Footer";
 import AdBanner from "@/components/AdBanner";
 import UsernameModal from "@/components/UsernameModal";
-import "./globals.css";
 import OnboardingPopup from "@/components/OnboardingPopup";
+import "./globals.css";
 
 const playfair = Playfair_Display({
   subsets: ["latin"],
@@ -20,17 +20,20 @@ const dmSans = DM_Sans({
   weight: ["300", "400", "500", "600"],
 });
 
-export const metadata = {
+export const metadata: Metadata = {
   title: "LexiStory — Apprends le français en lisant",
-  description: "Lis une histoire par jour, découvre de nouveaux mots et gagne des XP. L'application qui rend l'apprentissage du vocabulaire français amusant.",
-  keywords: "lexistory, vocabulaire français, apprendre français, histoires quotidiennes",
+  description: "Une histoire courte par jour pour enrichir ton vocabulaire en français. Clique sur n'importe quel mot pour voir sa définition, gagne des XP et monte de niveau !",
+  keywords: "lexistory, vocabulaire français, apprendre français, histoires quotidiennes, définitions",
   openGraph: {
-    title: "LexiStory",
-    description: "Apprends le français en lisant une histoire par jour.",
+    title: "LexiStory — Apprends le français en lisant",
+    description: "Une histoire courte par jour pour enrichir ton vocabulaire en français.",
     url: "https://lexistory.fr",
+    siteName: "LexiStory",
+    locale: "fr_FR",
+    type: "website",
   },
   twitter: {
-    card: "summary_large_image",
+    card: "summary",
     title: "LexiStory — Apprends le français en lisant",
     description: "Une histoire courte par jour pour enrichir ton vocabulaire en français.",
   },
@@ -45,12 +48,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="fr">
       <head>
         <script async src="https://www.googletagmanager.com/gtag/js?id=G-4J8MWNBH93" />
-<script dangerouslySetInnerHTML={{ __html: `
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-  gtag('config', 'G-4J8MWNBH93');
-`}} />
+        <script dangerouslySetInnerHTML={{ __html: `
+          window.dataLayer = window.dataLayer || [];
+          function gtag(){dataLayer.push(arguments);}
+          gtag('js', new Date());
+          gtag('config', 'G-4J8MWNBH93');
+        `}} />
         <script
           async
           src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4574004728084162"
@@ -58,13 +61,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         />
       </head>
       <body className={`${playfair.variable} ${dmSans.variable}`}>
-  <Nav />
-  <OnboardingPopup />
-  <UsernameModal />
-  {children}
-  <AdBanner />
-  <Footer />
-</body>
+        <Nav />
+        <OnboardingPopup />
+        <UsernameModal />
+        {children}
+        <AdBanner />
+        <Footer />
+      </body>
     </html>
   );
 }
