@@ -74,10 +74,18 @@ export default function Sidebar() {
       }
     });
 
-    const onWordSeen  = () => { if (userId) loadStats(userId); };
-    const onStoryRead = () => { if (userId) loadStats(userId); };
-    window.addEventListener("lexistory:word-seen", onWordSeen);
-    window.addEventListener("lexistory:story-read", onStoryRead);
+    const onWordSeen  = () => {
+  supabase.auth.getSession().then(({ data: { session } }) => {
+    if (session?.user) loadStats(session.user.id);
+  });
+};
+const onStoryRead = () => {
+  supabase.auth.getSession().then(({ data: { session } }) => {
+    if (session?.user) loadStats(session.user.id);
+  });
+};
+window.addEventListener("lexistory:word-seen", onWordSeen);
+window.addEventListener("lexistory:story-read", onStoryRead);
 
     return () => {
       listener.subscription.unsubscribe();
