@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
 import styles from "./login.module.css";
@@ -14,6 +14,14 @@ export default function LoginPage() {
   const [sent, setSent]           = useState(false);
   const [loading, setLoading]     = useState(false);
   const [error, setError]         = useState("");
+  const [resendCooldown, setResendCooldown] = useState(0);
+
+  // Countdown pour le renvoi d'email
+  useEffect(() => {
+    if (resendCooldown <= 0) return;
+    const timer = setTimeout(() => setResendCooldown(c => c - 1), 1000);
+    return () => clearTimeout(timer);
+  }, [resendCooldown]);
 
   async function handleGoogle() {
     await supabase.auth.signInWithOAuth({
@@ -42,7 +50,7 @@ export default function LoginPage() {
     });
     setLoading(false);
     if (error) setError("Erreur lors de l'inscription.");
-    else setSent(true);
+    else { setSent(true); setResendCooldown(60); }
   }
 
   async function handleForgotPassword() {
@@ -53,7 +61,25 @@ export default function LoginPage() {
     });
     setLoading(false);
     if (error) setError("Erreur, vérifie ton adresse email.");
-    else setSent(true);
+    else { setSent(true); setResendCooldown(60); }
+  }
+
+  async function handleResend() {
+    if (resendCooldown > 0) return;
+    setLoading(true);
+    if (mode === "forgot") {
+      await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/api/auth-callback`,
+      });
+    } else {
+      await supabase.auth.resend({
+        type: "signup",
+        email,
+        options: { emailRedirectTo: `${window.location.origin}/api/auth-callback` },
+      });
+    }
+    setLoading(false);
+    setResendCooldown(60);
   }
 
   if (sent) {
@@ -65,15 +91,35 @@ export default function LoginPage() {
           <h1 className={styles.title}>Vérifie tes emails !</h1>
           <p className={styles.subtitle}>
             {mode === "forgot"
-              ? "Un lien pour réinitialiser ton mot de passe a été envoyé."
-              : "Un lien de confirmation a été envoyé à ton adresse email."}
+              ? "Un lien pour réinitialiser ton mot de passe a été envoyé à "
+              : "Un lien de confirmation a été envoyé à "}
+            <strong>{email}</strong>
           </p>
 
-<a href="/login" className={styles.btnPrimary} style={{ textDecoration: "none", textAlign: "center" }}>
-  J'ai confirmé mon email → Se connecter
-</a>
+          {mode !== "forgot" && (
+            <a
+              href="/login"
+              className={styles.btnPrimary}
+              style={{ textDecoration: "none", textAlign: "center", display: "block" }}
+            >
+              J&apos;ai confirmé mon email → Se connecter
+            </a>
+          )}
 
-          <button className={styles.btnSecondary} onClick={() => { setSent(false); setMode("login"); }}>← Retour</button>
+          <button
+            className={styles.btnSecondary}
+            onClick={handleResend}
+            disabled={resendCooldown > 0 || loading}
+            style={{ opacity: resendCooldown > 0 ? 0.5 : 1 }}
+          >
+            {resendCooldown > 0
+              ? `Renvoyer l'email (${resendCooldown}s)`
+              : "Je n'ai pas reçu l'email — Renvoyer"}
+          </button>
+
+          <button className={styles.btnSecondary} onClick={() => { setSent(false); setMode("login"); }}>
+            ← Retour
+          </button>
         </div>
       </div>
     );
@@ -94,7 +140,6 @@ export default function LoginPage() {
             : "Content de te revoir sur LexiStory !"}
         </p>
 
-        {/* Google — seulement sur login et signup */}
         {mode !== "forgot" && (
           <>
             <button className={styles.googleBtn} onClick={handleGoogle}>
@@ -149,12 +194,8 @@ export default function LoginPage() {
             : "Envoyer le lien"}
         </button>
 
-        {/* Mot de passe oublié — visible seulement en mode login */}
         {mode === "login" && (
-          <button
-            className={styles.forgotBtn}
-            onClick={() => { setMode("forgot"); setError(""); }}
-          >
+          <button className={styles.forgotBtn} onClick={() => { setMode("forgot"); setError(""); }}>
             Mot de passe oublié ?
           </button>
         )}
@@ -173,10 +214,7 @@ export default function LoginPage() {
         )}
 
         {mode === "forgot" && (
-          <button
-            className={styles.switchBtn}
-            onClick={() => { setMode("login"); setError(""); }}
-          >
+          <button className={styles.switchBtn} onClick={() => { setMode("login"); setError(""); }}>
             ← Retour à la connexion
           </button>
         )}

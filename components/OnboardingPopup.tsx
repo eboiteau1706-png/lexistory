@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { createClient } from "@/lib/supabase";
 import styles from "./OnboardingPopup.module.css";
 
@@ -50,14 +50,18 @@ export default function OnboardingPopup() {
   const [showLogin, setShowLogin] = useState(false);
   const [user, setUser]           = useState<any>(null);
   const router   = useRouter();
+  const pathname = usePathname();
   const supabase = createClient();
 
   useEffect(() => {
+    // Ne pas afficher sur la page login ou compte-confirme
+    if (pathname === "/login" || pathname === "/compte-confirme") return;
+
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null);
       if (!session?.user) setShow(true);
     });
-  }, []);
+  }, [pathname]);
 
   function handleNext() {
     if (step < STEPS.length - 1) setStep(step + 1);
