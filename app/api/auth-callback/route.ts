@@ -24,23 +24,20 @@ export async function GET(request: NextRequest) {
     }
   );
  
-  if (code) {
-    await supabase.auth.exchangeCodeForSession(code);
-    // Connexion Google ou magic link → redirige vers l'accueil
-    return NextResponse.redirect(`${origin}/`);
+ if (token_hash && type) {
+  await supabase.auth.verifyOtp({ token_hash, type: type as any });
+  if (type === "signup") {
+    return NextResponse.redirect(`${origin}/compte-confirme`);
   }
- 
-  if (token_hash && type) {
-    await supabase.auth.verifyOtp({ token_hash, type: type as any });
-    // Confirmation email → redirige vers page de confirmation
-    if (type === "signup") {
-      return NextResponse.redirect(`${origin}/compte-confirme`);
-    }
-    // Reset mot de passe → redirige vers login
-    if (type === "recovery") {
-      return NextResponse.redirect(`${origin}/login`);
-    }
+  if (type === "recovery") {
+    return NextResponse.redirect(`${origin}/login`);
   }
+}
+
+if (code) {
+  await supabase.auth.exchangeCodeForSession(code);
+  return NextResponse.redirect(`${origin}/`);
+}
  
   return NextResponse.redirect(`${origin}/`);
 }
