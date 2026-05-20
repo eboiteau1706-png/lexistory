@@ -372,3 +372,15 @@
   .premiumCta { flex-direction: column; text-align: center; }
   .premiumCtaBtn { width: 100%; text-align: center; }
 }
+
+.letterClickable { cursor: pointer; transition: all 0.15s; }
+.letterClickable:hover { background: var(--accent); color: var(--bg); transform: translateY(-3px); }
+.letterSelected { cursor: pointer; background: var(--accent); color: var(--bg); opacity: 0.9; }
+.letterSelected:hover { opacity: 0.6; transform: translateY(2px); }
+.anagAnswer {
+  display: flex; flex-wrap: wrap; gap: 6px;
+  min-height: 44px; padding: 8px 12px;
+  background: var(--surface2); border: 1px dashed var(--border);
+  border-radius: 10px; margin-top: 8px; align-items: center;
+}
+.anagPlaceholder { color: var(--text-dim); font-size: 0.82rem; font-style: italic; }

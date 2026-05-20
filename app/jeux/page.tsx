@@ -135,6 +135,8 @@ const PREMIUM_CITATIONS = [
   { text: "Connais-toi *** et tu connaîtras l'univers et les dieux.", answer: "toi-même", choices: ["toi-même", "par l'étude", "par l'autre", "par l'expérience"] },
 ];
 
+type Letter = { char: string; id: number };
+
 function getParisDateKey() {
   const paris = new Date(new Date().toLocaleString("en-US", { timeZone: "Europe/Paris" }));
   const y = paris.getFullYear();
@@ -174,23 +176,29 @@ function getAnagramme(word: string, seed: number): string {
 
 export default function JeuxPage() {
   const supabase = createClient();
-  const [userId, setUserId]           = useState<string | null>(null);
-  const [isPremium, setIsPremium]     = useState(false);
-  const [defAnswer, setDefAnswer]     = useState<string | null>(null);
-  const [anagAnswer, setAnagAnswer]   = useState("");
-  const [anagResult, setAnagResult]   = useState<boolean | null>(null);
-  const [citAnswer, setCitAnswer]     = useState<string | null>(null);
-  const [pDefAnswer, setPDefAnswer]   = useState<string | null>(null);
-  const [pAnagAnswer, setPAnagAnswer] = useState("");
-  const [pAnagResult, setPAnagResult] = useState<boolean | null>(null);
-  const [pCitAnswer, setPCitAnswer]   = useState<string | null>(null);
-  const [xpGained, setXpGained]       = useState<number | null>(null);
+  const [userId, setUserId]       = useState<string | null>(null);
+  const [isPremium, setIsPremium] = useState(false);
+  const [xpGained, setXpGained]   = useState<number | null>(null);
+
+  // Jeux gratuits
+  const [defAnswer, setDefAnswer]         = useState<string | null>(null);
+  const [anagLetters, setAnagLetters]     = useState<Letter[]>([]);
+  const [anagSelected, setAnagSelected]   = useState<Letter[]>([]);
+  const [anagResult, setAnagResult]       = useState<boolean | null>(null);
+  const [citAnswer, setCitAnswer]         = useState<string | null>(null);
+
+  // Jeux Premium
+  const [pDefAnswer, setPDefAnswer]       = useState<string | null>(null);
+  const [pAnagLetters, setPAnagLetters]   = useState<Letter[]>([]);
+  const [pAnagSelected, setPAnagSelected] = useState<Letter[]>([]);
+  const [pAnagResult, setPAnagResult]     = useState<boolean | null>(null);
+  const [pCitAnswer, setPCitAnswer]       = useState<string | null>(null);
 
   const todayKey = getParisDateKey();
   const dayIdx   = getDayIndex(GAME_WORDS);
   const pDayIdx  = getDayIndex(PREMIUM_WORDS);
 
-  // Gratuit — ordre aléatoire fixe par jeu
+  // Gratuit
   const shuffledForWord = shuffle([...Array(GAME_WORDS.length).keys()], 11111);
   const shuffledForDef  = shuffle([...Array(GAME_WORDS.length).keys()], 22222);
   const shuffledForAnag = shuffle([...Array(GAME_WORDS.length).keys()], 33333);
@@ -199,15 +207,15 @@ export default function JeuxPage() {
   let anagIdx   = shuffledForAnag[dayIdx % GAME_WORDS.length];
   if (defIdx === wordIdx) defIdx = (defIdx + 1) % GAME_WORDS.length;
   if (anagIdx === wordIdx || anagIdx === defIdx) anagIdx = (anagIdx + 2) % GAME_WORDS.length;
-  const wordOfDay = GAME_WORDS[wordIdx];
-  const defWord   = GAME_WORDS[defIdx];
-  const anagWord  = GAME_WORDS[anagIdx];
-  const citation  = CITATIONS[getDayIndex(CITATIONS)];
-  const anagramme = getAnagramme(anagWord.word, dayIdx * 31337);
+  const wordOfDay    = GAME_WORDS[wordIdx];
+  const defWord      = GAME_WORDS[defIdx];
+  const anagWord     = GAME_WORDS[anagIdx];
+  const citation     = CITATIONS[getDayIndex(CITATIONS)];
+  const anagramme    = getAnagramme(anagWord.word, dayIdx * 31337);
   const wrongChoices = GAME_WORDS.filter(w => w.word !== defWord.word).slice(0, 3).map(w => w.word);
   const defChoices   = shuffle([defWord.word, ...wrongChoices], dayIdx * 99991);
 
-  // Premium — ordre aléatoire fixe par jeu
+  // Premium
   const pShuffledForWord = shuffle([...Array(PREMIUM_WORDS.length).keys()], 44444);
   const pShuffledForDef  = shuffle([...Array(PREMIUM_WORDS.length).keys()], 55555);
   const pShuffledForAnag = shuffle([...Array(PREMIUM_WORDS.length).keys()], 66666);
@@ -216,11 +224,11 @@ export default function JeuxPage() {
   let pAnagIdx   = pShuffledForAnag[pDayIdx % PREMIUM_WORDS.length];
   if (pDefIdx === pWordIdx) pDefIdx = (pDefIdx + 1) % PREMIUM_WORDS.length;
   if (pAnagIdx === pWordIdx || pAnagIdx === pDefIdx) pAnagIdx = (pAnagIdx + 2) % PREMIUM_WORDS.length;
-  const pWordOfDay = PREMIUM_WORDS[pWordIdx];
-  const pDefWord   = PREMIUM_WORDS[pDefIdx];
-  const pAnagWord  = PREMIUM_WORDS[pAnagIdx];
-  const pCitation  = PREMIUM_CITATIONS[getDayIndex(PREMIUM_CITATIONS)];
-  const pAnagramme = getAnagramme(pAnagWord.word, pDayIdx * 73331);
+  const pWordOfDay    = PREMIUM_WORDS[pWordIdx];
+  const pDefWord      = PREMIUM_WORDS[pDefIdx];
+  const pAnagWord     = PREMIUM_WORDS[pAnagIdx];
+  const pCitation     = PREMIUM_CITATIONS[getDayIndex(PREMIUM_CITATIONS)];
+  const pAnagramme    = getAnagramme(pAnagWord.word, pDayIdx * 73331);
   const pWrongChoices = PREMIUM_WORDS.filter(w => w.word !== pDefWord.word).slice(0, 3).map(w => w.word);
   const pDefChoices   = shuffle([pDefWord.word, ...pWrongChoices], pDayIdx * 11117);
 
@@ -251,16 +259,34 @@ export default function JeuxPage() {
       const savedPDef  = localStorage.getItem(pDefKey);
       const savedPAnag = localStorage.getItem(pAnagKey);
       const savedPCit  = localStorage.getItem(pCitKey);
-      if (savedDef)  setDefAnswer(savedDef);
-      if (savedAnag) { setAnagResult(savedAnag === "true"); setAnagAnswer(anagWord.word); }
-      if (savedCit)  setCitAnswer(savedCit);
-      if (savedPDef)  setPDefAnswer(savedPDef);
-      if (savedPAnag) { setPAnagResult(savedPAnag === "true"); setPAnagAnswer(pAnagWord.word); }
-      if (savedPCit)  setPCitAnswer(savedPCit);
+
+      if (savedDef) setDefAnswer(savedDef);
+      if (savedCit) setCitAnswer(savedCit);
+      if (savedPDef) setPDefAnswer(savedPDef);
+      if (savedPCit) setPCitAnswer(savedPCit);
+
+      // Init anagramme gratuit
+      if (savedAnag) {
+        setAnagResult(savedAnag === "true");
+        setAnagLetters([]);
+        setAnagSelected(anagWord.word.split("").map((char, i) => ({ char, id: i })));
+      } else {
+        setAnagLetters(anagramme.split("").map((char, i) => ({ char, id: i })));
+        setAnagSelected([]);
+      }
+
+      // Init anagramme Premium
+      if (savedPAnag) {
+        setPAnagResult(savedPAnag === "true");
+        setPAnagLetters([]);
+        setPAnagSelected(pAnagWord.word.split("").map((char, i) => ({ char, id: i })));
+      } else {
+        setPAnagLetters(pAnagramme.split("").map((char, i) => ({ char, id: i })));
+        setPAnagSelected([]);
+      }
     });
   }, []);
 
-  // Jeux gratuits — avec boost x1.5 Premium
   async function addXp(amount: number) {
     if (!userId) return;
     const bonus = isPremium ? Math.round(amount * 1.5) : amount;
@@ -271,7 +297,6 @@ export default function JeuxPage() {
     window.dispatchEvent(new CustomEvent("lexistory:story-read"));
   }
 
-  // Jeux Premium — sans boost, toujours 3 XP fixe
   async function addXpNoBoost(amount: number) {
     if (!userId) return;
     const { data } = await supabase.from("profiles").select("xp").eq("id", userId).single();
@@ -281,6 +306,7 @@ export default function JeuxPage() {
     window.dispatchEvent(new CustomEvent("lexistory:story-read"));
   }
 
+  // Définition mystère
   function handleDefAnswer(choice: string) {
     if (defAnswer) return;
     setDefAnswer(choice);
@@ -289,15 +315,28 @@ export default function JeuxPage() {
     if (choice === defWord.word) addXp(3);
   }
 
-  function handleAnagSubmit() {
+  // Anagramme gratuit
+  function handleAnagClick(letter: Letter) {
     if (anagResult !== null) return;
-    const correct = anagAnswer.toLowerCase().trim() === anagWord.word.toLowerCase();
+    setAnagLetters(prev => prev.filter(l => l.id !== letter.id));
+    setAnagSelected(prev => [...prev, letter]);
+  }
+  function handleAnagDeselect(letter: Letter) {
+    if (anagResult !== null) return;
+    setAnagSelected(prev => prev.filter(l => l.id !== letter.id));
+    setAnagLetters(prev => [...prev, letter]);
+  }
+  function handleAnagSubmit() {
+    if (anagResult !== null || anagSelected.length === 0) return;
+    const answer = anagSelected.map(l => l.char).join("");
+    const correct = answer.toLowerCase() === anagWord.word.toLowerCase();
     setAnagResult(correct);
     const { anagKey } = getKeys(userId);
     localStorage.setItem(anagKey, correct.toString());
     if (correct) addXp(3);
   }
 
+  // Citation
   function handleCitAnswer(choice: string) {
     if (citAnswer) return;
     setCitAnswer(choice);
@@ -306,7 +345,7 @@ export default function JeuxPage() {
     if (choice === citation.answer) addXp(3);
   }
 
-  // ↓ Jeux Premium — addXpNoBoost (pas de x1.5)
+  // Définition Expert Premium
   function handlePDefAnswer(choice: string) {
     if (!isPremium || pDefAnswer) return;
     setPDefAnswer(choice);
@@ -315,15 +354,28 @@ export default function JeuxPage() {
     if (choice === pDefWord.word) addXpNoBoost(3);
   }
 
-  function handlePAnagSubmit() {
+  // Anagramme Premium
+  function handlePAnagClick(letter: Letter) {
     if (!isPremium || pAnagResult !== null) return;
-    const correct = pAnagAnswer.toLowerCase().trim() === pAnagWord.word.toLowerCase();
+    setPAnagLetters(prev => prev.filter(l => l.id !== letter.id));
+    setPAnagSelected(prev => [...prev, letter]);
+  }
+  function handlePAnagDeselect(letter: Letter) {
+    if (!isPremium || pAnagResult !== null) return;
+    setPAnagSelected(prev => prev.filter(l => l.id !== letter.id));
+    setPAnagLetters(prev => [...prev, letter]);
+  }
+  function handlePAnagSubmit() {
+    if (!isPremium || pAnagResult !== null || pAnagSelected.length === 0) return;
+    const answer = pAnagSelected.map(l => l.char).join("");
+    const correct = answer.toLowerCase() === pAnagWord.word.toLowerCase();
     setPAnagResult(correct);
     const { pAnagKey } = getKeys(userId);
     localStorage.setItem(pAnagKey, correct.toString());
     if (correct) addXpNoBoost(3);
   }
 
+  // Citation Premium
   function handlePCitAnswer(choice: string) {
     if (!isPremium || pCitAnswer) return;
     setPCitAnswer(choice);
@@ -345,6 +397,7 @@ export default function JeuxPage() {
       <div className={styles.sectionTitle}>📚 Jeux du jour</div>
       <div className={styles.grid}>
 
+        {/* MOT DU JOUR */}
         <div className={`${styles.card} ${styles.cardWide}`}>
           <div className={styles.cardTag}>📖 Mot du jour</div>
           <div className={styles.motDuJour}>
@@ -354,6 +407,7 @@ export default function JeuxPage() {
           </div>
         </div>
 
+        {/* DÉFINITION MYSTÈRE */}
         <div className={styles.card}>
           <div className={styles.cardTag}>🔍 Définition mystère</div>
           <p className={styles.cardDesc}>Quel mot correspond à cette définition ?</p>
@@ -375,27 +429,47 @@ export default function JeuxPage() {
           {!userId && <div className={styles.loginHint}>Connecte-toi pour gagner des XP !</div>}
         </div>
 
+        {/* ANAGRAMME */}
         <div className={styles.card}>
           <div className={styles.cardTag}>🔤 Anagramme</div>
-          <p className={styles.cardDesc}>Retrouve le mot mélangé :</p>
-          <div className={styles.anagramme}>
-            {anagramme.split("").map((l, i) => <span key={i} className={styles.letter}>{l}</span>)}
-          </div>
+          <p className={styles.cardDesc}>Reconstitue le mot en cliquant sur les lettres :</p>
           <div className={styles.anagHint}>{anagWord.def}</div>
+
           {anagResult === null ? (
-            <div className={styles.anagInput}>
-              <input className={styles.input} value={anagAnswer} onChange={e => setAnagAnswer(e.target.value)}
-                onKeyDown={e => e.key === "Enter" && handleAnagSubmit()} placeholder="Ta réponse..." maxLength={30} />
-              <button className={styles.submitBtn} onClick={handleAnagSubmit}>→</button>
-            </div>
+            <>
+              <div className={styles.anagramme}>
+                {anagLetters.map(l => (
+                  <span key={l.id} className={`${styles.letter} ${styles.letterClickable}`}
+                    onClick={() => handleAnagClick(l)}>{l.char}</span>
+                ))}
+              </div>
+              <div className={styles.anagAnswer}>
+                {anagSelected.length === 0
+                  ? <span className={styles.anagPlaceholder}>Clique sur les lettres...</span>
+                  : anagSelected.map(l => (
+                    <span key={l.id} className={`${styles.letter} ${styles.letterSelected}`}
+                      onClick={() => handleAnagDeselect(l)}>{l.char}</span>
+                  ))
+                }
+              </div>
+              {anagSelected.length === anagramme.length && (
+                <button className={styles.submitBtn} onClick={handleAnagSubmit}>Valider →</button>
+              )}
+            </>
           ) : (
             <div className={anagResult ? styles.resultOk : styles.resultKo}>
               {anagResult ? "✅ Bravo ! +3 XP" : `❌ C'était : ${anagWord.word}`}
+              {!anagResult && (
+                <div className={styles.anagramme} style={{ marginTop: 8 }}>
+                  {anagWord.word.split("").map((l, i) => <span key={i} className={styles.letter}>{l}</span>)}
+                </div>
+              )}
             </div>
           )}
           {!userId && <div className={styles.loginHint}>Connecte-toi pour gagner des XP !</div>}
         </div>
 
+        {/* CITATION */}
         <div className={`${styles.card} ${styles.cardWide}`}>
           <div className={styles.cardTag}>💬 Citation du jour</div>
           <p className={styles.cardDesc}>Quel mot manque dans cette citation ?</p>
@@ -424,11 +498,13 @@ export default function JeuxPage() {
         </div>
       </div>
 
+      {/* SECTION PREMIUM */}
       <div className={styles.sectionTitle}>
         ✨ Jeux Premium <span className={styles.premiumBadge}>Premium</span>
       </div>
       <div className={`${styles.grid} ${!isPremium ? styles.blurredSection : ""}`}>
 
+        {/* MOT PREMIUM */}
         <div className={`${styles.card} ${styles.cardWide} ${styles.premiumCard}`}>
           <div className={styles.cardTag}>📖 Mot Premium du jour</div>
           <div className={styles.motDuJour}>
@@ -438,6 +514,7 @@ export default function JeuxPage() {
           </div>
         </div>
 
+        {/* DÉFINITION EXPERT */}
         <div className={`${styles.card} ${styles.premiumCard}`}>
           <div className={styles.cardTag}>🔍 Définition Expert</div>
           <p className={styles.cardDesc}>Quel mot savant correspond à cette définition ?</p>
@@ -458,27 +535,46 @@ export default function JeuxPage() {
           )}
         </div>
 
+        {/* ANAGRAMME EXPERT */}
         <div className={`${styles.card} ${styles.premiumCard}`}>
           <div className={styles.cardTag}>🔤 Anagramme Expert</div>
-          <p className={styles.cardDesc}>Retrouve ce mot difficile :</p>
-          <div className={styles.anagramme}>
-            {pAnagramme.split("").map((l, i) => <span key={i} className={styles.letter}>{l}</span>)}
-          </div>
+          <p className={styles.cardDesc}>Reconstitue ce mot difficile :</p>
           <div className={styles.anagHint}>{pAnagWord.def}</div>
+
           {pAnagResult === null ? (
-            <div className={styles.anagInput}>
-              <input className={styles.input} value={pAnagAnswer} onChange={e => setPAnagAnswer(e.target.value)}
-                onKeyDown={e => e.key === "Enter" && handlePAnagSubmit()} placeholder="Ta réponse..." maxLength={30}
-                disabled={!isPremium} />
-              <button className={styles.submitBtn} onClick={handlePAnagSubmit} disabled={!isPremium}>→</button>
-            </div>
+            <>
+              <div className={styles.anagramme}>
+                {pAnagLetters.map(l => (
+                  <span key={l.id} className={`${styles.letter} ${isPremium ? styles.letterClickable : ""}`}
+                    onClick={() => handlePAnagClick(l)}>{l.char}</span>
+                ))}
+              </div>
+              <div className={styles.anagAnswer}>
+                {pAnagSelected.length === 0
+                  ? <span className={styles.anagPlaceholder}>Clique sur les lettres...</span>
+                  : pAnagSelected.map(l => (
+                    <span key={l.id} className={`${styles.letter} ${styles.letterSelected}`}
+                      onClick={() => handlePAnagDeselect(l)}>{l.char}</span>
+                  ))
+                }
+              </div>
+              {isPremium && pAnagSelected.length === pAnagramme.length && (
+                <button className={styles.submitBtn} onClick={handlePAnagSubmit}>Valider →</button>
+              )}
+            </>
           ) : (
             <div className={pAnagResult ? styles.resultOk : styles.resultKo}>
               {pAnagResult ? "✅ Bravo ! +3 XP" : `❌ C'était : ${pAnagWord.word}`}
+              {!pAnagResult && (
+                <div className={styles.anagramme} style={{ marginTop: 8 }}>
+                  {pAnagWord.word.split("").map((l, i) => <span key={i} className={styles.letter}>{l}</span>)}
+                </div>
+              )}
             </div>
           )}
         </div>
 
+        {/* CITATION PHILO */}
         <div className={`${styles.card} ${styles.cardWide} ${styles.premiumCard}`}>
           <div className={styles.cardTag}>💬 Citation Philosophique</div>
           <p className={styles.cardDesc}>Complète cette citation de philosophe :</p>
