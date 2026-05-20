@@ -28,8 +28,12 @@ export default function ProfileClient({ user }: { user: User }) {
   const [topWords, setTopWords]                 = useState<string[]>([]);
   const [levelBreakdown, setLevelBreakdown]     = useState<Record<string, number>>({});
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [showCancelConfirm, setShowCancelConfirm] = useState(false);
   const [deleting, setDeleting]                 = useState(false);
-  const [portalLoading, setPortalLoading]       = useState(false);
+  const [cancelling, setCancelling]             = useState(false);
+  const [cancelDone, setCancelDone]             = useState(false);
+  const [renewalDate, setRenewalDate]           = useState<string | null>(null);
+  const [daysLeft, setDaysLeft]                 = useState<number | null>(null);
 
   useEffect(() => {
     supabase.from("profiles").select("username, is_premium, xp, stripe_customer_id").eq("id", user.id).single()
@@ -38,6 +42,12 @@ export default function ProfileClient({ user }: { user: User }) {
         if (data?.is_premium) setIsPremium(data.is_premium);
         setXp(data?.xp ?? 0);
         setStripeCustomerId(data?.stripe_customer_id ?? null);
+        if (data?.stripe_customer_id) {
+          fetch("/api/subscription").then(r => r.json()).then(d => {
+            if (d.renewalDate) setRenewalDate(d.renewalDate);
+            if (d.daysLeft) setDaysLeft(d.daysLeft);
+          });
+        }
       });
 
     supabase.from("words_seen").select("word", { count: "exact" }).eq("user_id", user.id).order("seen_at", { ascending: false })
@@ -60,30 +70,23 @@ export default function ProfileClient({ user }: { user: User }) {
       .then(({ data }) => {
         if (!data || data.length === 0) return;
         const dates = [...new Set(data.map((d: any) => new Date(d.read_at).toDateString()))];
-
         let s = 1;
         for (let i = 1; i < dates.length; i++) {
           const diff = (new Date(dates[i-1]).getTime() - new Date(dates[i]).getTime()) / 86400000;
           if (diff === 1) s++; else break;
         }
         setStreak(s);
-
-        let maxStreak = 1;
-        let currentStreak = 1;
+        let maxStreak = 1, currentStreak = 1;
         for (let i = 1; i < dates.length; i++) {
           const diff = (new Date(dates[i-1]).getTime() - new Date(dates[i]).getTime()) / 86400000;
           if (diff === 1) { currentStreak++; if (currentStreak > maxStreak) maxStreak = currentStreak; }
           else { currentStreak = 1; }
         }
         setStreakRecord(Math.max(maxStreak, s));
-
         const oneWeekAgo = new Date(Date.now() - 7 * 86400000);
         const recentStories = data.filter((d: any) => new Date(d.read_at) > oneWeekAgo);
         setXpThisWeek(recentStories.length * 3);
-
-        if (data.length > 0 && s > 0) {
-          setCompletionRate(Math.min(100, Math.round((data.length / Math.max(s, 1)) * 100)));
-        }
+        if (data.length > 0 && s > 0) setCompletionRate(Math.min(100, Math.round((data.length / Math.max(s, 1)) * 100)));
       });
 
     supabase.from("profiles").select("id", { count: "exact" }).gt("xp", 0).then(async ({ count }) => {
@@ -96,10 +99,7 @@ export default function ProfileClient({ user }: { user: User }) {
 
   async function handleSaveUsername() {
     if (!newUsername.trim()) return;
-    if (!/^[a-zA-Z0-9_-]{2,20}$/.test(newUsername.trim())) {
-      setError("Pseudo invalide. Lettres, chiffres, - ou _ uniquement.");
-      return;
-    }
+    if (!/^[a-zA-Z0-9_-]{2,20}$/.test(newUsername.trim())) { setError("Pseudo invalide. Lettres, chiffres, - ou _ uniquement."); return; }
     setSaving(true); setError("");
     const { error } = await supabase.from("profiles").upsert({ id: user.id, username: newUsername.trim() });
     setSaving(false);
@@ -118,15 +118,25 @@ export default function ProfileClient({ user }: { user: User }) {
     if (data.url) window.location.href = data.url;
   }
 
-  async function handlePortal() {
-    setPortalLoading(true);
+  async function handleCancelSubscription() {
+    setCancelling(true);
     try {
-      const res  = await fetch("/api/portal", { method: "POST" });
+      const res = await fetch("/api/portal", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ cancel: true }),
+      });
       const data = await res.json();
-      if (data.url) window.location.href = data.url;
-      else alert("Erreur, réessaie.");
-    } catch { alert("Erreur, réessaie."); }
-    finally { setPortalLoading(false); }
+      if (data.success) {
+        setCancelDone(true);
+        setShowCancelConfirm(false);
+      } else {
+        alert("Erreur, réessaie ou contacte e.boiteau1706@gmail.com");
+      }
+    } catch {
+      alert("Erreur, réessaie.");
+    }
+    finally { setCancelling(false); }
   }
 
   async function handleDeleteAccount() {
@@ -134,15 +144,9 @@ export default function ProfileClient({ user }: { user: User }) {
     try {
       const res = await fetch("/api/delete-account", { method: "POST" });
       const data = await res.json();
-      if (data.success) {
-        await supabase.auth.signOut();
-        router.push("/");
-      } else {
-        alert("Erreur lors de la suppression. Contacte-nous à contact@lexistory.fr");
-      }
-    } catch {
-      alert("Erreur lors de la suppression. Contacte-nous à contact@lexistory.fr");
-    }
+      if (data.success) { await supabase.auth.signOut(); router.push("/"); }
+      else alert("Erreur lors de la suppression. Contacte-nous à e.boiteau1706@gmail.com");
+    } catch { alert("Erreur lors de la suppression."); }
     finally { setDeleting(false); }
   }
 
@@ -152,19 +156,15 @@ export default function ProfileClient({ user }: { user: User }) {
   const nextLevel = LEVELS.find(l => l.level === level.level + 1);
   const levelEmoji: Record<string, string> = { "Curieux": "🌱", "Lecteur": "📖", "Érudit": "🎓" };
   const maxStories = Math.max(...Object.values(levelBreakdown), 1);
-
-  // Badge Premium : à vie si pas de stripe_customer_id, sinon abonné normal
-  const premiumBadgeText = isPremium
-    ? stripeCustomerId ? "✨ Premium" : "✨ Premium à vie"
-    : null;
+  const isLifetime = isPremium && !stripeCustomerId;
 
   return (
     <div className={styles.page}>
       <div className={styles.card}>
         <div className={styles.avatar}>{initial}</div>
-        {premiumBadgeText && (
-          <div className={`${styles.premiumBadge} ${!stripeCustomerId ? styles.premiumBadgeLifetime : ""}`}>
-            {premiumBadgeText}
+        {isPremium && (
+          <div className={`${styles.premiumBadge} ${isLifetime ? styles.premiumBadgeLifetime : ""}`}>
+            {isLifetime ? "✨ Premium à vie" : "✨ Premium"}
           </div>
         )}
 
@@ -191,9 +191,7 @@ export default function ProfileClient({ user }: { user: User }) {
         )}
 
         <div className={styles.since}>
-          Membre depuis le {new Date(user.created_at).toLocaleDateString("fr-FR", {
-            day: "numeric", month: "long", year: "numeric",
-          })}
+          Membre depuis le {new Date(user.created_at).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" })}
         </div>
 
         <div className={styles.xpCard}>
@@ -213,18 +211,9 @@ export default function ProfileClient({ user }: { user: User }) {
         </div>
 
         <div className={styles.stats}>
-          <div className={styles.statBox}>
-            <div className={styles.statNum}>{streak}</div>
-            <div className={styles.statLabel}>🔥 Série</div>
-          </div>
-          <div className={styles.statBox}>
-            <div className={styles.statNum}>{storiesCount}</div>
-            <div className={styles.statLabel}>📖 Histoires</div>
-          </div>
-          <div className={styles.statBox}>
-            <div className={styles.statNum}>{wordsCount}</div>
-            <div className={styles.statLabel}>✨ Mots</div>
-          </div>
+          <div className={styles.statBox}><div className={styles.statNum}>{streak}</div><div className={styles.statLabel}>🔥 Série</div></div>
+          <div className={styles.statBox}><div className={styles.statNum}>{storiesCount}</div><div className={styles.statLabel}>📖 Histoires</div></div>
+          <div className={styles.statBox}><div className={styles.statNum}>{wordsCount}</div><div className={styles.statLabel}>✨ Mots</div></div>
         </div>
 
         <div className={`${styles.advancedStats} ${!isPremium ? styles.blurred : ""}`}>
@@ -233,31 +222,17 @@ export default function ProfileClient({ user }: { user: User }) {
             {!isPremium && <span className={styles.premiumTag}>Premium</span>}
           </div>
           <div className={styles.statGrid}>
-            <div className={styles.statGridBox}>
-              <div className={styles.statGridNum}>#{myRank ?? "—"}</div>
-              <div className={styles.statGridLabel}>🏆 Classement</div>
-            </div>
-            <div className={styles.statGridBox}>
-              <div className={styles.statGridNum}>{streakRecord}j</div>
-              <div className={styles.statGridLabel}>🔥 Record série</div>
-            </div>
-            <div className={styles.statGridBox}>
-              <div className={styles.statGridNum}>+{xpThisWeek}</div>
-              <div className={styles.statGridLabel}>⚡ XP cette semaine</div>
-            </div>
-            <div className={styles.statGridBox}>
-              <div className={styles.statGridNum}>{completionRate}%</div>
-              <div className={styles.statGridLabel}>✅ Assiduité</div>
-            </div>
+            <div className={styles.statGridBox}><div className={styles.statGridNum}>#{myRank ?? "—"}</div><div className={styles.statGridLabel}>🏆 Classement</div></div>
+            <div className={styles.statGridBox}><div className={styles.statGridNum}>{streakRecord}j</div><div className={styles.statGridLabel}>🔥 Record série</div></div>
+            <div className={styles.statGridBox}><div className={styles.statGridNum}>+{xpThisWeek}</div><div className={styles.statGridLabel}>⚡ XP cette semaine</div></div>
+            <div className={styles.statGridBox}><div className={styles.statGridNum}>{completionRate}%</div><div className={styles.statGridLabel}>✅ Assiduité</div></div>
           </div>
           <div className={styles.breakdown}>
             <div className={styles.breakdownTitle}>Histoires lues par niveau</div>
             {["Curieux", "Lecteur", "Érudit"].map(lvl => (
               <div key={lvl} className={styles.breakdownRow}>
                 <span className={styles.breakdownLabel}>{levelEmoji[lvl]} {lvl}</span>
-                <div className={styles.barWrap}>
-                  <div className={styles.bar} style={{ width: `${((levelBreakdown[lvl] || 0) / maxStories) * 100}%` }} />
-                </div>
+                <div className={styles.barWrap}><div className={styles.bar} style={{ width: `${((levelBreakdown[lvl] || 0) / maxStories) * 100}%` }} /></div>
                 <span className={styles.breakdownVal}>{levelBreakdown[lvl] || 0}</span>
               </div>
             ))}
@@ -274,9 +249,23 @@ export default function ProfileClient({ user }: { user: User }) {
 
         {/* Gestion abonnement */}
         {isPremium && stripeCustomerId ? (
-          <button className={styles.portalBtn} onClick={handlePortal} disabled={portalLoading}>
-            {portalLoading ? "Chargement..." : "⚙️ Gérer mon abonnement"}
-          </button>
+          <div className={styles.subscriptionBox}>
+            {cancelDone ? (
+              <div className={styles.cancelDone}>
+                ✅ Résiliation confirmée — ton accès Premium reste actif jusqu'au {renewalDate ?? "fin de période"}.
+              </div>
+            ) : (
+              <>
+                <div className={styles.subscriptionInfo}>
+                  <span>✨ Premium actif</span>
+                  {renewalDate && <span className={styles.renewalDate}>Renouvellement le {renewalDate} ({daysLeft}j)</span>}
+                </div>
+                <button className={styles.cancelBtn} onClick={() => setShowCancelConfirm(true)}>
+                  Résilier mon abonnement
+                </button>
+              </>
+            )}
+          </div>
         ) : isPremium && !stripeCustomerId ? (
           <div className={styles.portalInfo}>
             🎁 Tu bénéficies du Premium à vie — offert par LexiStory !
@@ -302,66 +291,42 @@ export default function ProfileClient({ user }: { user: User }) {
 
         <div className={styles.dangerZone}>
           <p className={styles.dangerTitle}>Zone de danger</p>
-          <button className={styles.deleteBtn} onClick={() => setShowDeleteConfirm(true)}>
-            Supprimer mon compte
-          </button>
+          <button className={styles.deleteBtn} onClick={() => setShowDeleteConfirm(true)}>Supprimer mon compte</button>
         </div>
       </div>
 
-      {showDeleteConfirm && (
-        <div
-          onClick={() => setShowDeleteConfirm(false)}
-          style={{
-            position: "fixed", inset: 0, zIndex: 300,
-            display: "flex", alignItems: "center", justifyContent: "center",
-            background: "rgba(0,0,0,0.6)", backdropFilter: "blur(4px)",
-            padding: "24px",
-          }}
-        >
-          <div
-            onClick={e => e.stopPropagation()}
-            style={{
-              background: "var(--surface)",
-              border: "1px solid #e07070",
-              borderRadius: "16px",
-              padding: "28px",
-              maxWidth: "360px",
-              width: "100%",
-              display: "flex",
-              flexDirection: "column",
-              gap: "14px",
-            }}
-          >
+      {/* Popup résiliation */}
+      {showCancelConfirm && (
+        <div onClick={() => setShowCancelConfirm(false)} style={{ position: "fixed", inset: 0, zIndex: 300, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(0,0,0,0.6)", backdropFilter: "blur(4px)", padding: "24px" }}>
+          <div onClick={e => e.stopPropagation()} style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: "16px", padding: "28px", maxWidth: "360px", width: "100%", display: "flex", flexDirection: "column", gap: "14px" }}>
             <div style={{ fontSize: "1.8rem" }}>⚠️</div>
-            <p style={{ fontFamily: "var(--font-playfair)", fontSize: "1.1rem", fontWeight: 700, color: "var(--text)" }}>
-              Supprimer mon compte ?
-            </p>
+            <p style={{ fontFamily: "var(--font-playfair)", fontSize: "1.1rem", fontWeight: 700, color: "var(--text)" }}>Résilier mon abonnement ?</p>
             <p style={{ fontSize: "0.88rem", color: "var(--text-muted)", lineHeight: 1.6 }}>
-              Cette action est irréversible. Toutes tes données seront supprimées : progression, mots appris, histoires lues, amis.
-              {isPremium && stripeCustomerId && " Résilie d'abord ton abonnement depuis 'Gérer mon abonnement'."}
+              Tu garderas ton accès Premium jusqu'au {renewalDate ?? "fin de la période en cours"}. Après cette date, tu repasseras en compte gratuit.
             </p>
             <div style={{ display: "flex", gap: "8px" }}>
-              <button
-                style={{
-                  flex: 1, padding: "10px", borderRadius: "10px",
-                  background: "var(--surface2)", border: "1px solid var(--border)",
-                  color: "var(--text-muted)", cursor: "pointer", fontFamily: "inherit", fontSize: "0.88rem",
-                }}
-                onClick={() => setShowDeleteConfirm(false)}
-              >
-                Annuler
+              <button style={{ flex: 1, padding: "10px", borderRadius: "10px", background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text-muted)", cursor: "pointer", fontFamily: "inherit", fontSize: "0.88rem" }} onClick={() => setShowCancelConfirm(false)}>Annuler</button>
+              <button style={{ flex: 1, padding: "10px", borderRadius: "10px", background: "#e07070", border: "none", color: "white", cursor: "pointer", fontFamily: "inherit", fontSize: "0.88rem", fontWeight: 700, opacity: cancelling ? 0.6 : 1 }} onClick={handleCancelSubscription} disabled={cancelling}>
+                {cancelling ? "Résiliation..." : "Confirmer"}
               </button>
-              <button
-                style={{
-                  flex: 1, padding: "10px", borderRadius: "10px",
-                  background: "#e07070", border: "none",
-                  color: "white", cursor: "pointer", fontFamily: "inherit",
-                  fontSize: "0.88rem", fontWeight: 700,
-                  opacity: deleting ? 0.6 : 1,
-                }}
-                onClick={handleDeleteAccount}
-                disabled={deleting}
-              >
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Popup suppression compte */}
+      {showDeleteConfirm && (
+        <div onClick={() => setShowDeleteConfirm(false)} style={{ position: "fixed", inset: 0, zIndex: 300, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(0,0,0,0.6)", backdropFilter: "blur(4px)", padding: "24px" }}>
+          <div onClick={e => e.stopPropagation()} style={{ background: "var(--surface)", border: "1px solid #e07070", borderRadius: "16px", padding: "28px", maxWidth: "360px", width: "100%", display: "flex", flexDirection: "column", gap: "14px" }}>
+            <div style={{ fontSize: "1.8rem" }}>⚠️</div>
+            <p style={{ fontFamily: "var(--font-playfair)", fontSize: "1.1rem", fontWeight: 700, color: "var(--text)" }}>Supprimer mon compte ?</p>
+            <p style={{ fontSize: "0.88rem", color: "var(--text-muted)", lineHeight: 1.6 }}>
+              Cette action est irréversible. Toutes tes données seront supprimées.
+              {isPremium && stripeCustomerId && !cancelDone && " Résilie d'abord ton abonnement."}
+            </p>
+            <div style={{ display: "flex", gap: "8px" }}>
+              <button style={{ flex: 1, padding: "10px", borderRadius: "10px", background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text-muted)", cursor: "pointer", fontFamily: "inherit", fontSize: "0.88rem" }} onClick={() => setShowDeleteConfirm(false)}>Annuler</button>
+              <button style={{ flex: 1, padding: "10px", borderRadius: "10px", background: "#e07070", border: "none", color: "white", cursor: "pointer", fontFamily: "inherit", fontSize: "0.88rem", fontWeight: 700, opacity: deleting ? 0.6 : 1 }} onClick={handleDeleteAccount} disabled={deleting}>
                 {deleting ? "Suppression..." : "Supprimer"}
               </button>
             </div>

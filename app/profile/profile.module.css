@@ -537,3 +537,10 @@
   text-align: center;
 }
 .portalInfo a { color: var(--accent); text-decoration: none; }
+
+.subscriptionBox { display: flex; flex-direction: column; gap: 10px; padding: 14px; background: var(--surface2); border: 1px solid var(--border); border-radius: 12px; }
+.subscriptionInfo { display: flex; justify-content: space-between; align-items: center; font-size: 0.88rem; }
+.renewalDate { color: var(--text-dim); font-size: 0.82rem; }
+.cancelBtn { padding: 10px; border-radius: 10px; background: none; border: 1px solid #e07070; color: #e07070; cursor: pointer; font-family: inherit; font-size: 0.85rem; font-weight: 600; }
+.cancelBtn:hover { background: rgba(224,112,112,0.1); }
+.cancelDone { font-size: 0.88rem; color: var(--green); line-height: 1.6; }

@@ -10,6 +10,9 @@ export default function Nav() {
   const [user, setUser]                 = useState<any>(null);
   const [ready, setReady]               = useState(false);
   const [isPremium, setIsPremium]       = useState(false);
+  const [isLifetime, setIsLifetime]     = useState(false);
+  const [daysLeft, setDaysLeft]         = useState<number | null>(null);
+  const [renewalDate, setRenewalDate]   = useState<string | null>(null);
   const [streak, setStreak]             = useState(0);
   const [xp, setXp]                     = useState(0);
   const [menuOpen, setMenuOpen]         = useState(false);
@@ -21,18 +24,26 @@ export default function Nav() {
   async function loadUserData(userId: string) {
     const { data: profile } = await supabase
       .from("profiles")
-      .select("is_premium, xp")
+      .select("is_premium, xp, stripe_customer_id")
       .eq("id", userId)
       .single();
-    if (profile?.is_premium) setIsPremium(true);
+    if (profile?.is_premium) {
+      setIsPremium(true);
+      if (!profile.stripe_customer_id) {
+        setIsLifetime(true);
+      } else {
+        // Récupère les jours restants
+        fetch("/api/subscription").then(r => r.json()).then(data => {
+          if (data.daysLeft) setDaysLeft(data.daysLeft);
+          if (data.renewalDate) setRenewalDate(data.renewalDate);
+        });
+      }
+    }
     setXp(profile?.xp ?? 0);
 
     const { data: reads } = await supabase
-      .from("stories_read")
-      .select("read_at")
-      .eq("user_id", userId)
-      .order("read_at", { ascending: false });
-
+      .from("stories_read").select("read_at")
+      .eq("user_id", userId).order("read_at", { ascending: false });
     if (!reads || reads.length === 0) { setStreak(0); }
     else {
       const dates = [...new Set(reads.map((d: any) => new Date(d.read_at).toDateString()))];
@@ -49,11 +60,9 @@ export default function Nav() {
       }
     }
 
-    const { count } = await supabase
-      .from("friendships")
+    const { count } = await supabase.from("friendships")
       .select("id", { count: "exact" })
-      .eq("friend_id", userId)
-      .eq("status", "pending");
+      .eq("friend_id", userId).eq("status", "pending");
     setPendingCount(count ?? 0);
   }
 
@@ -66,7 +75,7 @@ export default function Nav() {
     const { data: listener } = supabase.auth.onAuthStateChange((_e, session) => {
       setUser(session?.user ?? null);
       if (session?.user) loadUserData(session.user.id);
-      else { setIsPremium(false); setStreak(0); setXp(0); setPendingCount(0); }
+      else { setIsPremium(false); setStreak(0); setXp(0); setPendingCount(0); setDaysLeft(null); }
     });
     const onStoryRead = () => {
       supabase.auth.getSession().then(({ data: { session } }) => {
@@ -103,15 +112,17 @@ export default function Nav() {
   const level = getLevel(xp);
   const { pct, current, needed } = getXpProgress(xp);
 
-  // Boutons nav — floutés si pas connecté
+  // Badge Premium avec jours restants
+  const premiumBadge = isPremium ? (
+    <div className={styles.premiumBadge}>
+      {isLifetime ? "✨ Premium à vie" : daysLeft ? `✨ Premium · ${daysLeft}j` : "✨ Premium"}
+    </div>
+  ) : null;
+
   const navLinks = ready && !user ? (
     <div className={styles.lockedNav}>
-      <span className={styles.lockedNavText}>
-        Connecte-toi pour accéder à toutes les fonctionnalités
-      </span>
-      <button className={styles.btnPrimary} onClick={() => router.push("/login")}>
-        Se connecter
-      </button>
+      <span className={styles.lockedNavText}>Connecte-toi pour accéder à toutes les fonctionnalités</span>
+      <button className={styles.btnPrimary} onClick={() => router.push("/login")}>Se connecter</button>
     </div>
   ) : (
     <>
@@ -125,24 +136,16 @@ export default function Nav() {
             background: "#e88080", color: "white", borderRadius: "50%",
             width: "18px", height: "18px", fontSize: "0.65rem", fontWeight: 700,
             display: "flex", alignItems: "center", justifyContent: "center",
-          }}>
-            {pendingCount}
-          </span>
+          }}>{pendingCount}</span>
         )}
       </a>
-      {ready && (
-        <button className={styles.btnGhost} onClick={() => router.push("/profile")}>
-          Mon profil
-        </button>
-      )}
+      {ready && <button className={styles.btnGhost} onClick={() => router.push("/profile")}>Mon profil</button>}
       {ready && !isPremium && (
         <button className={styles.btnPrimary} onClick={handlePremium} disabled={loading}>
           {loading ? "..." : "Premium — 1,99€/mois"}
         </button>
       )}
-      {ready && isPremium && (
-        <div className={styles.premiumBadge}>✨ Premium</div>
-      )}
+      {ready && premiumBadge}
     </>
   );
 
@@ -150,7 +153,6 @@ export default function Nav() {
     <>
       <nav className={styles.nav}>
         <a href="/" className={styles.logo}>Lexi<span>Story</span></a>
-
         <div className={styles.desktopRight}>
           {ready && user && (
             <div className={styles.userStats}>
@@ -167,7 +169,6 @@ export default function Nav() {
           )}
           {navLinks}
         </div>
-
         <button className={styles.hamburger} onClick={() => setMenuOpen(!menuOpen)} aria-label="Menu">
           <span className={`${styles.bar} ${menuOpen ? styles.barOpen1 : ""}`} />
           <span className={`${styles.bar} ${menuOpen ? styles.barOpen2 : ""}`} />
@@ -183,36 +184,28 @@ export default function Nav() {
                 <span>🔥 {streak} jour{streak > 1 ? "s" : ""}</span>
                 <span>{level.emoji} {level.name} · {xp} XP</span>
               </div>
-              <button className={styles.mobileBtn} onClick={() => { setMenuOpen(false); router.push("/jeux"); }}>
-                🎮 Jeux
-              </button>
-              <button className={styles.mobileBtn} onClick={() => { setMenuOpen(false); router.push("/classement"); }}>
-                🏆 Classement
-              </button>
+              <button className={styles.mobileBtn} onClick={() => { setMenuOpen(false); router.push("/jeux"); }}>🎮 Jeux</button>
+              <button className={styles.mobileBtn} onClick={() => { setMenuOpen(false); router.push("/classement"); }}>🏆 Classement</button>
               <button className={styles.mobileBtn} onClick={() => { setMenuOpen(false); router.push("/amis"); }}>
                 👥 Amis {pendingCount > 0 && `(${pendingCount})`}
               </button>
-              <button className={styles.mobileBtn} onClick={() => { setMenuOpen(false); router.push("/rangs"); }}>
-                ⭐ Rangs & XP
-              </button>
-              <button className={styles.mobileBtn} onClick={() => { setMenuOpen(false); router.push("/profile"); }}>
-                👤 Mon profil
-              </button>
+              <button className={styles.mobileBtn} onClick={() => { setMenuOpen(false); router.push("/rangs"); }}>⭐ Rangs & XP</button>
+              <button className={styles.mobileBtn} onClick={() => { setMenuOpen(false); router.push("/profile"); }}>👤 Mon profil</button>
               {!isPremium && (
                 <button className={styles.mobilePremiumBtn} onClick={() => { setMenuOpen(false); handlePremium(); }} disabled={loading}>
                   {loading ? "..." : "✨ Premium — 1,99€/mois"}
                 </button>
               )}
               {isPremium && (
-                <div className={styles.mobilePremiumBadge}>✨ Abonné Premium</div>
+                <div className={styles.mobilePremiumBadge}>
+                  {isLifetime ? "✨ Premium à vie" : daysLeft ? `✨ Premium · renouvellement le ${renewalDate}` : "✨ Premium"}
+                </div>
               )}
             </>
           ) : (
             <>
               <p className={styles.mobileLockedText}>Connecte-toi pour accéder à toutes les fonctionnalités !</p>
-              <button className={styles.mobilePremiumBtn} onClick={() => { setMenuOpen(false); router.push("/login"); }}>
-                🔑 Se connecter
-              </button>
+              <button className={styles.mobilePremiumBtn} onClick={() => { setMenuOpen(false); router.push("/login"); }}>🔑 Se connecter</button>
             </>
           )}
         </div>
