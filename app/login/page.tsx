@@ -49,7 +49,7 @@ export default function LoginPage() {
       options: { emailRedirectTo: `${window.location.origin}/api/auth-callback` },
     });
     setLoading(false);
-    if (error) setError("Erreur lors de l'inscription.");
+    if (error) { setError(error.message); return; }
     else { setSent(true); setResendCooldown(60); }
   }
 
