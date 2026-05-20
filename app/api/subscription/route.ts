@@ -30,41 +30,46 @@ export async function GET() {
       return NextResponse.json({ renewalDate: null, daysLeft: null });
     }
 
-    const sub = subscriptions.data[0];
+    const sub = subscriptions.data[0] as any;
 
-    // Log pour débugger
-    console.log("Subscription keys:", Object.keys(sub));
-    console.log("current_period_end:", (sub as any).current_period_end);
-    console.log("billing_cycle_anchor:", (sub as any).billing_cycle_anchor);
-
-    // Stripe renvoie current_period_end en secondes Unix
-    const raw = sub.items?.data?.[0]?.subscription
-      ? null
-      : (sub as any).current_period_end;
-
-    // Fallback : cherche dans tous les endroits possibles
+    // Cherche la date de fin dans tous les champs possibles
     const periodEndSeconds =
-      (sub as any).current_period_end ||
-      (sub as any).current_period?.end ||
+      sub.current_period_end ||
+      sub.billing_cycle_anchor ||
+      sub.next_pending_invoice_item_invoice ||
       null;
 
-    if (!periodEndSeconds) {
+    // Si toujours pas trouvé, cherche dans les items
+    const itemPeriodEnd = sub.items?.data?.[0]?.current_period_end || null;
+    const finalEnd = periodEndSeconds || itemPeriodEnd;
+
+    if (!finalEnd) {
+      // Dernier recours : billing_cycle_anchor + 1 mois
+      const anchor = sub.billing_cycle_anchor;
+      if (anchor) {
+        const anchorDate = new Date(anchor * 1000);
+        const now = new Date();
+        // Trouve le prochain billing_cycle_anchor
+        anchorDate.setFullYear(now.getFullYear());
+        anchorDate.setMonth(now.getMonth() + (anchorDate < now ? 1 : 0));
+        const daysLeft = Math.ceil((anchorDate.getTime() - now.getTime()) / 86400000);
+        const renewalDateStr = anchorDate.toLocaleDateString("fr-FR", {
+          day: "numeric", month: "long", year: "numeric", timeZone: "Europe/Paris",
+        });
+        return NextResponse.json({ renewalDate: renewalDateStr, daysLeft });
+      }
       return NextResponse.json({ renewalDate: null, daysLeft: null });
     }
 
-    const renewalDate = new Date(periodEndSeconds * 1000);
+    const renewalDate = new Date(Number(finalEnd) * 1000);
     const now = new Date();
     const daysLeft = Math.ceil((renewalDate.getTime() - now.getTime()) / 86400000);
     const renewalDateStr = renewalDate.toLocaleDateString("fr-FR", {
-      day: "numeric",
-      month: "long",
-      year: "numeric",
-      timeZone: "Europe/Paris",
+      day: "numeric", month: "long", year: "numeric", timeZone: "Europe/Paris",
     });
 
     return NextResponse.json({ renewalDate: renewalDateStr, daysLeft });
   } catch (err: any) {
-    console.error("Subscription error:", err);
     return NextResponse.json({ error: err.message }, { status: 500 });
   }
 }
