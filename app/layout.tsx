@@ -20,17 +20,14 @@ const dmSans = DM_Sans({
   weight: ["300", "400", "500", "600"],
 });
 
-export const metadata: Metadata = {
+export const metadata = {
   title: "LexiStory — Apprends le français en lisant",
-  description: "Une histoire courte par jour pour enrichir ton vocabulaire en français. Clique sur n'importe quel mot pour voir sa définition. Gratuit, sans pub.",
-  keywords: ["vocabulaire français", "apprendre le français", "histoire du jour", "définition", "lexique", "enrichir vocabulaire"],
+  description: "Lis une histoire par jour, découvre de nouveaux mots et gagne des XP. L'application qui rend l'apprentissage du vocabulaire français amusant.",
+  keywords: "lexistory, vocabulaire français, apprendre français, histoires quotidiennes",
   openGraph: {
-    title: "LexiStory — Apprends le français en lisant",
-    description: "Une histoire courte par jour pour enrichir ton vocabulaire. Clique sur n'importe quel mot pour voir sa définition.",
-    url: "https://lexistory-tawny.vercel.app",
-    siteName: "LexiStory",
-    locale: "fr_FR",
-    type: "website",
+    title: "LexiStory",
+    description: "Apprends le français en lisant une histoire par jour.",
+    url: "https://lexistory.fr",
   },
   twitter: {
     card: "summary_large_image",
