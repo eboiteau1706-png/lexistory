@@ -9,7 +9,6 @@ export async function POST() {
     const supabase = await createServerSupabaseClient();
     const { data: { user } } = await supabase.auth.getUser();
 
-    // Récupère le stripe_customer_id existant si possible
     let customerId: string | undefined;
     let customerEmail: string | undefined;
 
@@ -33,7 +32,9 @@ export async function POST() {
           quantity: 1,
         },
       ],
-      // Pré-remplit l'email ET lie au customer existant si possible
+      subscription_data: {
+        proration_behavior: "none",
+      },
       ...(customerId ? { customer: customerId } : {}),
       ...(customerEmail && !customerId ? { customer_email: customerEmail } : {}),
       success_url: `${process.env.NEXT_PUBLIC_BASE_URL}/success`,
