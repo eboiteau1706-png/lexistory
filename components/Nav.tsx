@@ -115,7 +115,7 @@ export default function Nav() {
   // Badge Premium avec jours restants
   const premiumBadge = isPremium ? (
     <div className={styles.premiumBadge}>
-      {isLifetime ? "✨ Premium à vie" : daysLeft ? `✨ Premium · ${daysLeft}j` : "✨ Premium"}
+      {isLifetime ? "✨ Premium à vie" : renewalDate ? `✨ Premium · fin le ${renewalDate}` : "✨ Premium"}
     </div>
   ) : null;
 

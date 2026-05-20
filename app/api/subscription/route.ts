@@ -31,7 +31,8 @@ export async function GET() {
     }
 
     const sub = subscriptions.data[0];
-    const renewalDate = new Date((sub as any).current_period_end * 1000);
+    const periodEnd = (sub as any).current_period_end ?? (sub as any).billing_cycle_anchor;
+    const renewalDate = new Date(Number(periodEnd) * 1000);
     const now = new Date();
     const daysLeft = Math.ceil((renewalDate.getTime() - now.getTime()) / 86400000);
     const renewalDateStr = renewalDate.toLocaleDateString("fr-FR", {
