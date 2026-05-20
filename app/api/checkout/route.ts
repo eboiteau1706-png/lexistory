@@ -25,21 +25,18 @@ export async function POST() {
     }
 
     const session = await stripe.checkout.sessions.create({
-      mode: "subscription",
-      line_items: [
-        {
-          price: process.env.STRIPE_PRICE_ID!,
-          quantity: 1,
-        },
-      ],
-      subscription_data: {
-        proration_behavior: "none",
-      },
-      ...(customerId ? { customer: customerId } : {}),
-      ...(customerEmail && !customerId ? { customer_email: customerEmail } : {}),
-      success_url: `${process.env.NEXT_PUBLIC_BASE_URL}/success`,
-      cancel_url: `${process.env.NEXT_PUBLIC_BASE_URL}/`,
-    });
+  mode: "subscription",
+  line_items: [
+    {
+      price: process.env.STRIPE_PRICE_ID!,
+      quantity: 1,
+    },
+  ],
+  ...(customerId ? { customer: customerId } : {}),
+  ...(customerEmail && !customerId ? { customer_email: customerEmail } : {}),
+  success_url: `${process.env.NEXT_PUBLIC_BASE_URL}/success`,
+  cancel_url: `${process.env.NEXT_PUBLIC_BASE_URL}/`,
+});
 
     return NextResponse.json({ url: session.url });
   } catch (err: any) {
