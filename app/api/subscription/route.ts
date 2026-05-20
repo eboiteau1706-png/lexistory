@@ -32,40 +32,24 @@ export async function GET() {
 
     const sub = subscriptions.data[0] as any;
 
-    // Cherche la date de fin dans tous les champs possibles
+    // current_period_end uniquement — pas de fallback qui cause des bugs
     const periodEndSeconds =
       sub.current_period_end ||
-      sub.billing_cycle_anchor ||
-      sub.next_pending_invoice_item_invoice ||
+      sub.items?.data?.[0]?.current_period_end ||
       null;
 
-    // Si toujours pas trouvé, cherche dans les items
-    const itemPeriodEnd = sub.items?.data?.[0]?.current_period_end || null;
-    const finalEnd = periodEndSeconds || itemPeriodEnd;
-
-    if (!finalEnd) {
-      // Dernier recours : billing_cycle_anchor + 1 mois
-      const anchor = sub.billing_cycle_anchor;
-      if (anchor) {
-        const anchorDate = new Date(anchor * 1000);
-        const now = new Date();
-        // Trouve le prochain billing_cycle_anchor
-        anchorDate.setFullYear(now.getFullYear());
-        anchorDate.setMonth(now.getMonth() + (anchorDate < now ? 1 : 0));
-        const daysLeft = Math.ceil((anchorDate.getTime() - now.getTime()) / 86400000);
-        const renewalDateStr = anchorDate.toLocaleDateString("fr-FR", {
-          day: "numeric", month: "long", year: "numeric", timeZone: "Europe/Paris",
-        });
-        return NextResponse.json({ renewalDate: renewalDateStr, daysLeft });
-      }
+    if (!periodEndSeconds) {
       return NextResponse.json({ renewalDate: null, daysLeft: null });
     }
 
-    const renewalDate = new Date(Number(finalEnd) * 1000);
+    const renewalDate = new Date(Number(periodEndSeconds) * 1000);
     const now = new Date();
     const daysLeft = Math.ceil((renewalDate.getTime() - now.getTime()) / 86400000);
     const renewalDateStr = renewalDate.toLocaleDateString("fr-FR", {
-      day: "numeric", month: "long", year: "numeric", timeZone: "Europe/Paris",
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+      timeZone: "Europe/Paris",
     });
 
     return NextResponse.json({ renewalDate: renewalDateStr, daysLeft });
