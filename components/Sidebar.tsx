@@ -206,7 +206,7 @@ export default function Sidebar() {
         {!isPremium && (
           <div className={styles.premiumCard}>
             <div className={styles.premiumTitle}>✨ Passe Premium</div>
-            <div className={styles.premiumText}>Histoires illimitées, stats avancées et accès aux histoires passées.</div>
+            <div className={styles.premiumText}>Accès aux histoires passées, jeux exclusifs et boost XP ×1,5.</div>
             <div className={styles.premiumPrice}>1,99€ <span>/ mois</span></div>
             <button className={styles.btnUpgrade} onClick={handlePremium} disabled={loading}>
               {loading ? "Chargement..." : "Passer Premium →"}

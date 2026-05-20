@@ -22,7 +22,7 @@ export default function SuccessPage() {
         Bienvenue dans LexiStory Premium !
       </h1>
       <p style={{ color: "var(--text-muted)", marginBottom: "32px", maxWidth: "400px", lineHeight: 1.6 }}>
-        Ton abonnement est actif. Tu as maintenant accès à toutes les histoires illimitées.
+        Ton abonnement est actif. Tu as maintenant accès aux histoires passées, aux jeux Premium et au boost XP ×1,5.
       </p>
       <a href="/" style={{
         padding: "12px 28px",
