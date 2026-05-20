@@ -6,14 +6,12 @@ export interface Story {
   category:   string;
   level:      "Curieux" | "Lecteur" | "Érudit";
   readTime:   string;
+  source:     string;
   paragraphs: string[];
 }
 
 export const STORIES: Story[] = [
 
-  // ══════════════════════════════════════════════════════
-  // HISTOIRES EXISTANTES
-  // ══════════════════════════════════════════════════════
   {
     slug: "pourquoi-ciel-bleu",
     date: "2026-05-17",
@@ -21,6 +19,7 @@ export const STORIES: Story[] = [
     category: "Science",
     level: "Curieux",
     readTime: "2 min de lecture",
+    source: "D'après les travaux de Lord Rayleigh sur la diffusion de la lumière (1871)",
     paragraphs: [
       "Chaque jour, tu lèves les yeux et tu vois un grand ciel bleu. Mais as-tu déjà demandé pourquoi il n'est pas rouge, vert ou violet ? La réponse est cachée dans la lumière du soleil.",
       "La lumière du soleil semble blanche, mais en réalité elle contient toutes les couleurs de l'arc-en-ciel. Quand cette lumière traverse l'atmosphère, elle rencontre de minuscules particules d'air. Ces particules dévient la lumière dans toutes les directions.",
@@ -35,6 +34,7 @@ export const STORIES: Story[] = [
     category: "Histoire · Science",
     level: "Lecteur",
     readTime: "3 min de lecture",
+    source: "D'après les recherches en ornithologie du Muséum National d'Histoire Naturelle",
     paragraphs: [
       "Le flamant rose est sans doute l'un des oiseaux les plus emblématiques des zones humides du monde. Pourtant, sa couleur si particulière cache un secret fascinant : les flamants ne naissent pas roses.",
       "À leur naissance, les poussins sont entièrement blancs ou gris. C'est leur alimentation qui va progressivement teinter leur plumage. Ils se nourrissent principalement d'algues et de petits crustacés riches en caroténoïdes, des pigments naturels que leur organisme assimile et redistribue dans leurs plumes.",
@@ -49,6 +49,7 @@ export const STORIES: Story[] = [
     category: "Psychologie",
     level: "Érudit",
     readTime: "4 min de lecture",
+    source: "D'après Daniel Kahneman, Thinking, Fast and Slow (2011)",
     paragraphs: [
       "Nous aimons penser que nos décisions sont le fruit d'une réflexion rationnelle et méthodique. Pourtant, la psychologie cognitive a démontré depuis plusieurs décennies que notre cerveau est constamment soumis à des biais, ces raccourcis mentaux qui altèrent notre jugement à notre insu.",
       "Le biais de confirmation en est l'exemple le plus pernicieux : nous avons naturellement tendance à rechercher, interpréter et mémoriser les informations qui corroborent nos croyances préexistantes, tout en ignorant celles qui les contredisent.",
@@ -56,12 +57,6 @@ export const STORIES: Story[] = [
       "Comprendre ces biais ne suffit malheureusement pas à s'en affranchir. La lucidité consiste alors non pas à les éliminer, mais à les reconnaître au moment où ils opèrent — un effort d'introspection permanent.",
     ],
   },
-
-  // ══════════════════════════════════════════════════════
-  // JUIN 2026
-  // ══════════════════════════════════════════════════════
-
-  // JOUR 1 — 1er juin
   {
     slug: "pourquoi-chats-ronronnent",
     date: "2026-06-01",
@@ -69,6 +64,7 @@ export const STORIES: Story[] = [
     category: "Nature",
     level: "Curieux",
     readTime: "2 min de lecture",
+    source: "D'après les recherches du Dr Elizabeth Von Muggenthaler sur les vibrations félines (2001)",
     paragraphs: [
       "Quand tu caresses ton chat et qu'il ferme les yeux en faisant ce drôle de bruit dans sa gorge, tu te demandes sûrement ce que ça veut dire. Ce bruit, c'est le ronronnement, et il cache plein de secrets !",
       "Les chats ronronnent en faisant vibrer leurs cordes vocales très vite, environ 25 fois par seconde. Ce n'est pas seulement un signe de bonheur. Les chats ronronnent aussi quand ils ont peur, mal ou quand ils veulent demander quelque chose.",
@@ -83,6 +79,7 @@ export const STORIES: Story[] = [
     category: "Histoire",
     level: "Lecteur",
     readTime: "3 min de lecture",
+    source: "D'après Sophie D. Coe & Michael D. Coe, The True History of Chocolate (1996)",
     paragraphs: [
       "Le chocolat que nous consommons aujourd'hui n'a presque rien à voir avec la boisson amère et épicée qu'appréciaient les Mayas et les Aztèques il y a plus de trois mille ans. Cette transformation est le fruit d'une longue histoire de conquêtes et d'innovations.",
       "Pour les civilisations mésoaméricaines, le cacao était une denrée sacrée, utilisée lors des rituels religieux et même comme monnaie d'échange. Les fèves de cacao étaient si précieuses qu'elles valaient plus que l'or dans certaines régions.",
@@ -97,6 +94,7 @@ export const STORIES: Story[] = [
     category: "Neurosciences",
     level: "Érudit",
     readTime: "4 min de lecture",
+    source: "D'après Joseph LeDoux, The Emotional Brain (1996)",
     paragraphs: [
       "Il est des souvenirs que le temps semble incapable d'effacer : le jour d'un accident, une déclaration d'amour inattendue, l'annonce d'un deuil. Ces événements restent gravés avec une précision photographique, tandis que des journées entières s'évaporent sans laisser de trace.",
       "Ce phénomène s'explique par le rôle de l'amygdale, cette petite structure en forme d'amande nichée au cœur du cerveau limbique. Lors d'une expérience émotionnellement intense, l'amygdale envoie un signal au reste du cerveau pour lui dire, en substance : 'Ce moment est important, grave-le soigneusement.'",
@@ -104,8 +102,6 @@ export const STORIES: Story[] = [
       "Paradoxalement, cette même mécanique est à l'origine des troubles post-traumatiques, où un souvenir particulièrement intense se rejoue en boucle, envahissant la conscience bien au-delà de toute utilité adaptative. La mémoire émotionnelle, conçue pour nous protéger, peut ainsi devenir une prison.",
     ],
   },
-
-  // JOUR 2 — 2 juin
   {
     slug: "pourquoi-arc-en-ciel",
     date: "2026-06-02",
@@ -113,6 +109,7 @@ export const STORIES: Story[] = [
     category: "Science",
     level: "Curieux",
     readTime: "2 min de lecture",
+    source: "D'après les travaux de René Descartes sur la réfraction de la lumière (1637)",
     paragraphs: [
       "L'arc-en-ciel est l'une des plus belles surprises que la nature nous offre. Mais pourquoi apparaît-il toujours après la pluie et jamais quand il fait beau ?",
       "Chaque goutte de pluie fonctionne comme un tout petit prisme de verre. Quand la lumière du soleil entre dans la goutte, elle se sépare en toutes ses couleurs : rouge, orange, jaune, vert, bleu, indigo et violet.",
@@ -127,6 +124,7 @@ export const STORIES: Story[] = [
     category: "Science · Santé",
     level: "Lecteur",
     readTime: "3 min de lecture",
+    source: "D'après Matthew Walker, Why We Sleep (2017)",
     paragraphs: [
       "Pendant longtemps, le sommeil a été considéré comme un simple repos passif. Les neurosciences modernes ont radicalement changé cette vision : la nuit, notre cerveau est en réalité plus actif que dans bien des moments de la journée.",
       "Durant le sommeil profond, le cerveau procède à un véritable nettoyage. Le système glymphatique s'active et élimine les déchets métaboliques accumulés pendant la journée, dont des protéines associées aux maladies neurodégénératives comme Alzheimer.",
@@ -141,6 +139,7 @@ export const STORIES: Story[] = [
     category: "Philosophie",
     level: "Érudit",
     readTime: "4 min de lecture",
+    source: "D'après Ryan Holiday, The Obstacle Is the Way (2014) et Marc Aurèle, Pensées pour moi-même (161-180)",
     paragraphs: [
       "Fondé à Athènes par Zénon de Kition au IIIe siècle avant notre ère, le stoïcisme connaît depuis une décennie un regain d'intérêt remarquable. Des dirigeants de la Silicon Valley aux sportifs de haut niveau, nombreux sont ceux qui revendiquent cette philosophie comme boussole existentielle.",
       "Le principe fondamental du stoïcisme repose sur une distinction radicale : il existe ce qui dépend de nous — nos jugements, nos désirs, nos actes — et ce qui n'en dépend pas — le corps, la réputation, les possessions, les événements extérieurs. Le sage stoïcien concentre toute son énergie sur le premier domaine et accepte le second avec équanimité.",
@@ -148,8 +147,6 @@ export const STORIES: Story[] = [
       "La popularité contemporaine du stoïcisme révèle peut-être un besoin profond : dans un monde saturé de stimulations et d'injonctions au bonheur immédiat, la promesse d'une paix intérieure accessible par l'effort de la raison conserve une force séduisante intacte depuis vingt-trois siècles.",
     ],
   },
-
-  // JOUR 3 — 3 juin
   {
     slug: "pourquoi-baillons",
     date: "2026-06-03",
@@ -157,6 +154,7 @@ export const STORIES: Story[] = [
     category: "Corps humain",
     level: "Curieux",
     readTime: "2 min de lecture",
+    source: "D'après Andrew Gallup, chercheur à l'Université de Princeton (2011)",
     paragraphs: [
       "Tout le monde bâille, même les bébés dans le ventre de leur maman et les animaux comme les chiens et les lions. Mais sais-tu vraiment pourquoi tu bâilles ?",
       "Les scientifiques pensent que le bâillement aide ton cerveau à rester bien réveillé en faisant entrer beaucoup d'air frais d'un coup. C'est comme appuyer sur un bouton pour se réveiller !",
@@ -171,6 +169,7 @@ export const STORIES: Story[] = [
     category: "Histoire",
     level: "Lecteur",
     readTime: "3 min de lecture",
+    source: "D'après Gustave Eiffel, La Tour de trois cents mètres (1900)",
     paragraphs: [
       "Difficile d'imaginer Paris sans la Tour Eiffel. Et pourtant, lorsqu'elle fut construite en 1889 pour l'Exposition universelle, elle déclencha un tollé sans précédent parmi les intellectuels et artistes parisiens, qui la qualifièrent de 'lampadaire disgracieux' ou de 'suppositoire criblé de trous'.",
       "Gustave Eiffel releva le défi en seulement deux ans, deux mois et cinq jours, avec une précision d'assemblage remarquable pour l'époque. Les 18 038 pièces métalliques furent fabriquées en usine et assemblées sur place, grâce à 2,5 millions de rivets.",
@@ -185,6 +184,7 @@ export const STORIES: Story[] = [
     category: "Linguistique · Philosophie",
     level: "Érudit",
     readTime: "4 min de lecture",
+    source: "D'après George Lakoff & Mark Johnson, Les Métaphores dans la vie quotidienne (1980)",
     paragraphs: [
       "Nous avons tendance à considérer les métaphores comme des ornements du discours, des figures de style réservées aux poètes. Les travaux de George Lakoff et Mark Johnson, publiés en 1980 dans 'Les Métaphores dans la vie quotidienne', ont radicalement remis en question cette conception : la métaphore serait non pas un embellissement du langage mais son infrastructure même.",
       "Lorsque nous disons qu'une discussion 's'est envenimée', qu'une idée nous a 'traversé l'esprit', ou qu'une relation 'bat de l'aile', nous mobilisons des schèmes conceptuels issus du monde physique pour appréhender des réalités abstraites. Ces métaphores structurelles ne sont pas des choix stylistiques mais des modes de pensée automatiques.",
@@ -192,8 +192,6 @@ export const STORIES: Story[] = [
       "Prendre conscience de nos métaphores ordinaires, c'est entrouvrir une fenêtre sur notre manière implicite d'organiser le monde. C'est aussi comprendre pourquoi certains débats semblent insolubles : deux interlocuteurs qui utilisent des métaphores fondamentales différentes pour le même concept ne parlent, en réalité, pas de la même chose.",
     ],
   },
-
-  // JOUR 4 — 4 juin
   {
     slug: "pourquoi-feuilles-changent",
     date: "2026-06-04",
@@ -201,6 +199,7 @@ export const STORIES: Story[] = [
     category: "Nature",
     level: "Curieux",
     readTime: "2 min de lecture",
+    source: "D'après l'INRAE, Institut National de Recherche pour l'Agriculture et l'Environnement",
     paragraphs: [
       "En automne, les forêts se transforment en tableaux de peinture avec leurs feuilles rouges, oranges et jaunes. Mais pourquoi ce changement de couleur se produit-il ?",
       "Pendant l'été, les feuilles sont vertes grâce à la chlorophylle, une substance qui capte la lumière du soleil pour fabriquer la nourriture de l'arbre. Mais quand les jours raccourcissent et que le froid arrive, les arbres se préparent pour l'hiver.",
@@ -215,6 +214,7 @@ export const STORIES: Story[] = [
     category: "Science · Histoire",
     level: "Lecteur",
     readTime: "3 min de lecture",
+    source: "D'après Brenda Maddox, Rosalind Franklin : The Dark Lady of DNA (2002)",
     paragraphs: [
       "En 1953, deux jeunes chercheurs de Cambridge, James Watson et Francis Crick, publièrent l'une des découvertes les plus importantes du XXe siècle : la structure en double hélice de l'ADN. Mais derrière cette avancée historique se cache une histoire bien moins glorieuse.",
       "Une chercheuse britannique, Rosalind Franklin, avait produit grâce à ses travaux de cristallographie une image d'une précision extraordinaire de l'ADN, connue sous le nom de 'Photo 51'. Cette image fut transmise à Watson à son insu, sans la permission de Franklin.",
@@ -229,6 +229,7 @@ export const STORIES: Story[] = [
     category: "Neurosciences · Philosophie",
     level: "Érudit",
     readTime: "4 min de lecture",
+    source: "D'après David Eagleman, The Brain: The Story of You (2015)",
     paragraphs: [
       "L'ennui dilate le temps, la passion le contracte. Cette expérience universelle soulève une question fondamentale : le temps que nous vivons est-il le même que le temps que mesurent les horloges ? Les neurosciences contemporaines apportent des éléments de réponse fascinants.",
       "Notre cerveau ne dispose pas d'une horloge centrale unique, mais d'une multitude de systèmes temporels distribués. La perception du temps dépend étroitement du niveau d'attention, de l'état émotionnel et de la quantité d'informations traitées. Lors d'un événement intense ou nouveau, le cerveau enregistre davantage de détails, ce qui donne rétrospectivement l'impression que cet épisode a duré plus longtemps.",
@@ -236,8 +237,6 @@ export const STORIES: Story[] = [
       "Des pratiques comme la méditation ou le voyage en territoire inconnu permettent de ralentir subjectivement le temps en restaurant la capacité d'étonnement. Il s'agirait, selon certains philosophes, d'une des voies d'accès les plus directes à ce que nous appelons, faute de mieux, une vie pleinement vécue.",
     ],
   },
-
-  // JOUR 5 — 5 juin
   {
     slug: "pourquoi-peau-rides",
     date: "2026-06-05",
@@ -245,6 +244,7 @@ export const STORIES: Story[] = [
     category: "Corps humain",
     level: "Curieux",
     readTime: "2 min de lecture",
+    source: "D'après Mark Changizi, chercheur en neurosciences cognitives (2011)",
     paragraphs: [
       "Quand tu restes longtemps dans le bain ou la piscine, tes doigts et tes orteils deviennent tout ridés, comme des raisins secs. Mais pourquoi est-ce que ça arrive ?",
       "Pendant longtemps, les scientifiques pensaient que la peau absorbait l'eau et gonflait, ce qui créait des rides. Mais ce n'est pas la vraie raison !",
@@ -259,6 +259,7 @@ export const STORIES: Story[] = [
     category: "Science · Histoire",
     level: "Lecteur",
     readTime: "3 min de lecture",
+    source: "D'après William Stukeley, Memoirs of Sir Isaac Newton's Life (1752)",
     paragraphs: [
       "L'image est célèbre : Isaac Newton, assis sous un pommier, reçoit une pomme sur la tête et découvre soudainement la loi de la gravitation universelle. Bonne nouvelle : il y a bien une pomme dans cette histoire. Mauvaise nouvelle : les détails sont un peu plus nuancés.",
       "Newton lui-même a raconté cette anecdote à plusieurs reprises, mais il n'a jamais dit que la pomme lui était tombée sur la tête. Il affirmait simplement avoir vu une pomme tomber dans son verger de Woolsthorpe Manor en 1666, ce qui l'avait conduit à s'interroger sur la nature de la force qui l'attirait vers le sol.",
@@ -273,6 +274,7 @@ export const STORIES: Story[] = [
     category: "Philosophie · Technologie",
     level: "Érudit",
     readTime: "4 min de lecture",
+    source: "D'après Luciano Floridi, The Ethics of Artificial Intelligence (2023)",
     paragraphs: [
       "Nos smartphones enregistrent nos déplacements, nos applications connaissent nos habitudes d'achat, nos réseaux sociaux cartographient nos relations et nos centres d'intérêt. L'ensemble de ces traces constitue ce que les chercheurs appellent notre 'double numérique' — une représentation de nous-mêmes qui existe indépendamment de notre volonté consciente.",
       "La question philosophique qui émerge de cette réalité est vertigineuse : dans quelle mesure ce double numérique nous représente-t-il réellement ? Les données que nous produisons reflètent nos comportements, mais pas nécessairement nos valeurs, nos aspirations ou notre vie intérieure. Elles capturent ce que nous faisons, rarement ce que nous sommes.",
@@ -280,8 +282,6 @@ export const STORIES: Story[] = [
       "Cette transformation pose des questions éthiques urgentes : qui possède notre double numérique ? Peut-on revendiquer un droit à l'oubli dans un monde où chaque interaction laisse une empreinte persistante ? La réponse collective à ces interrogations définira en grande partie la nature des libertés individuelles au XXIe siècle.",
     ],
   },
-
-  // JOUR 6 — 6 juin
   {
     slug: "pourquoi-larmes",
     date: "2026-06-06",
@@ -289,9 +289,10 @@ export const STORIES: Story[] = [
     category: "Corps humain",
     level: "Curieux",
     readTime: "2 min de lecture",
+    source: "D'après Ad Vingerhoets, Why Only Humans Weep (2013)",
     paragraphs: [
       "Les larmes, c'est mystérieux. On pleure quand on est triste, mais aussi quand on est très heureux, quand on rit trop fort, ou quand on coupe des oignons. Comment ça marche ?",
-      "Il existe trois types de larmes. Les larmes basales humilifient tes yeux en permanence pour les protéger. Les larmes réflexes apparaissent quand quelque chose irrite tes yeux, comme la fumée ou les oignons. Et les larmes émotionnelles, elles, viennent du coeur.",
+      "Il existe trois types de larmes. Les larmes basales humidifient tes yeux en permanence pour les protéger. Les larmes réflexes apparaissent quand quelque chose irrite tes yeux, comme la fumée ou les oignons. Et les larmes émotionnelles, elles, viennent du cœur.",
       "Les larmes émotionnelles sont spéciales : elles contiennent des hormones du stress. Pleurer aide ton corps à éliminer ces substances et te fait du bien. C'est pour ça qu'on se sent souvent mieux après avoir pleuré un bon coup !",
       "Les humains sont les seuls animaux qui pleurent pour leurs émotions. C'est une façon très puissante de communiquer avec les autres : quand tu vois quelqu'un pleurer, tu ressens immédiatement de l'empathie pour lui.",
     ],
@@ -303,6 +304,7 @@ export const STORIES: Story[] = [
     category: "Histoire · Culture",
     level: "Lecteur",
     readTime: "3 min de lecture",
+    source: "D'après William Ukers, All About Coffee (1922)",
     paragraphs: [
       "Avant l'invention du café, la majorité des Européens commençaient leur journée avec de la bière ou du vin — les seules boissons considérées comme sûres, l'eau étant souvent contaminée. L'arrivée du café au XVIIe siècle a donc représenté bien plus qu'une nouvelle boisson : c'était une révolution culturelle.",
       "Les cafés londoniens, parisiens et viennois devinrent des lieux d'effervescence intellectuelle où toutes les classes sociales pouvaient se mêler pour le prix d'une tasse. On y lisait les journaux, on y débattait de politique, on y brassait des affaires. Lloyd's de Londres, la célèbre compagnie d'assurances, est née d'un café.",
@@ -317,6 +319,7 @@ export const STORIES: Story[] = [
     category: "Philosophie · Neurosciences",
     level: "Érudit",
     readTime: "4 min de lecture",
+    source: "D'après David Chalmers, The Conscious Mind (1996)",
     paragraphs: [
       "En 1995, le philosophe australien David Chalmers introduisit une distinction devenue fondamentale dans le débat sur la conscience. Il sépara les 'problèmes faciles' — expliquer comment le cerveau traite l'information, intègre les perceptions, régule le comportement — du 'problème difficile' : expliquer pourquoi et comment ces processus physiques donnent naissance à une expérience subjective.",
       "Pourquoi y a-t-il 'quelque chose que ça fait' d'être moi, de voir le rouge, d'entendre de la musique, de ressentir de la douleur ? Cette dimension qualitative de l'expérience, que les philosophes appellent qualia, résiste à toute explication purement fonctionnelle ou computationnelle.",
@@ -324,8 +327,6 @@ export const STORIES: Story[] = [
       "Ce débat n'est pas purement académique : il détermine la façon dont nous concevons l'intelligence artificielle, les droits des animaux, et même la nature de ce que nous appelons la mort. Si la conscience n'est pas entièrement produite par le cerveau, qu'advient-il d'elle quand celui-ci cesse de fonctionner ?",
     ],
   },
-
-  // JOUR 7 — 7 juin
   {
     slug: "pourquoi-sommeil-reves",
     date: "2026-06-07",
@@ -333,6 +334,7 @@ export const STORIES: Story[] = [
     category: "Corps humain",
     level: "Curieux",
     readTime: "2 min de lecture",
+    source: "D'après Sigmund Freud, L'Interprétation des rêves (1900) et les recherches modernes de Robert Stickgold (Harvard, 2005)",
     paragraphs: [
       "Chaque nuit, tu pars en voyage dans un monde inventé par ton cerveau. Des fois c'est super, des fois c'est un cauchemar. Mais pourquoi est-ce qu'on rêve ?",
       "Les scientifiques pensent que rêver aide ton cerveau à trier les souvenirs de la journée. C'est comme si ton cerveau faisait du rangement pendant la nuit, gardant les choses importantes et jetant ce qui ne sert à rien.",
@@ -347,11 +349,12 @@ export const STORIES: Story[] = [
     category: "Histoire · Art",
     level: "Lecteur",
     readTime: "3 min de lecture",
+    source: "D'après Giorgio Vasari, Les Vies des meilleurs peintres, sculpteurs et architectes (1550)",
     paragraphs: [
       "Entre le XIVe et le XVIe siècle, l'Europe occidentale connut une transformation culturelle sans précédent. La Renaissance, qui naquit dans les cités-États italiennes avant de se répandre à travers le continent, représenta une rupture fondamentale avec la vision médiévale du monde.",
       "Au Moyen Âge, l'art et la pensée étaient principalement au service de Dieu. La Renaissance plaça l'être humain au centre des préoccupations — c'est ce qu'on appelle l'humanisme. Les artistes étudièrent le corps humain, dissèquèrent des cadavres, observèrent la nature avec une curiosité nouvelle et scientifique.",
       "Des génies comme Léonard de Vinci illustrent parfaitement cet esprit universel : peintre, sculpteur, architecte, musicien, mathématicien, ingénieur et anatomiste à la fois. Son Homme de Vitruve, dessin montrant les proportions idéales du corps humain, symbolise cette réconciliation entre l'art et la science.",
-      "La Renaissance a posé les fondements du monde moderne : la pensée critique, la méthode scientifique, l'individualisme et la conception de l'art comme expression personnelle plutôt que comme service divin. Cinq siècles plus tard, ces valeurs restent au coeur de notre civilisation.",
+      "La Renaissance a posé les fondements du monde moderne : la pensée critique, la méthode scientifique, l'individualisme et la conception de l'art comme expression personnelle plutôt que comme service divin. Cinq siècles plus tard, ces valeurs restent au cœur de notre civilisation.",
     ],
   },
   {
@@ -361,6 +364,7 @@ export const STORIES: Story[] = [
     category: "Philosophie · Neurosciences",
     level: "Érudit",
     readTime: "4 min de lecture",
+    source: "D'après Benjamin Libet, Mind Time (2004) et Daniel Dennett, Freedom Evolves (2003)",
     paragraphs: [
       "En 1983, le neurophysiologiste Benjamin Libet réalisa une expérience qui allait troubler durablement notre conception de la volonté humaine. En demandant à des sujets de fléchir leur poignet quand ils le souhaitaient tout en notant l'heure précise de leur décision consciente, il découvrit que l'activité cérébrale précédant le mouvement — le 'potentiel de préparation' — démarrait environ 550 millisecondes avant que les sujets aient conscience de vouloir bouger.",
       "La conclusion semblait vertigineuse : nos décisions conscientes seraient le reflet d'une activité cérébrale inconsciente antérieure, non sa cause. Nous ne choisirions pas vraiment — nous nous raconterions simplement l'histoire d'un choix après coup.",
@@ -368,8 +372,6 @@ export const STORIES: Story[] = [
       "L'enjeu de ce débat dépasse la philosophie abstraite : si le libre arbitre est une illusion, la notion de responsabilité pénale, qui suppose qu'un individu aurait pu agir autrement, devient philosophiquement fragile. Nos systèmes juridiques et moraux reposent sur une hypothèse que les neurosciences contemporaines peinent à confirmer.",
     ],
   },
-
-  // JOUR 8 — 8 juin
   {
     slug: "pourquoi-musique-frissons",
     date: "2026-06-08",
@@ -377,6 +379,7 @@ export const STORIES: Story[] = [
     category: "Science · Musique",
     level: "Curieux",
     readTime: "2 min de lecture",
+    source: "D'après Matthew Sachs, chercheur à l'Université de Californie du Sud (2016)",
     paragraphs: [
       "Tu écoutes ta chanson préférée et soudain, tu as des frissons dans le dos et les bras. Ce phénomène a un nom scientifique : la chair de poule musicale. Et elle est vraiment fascinante !",
       "Quand tu entends de la musique qui te touche, ton cerveau libère de la dopamine, une substance chimique qui te fait te sentir très bien. C'est la même substance qui se libère quand tu manges quelque chose de délicieux !",
@@ -391,6 +394,7 @@ export const STORIES: Story[] = [
     category: "Nature · Science",
     level: "Lecteur",
     readTime: "3 min de lecture",
+    source: "D'après la NOAA (National Oceanic and Atmospheric Administration) et les travaux de Jacques Piccard (1960)",
     paragraphs: [
       "Nous en savons plus sur la surface de la Lune que sur les fonds marins de notre propre planète. Seulement 20% des océans ont été cartographiés avec précision, et les grandes fosses abyssales restent parmi les territoires les moins explorés de la Terre.",
       "Dans ces zones situées au-delà de 6 000 mètres de profondeur, les conditions sont extrêmes : pression écrasante, température proche de zéro, obscurité totale. Pourtant, la vie s'y est adaptée de façon spectaculaire. Des créatures bioluminescentes, des poissons aux dents translucides et des organismes capables de survivre sans la moindre lumière y prospèrent.",
@@ -405,6 +409,7 @@ export const STORIES: Story[] = [
     category: "Philosophie",
     level: "Érudit",
     readTime: "4 min de lecture",
+    source: "D'après Aristote, Éthique à Nicomaque (IVe siècle av. J.-C.) et Martin Seligman, Flourish (2011)",
     paragraphs: [
       "Aucune question n'a mobilisé autant de penseurs au fil des siècles que celle du bonheur. Et pourtant, deux millénaires et demi après les premières grandes réflexions grecques, les philosophes continuent de s'affronter sur sa nature même.",
       "Aristote distinguait deux formes de bien-être : l'hédoné, le plaisir immédiat, et l'eudaimonia, terme souvent traduit par 'bonheur' mais qui désigne plutôt une forme d'épanouissement ou de vie accomplie. Pour lui, le bonheur n'est pas un état mais une activité — celle de vivre en accord avec l'excellence dont on est capable.",
@@ -412,8 +417,6 @@ export const STORIES: Story[] = [
       "La psychologie positive contemporaine, incarnée par Martin Seligman, a tenté de donner une base empirique à ces débats millénaires. Ses travaux suggèrent que le bonheur durable repose moins sur le plaisir immédiat que sur l'engagement, les relations significatives, le sens donné à l'existence et l'accomplissement personnel — rejoignant ainsi, par des voies détournées, les intuitions d'Aristote.",
     ],
   },
-
-  // JOUR 9 — 9 juin
   {
     slug: "pourquoi-ocean-sale",
     date: "2026-06-09",
@@ -421,6 +424,7 @@ export const STORIES: Story[] = [
     category: "Nature · Science",
     level: "Curieux",
     readTime: "2 min de lecture",
+    source: "D'après l'USGS (United States Geological Survey) et les travaux de John Joly (1899)",
     paragraphs: [
       "Tu as sûrement avalé de l'eau de mer par accident et tu sais que c'est vraiment très salé ! Mais d'où vient tout ce sel ?",
       "Depuis des millions d'années, les pluies tombent sur les rochers et les montagnes. L'eau de pluie est légèrement acide et dissout petit à petit les minéraux et le sel des roches. Ces substances sont emportées par les rivières jusqu'à la mer.",
@@ -435,6 +439,7 @@ export const STORIES: Story[] = [
     category: "Technologie · Histoire",
     level: "Lecteur",
     readTime: "3 min de lecture",
+    source: "D'après Alan Turing, Computing Machinery and Intelligence (1950) et Yann LeCun, Quand la machine apprend (2019)",
     paragraphs: [
       "L'intelligence artificielle n'est pas une invention du XXIe siècle. Dès 1950, le mathématicien Alan Turing posait la question fondatrice : 'Les machines peuvent-elles penser ?' Il proposa même un test — le test de Turing — pour évaluer si une machine peut exhiber une intelligence indiscernable de celle d'un humain.",
       "Les premières décennies furent marquées par un optimisme excessif, suivi de périodes de désillusion appelées 'hivers de l'IA', lorsque les chercheurs réalisèrent que leurs ambitions dépassaient largement leurs capacités techniques. Résoudre un problème de logique formelle était à la portée des machines, mais comprendre le langage naturel ou reconnaître un visage s'avérait infiniment plus complexe.",
@@ -449,6 +454,7 @@ export const STORIES: Story[] = [
     category: "Linguistique · Philosophie",
     level: "Érudit",
     readTime: "4 min de lecture",
+    source: "D'après Lera Boroditsky, How Language Shapes the Way We Think (TED, 2018) et Benjamin Lee Whorf (1956)",
     paragraphs: [
       "L'hypothèse de Sapir-Whorf, formulée dans les années 1930, postule que la langue que nous parlons influence fondamentalement notre façon de percevoir et de conceptualiser le monde. Cette idée, longtemps marginalisée dans les milieux académiques, connaît aujourd'hui un regain d'intérêt grâce à des recherches empiriques solides.",
       "Les travaux de Lera Boroditsky, psychologue à l'Université de Californie, ont montré que les locuteurs de langues différentes conceptualisent le temps, l'espace et la couleur de manières distinctes. Les Guugu Yimithirr d'Australie, qui utilisent exclusivement des directions cardinales plutôt que des références relatives comme 'gauche' ou 'droite', développent un sens de l'orientation remarquable. Les Piraha d'Amazonie, dont la langue ne possède pas de termes pour les nombres au-delà de 'peu' et 'beaucoup', ont des difficultés caractéristiques avec les tâches de comptage précis.",
@@ -456,8 +462,6 @@ export const STORIES: Story[] = [
       "Cette conclusion a des implications pratiques considérables : apprendre une nouvelle langue ne consiste pas seulement à acquérir un nouveau code de communication, mais à développer une nouvelle façon d'habiter le monde, d'autres façons de découper la réalité, d'autres catégories pour penser le temps, les relations et la causalité.",
     ],
   },
-
-  // JOUR 10 — 10 juin
   {
     slug: "pourquoi-miroir-inverse",
     date: "2026-06-10",
@@ -465,6 +469,7 @@ export const STORIES: Story[] = [
     category: "Science",
     level: "Curieux",
     readTime: "2 min de lecture",
+    source: "D'après Richard Feynman, The Feynman Lectures on Physics (1964)",
     paragraphs: [
       "Regarde-toi dans un miroir et lève ta main droite. Dans le miroir, la personne en face lève sa main... gauche ! Le miroir inverse gauche et droite. Mais quand tu sautes, ton reflet saute aussi vers le haut, pas vers le bas. Bizarre, non ?",
       "En réalité, le miroir n'inverse pas gauche et droite ! Il inverse avant et arrière. Si tu fais face à un miroir, ta tête reste en haut dans le reflet et tes pieds en bas. Mais ton côté avant devient le côté arrière du reflet.",
@@ -479,6 +484,7 @@ export const STORIES: Story[] = [
     category: "Science · Santé",
     level: "Lecteur",
     readTime: "3 min de lecture",
+    source: "D'après Rob Knight & Brendan Buhler, Follow Your Gut (2015) et les recherches du Human Microbiome Project (2012)",
     paragraphs: [
       "Nous transportons sur et dans notre corps environ 38 000 milliards de bactéries — soit autant, voire plus, que le nombre de cellules humaines qui nous constituent. Cette réalité, découverte relativement récemment, a transformé notre compréhension de la santé et de la maladie.",
       "Le microbiome intestinal, cette communauté de micro-organismes qui peuple notre tube digestif, est impliqué dans des fonctions bien au-delà de la simple digestion. Il influence notre système immunitaire, produit des vitamines essentielles, et communique avec notre cerveau via ce qu'on appelle l'axe intestin-cerveau. Des perturbations du microbiome ont été associées à des maladies aussi variées que l'obésité, les allergies, la dépression et l'autisme.",
@@ -493,27 +499,23 @@ export const STORIES: Story[] = [
     category: "Philosophie · Art",
     level: "Érudit",
     readTime: "4 min de lecture",
+    source: "D'après George Dickie, Art and the Aesthetic (1974) et Ludwig Wittgenstein, Investigations philosophiques (1953)",
     paragraphs: [
       "En 1917, Marcel Duchamp déposa un urinoir retourné, signé 'R. Mutt', comme oeuvre d'art à une exposition new-yorkaise. Ce geste, connu sous le nom de 'Fontaine', inaugura un siècle de remises en question radicales : si n'importe quel objet du quotidien peut être de l'art, qu'est-ce qui définit l'art ?",
       "Les théoriciens ont proposé de nombreuses réponses. La théorie institutionnelle, défendue par George Dickie, soutient que l'art est ce que le 'monde de l'art' — les musées, les galeries, les critiques, les collectionneurs — décide de reconnaître comme tel. Cette définition a le mérite de rendre compte de la pratique réelle, mais elle semble circulaire et dépendante du pouvoir culturel.",
-      "D'autres approches privilégient l'intention de l'artiste, la capacité de l'oeuvre à susciter une expérience esthétique particulière, ou son aptitude à exprimer et communiquer des états émotionnels complexes. Chacune de ces théories rend compte d'une dimension réelle de l'art tout en achopp sur des contre-exemples embarrassants.",
+      "D'autres approches privilégient l'intention de l'artiste, la capacité de l'oeuvre à susciter une expérience esthétique particulière, ou son aptitude à exprimer et communiquer des états émotionnels complexes. Chacune de ces théories rend compte d'une dimension réelle de l'art tout en achoppant sur des contre-exemples embarrassants.",
       "Peut-être la question 'Qu'est-ce que l'art ?' est-elle mal posée. Le philosophe Ludwig Wittgenstein suggérait que certains concepts fonctionnent non par une propriété commune à toutes leurs instances, mais par des 'ressemblances de famille' — un réseau de similarités partielles et entrecroisées. L'art serait peut-être l'un de ces concepts essentiellement ouverts, dont la richesse tient précisément à son irréductibilité à une définition fermée.",
     ],
   },
 ];
 
 export function getTodayStory(level: Story["level"] = "Lecteur"): Story {
-  // Filtrer les histoires du niveau demandé
   const levelStories = STORIES.filter((s) => s.level === level);
-  
-  // Calculer le jour depuis une date de référence fixe
   const reference = new Date("2026-05-17");
   const today = new Date();
   const diffDays = Math.floor(
     (today.getTime() - reference.getTime()) / (1000 * 60 * 60 * 24)
   );
-  
-  // Rotation automatique : jour 0 = première histoire, jour 1 = deuxième, etc.
   const index = diffDays % levelStories.length;
   return levelStories[index];
 }

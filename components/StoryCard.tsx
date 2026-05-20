@@ -211,6 +211,10 @@ export default function StoryCard({ story }: Props) {
           ))}
         </div>
 
+        <div className={styles.source}>
+  📚 {story.source}
+</div>
+
         <div className={styles.hint}>
           💡 Clique sur un mot pour voir sa définition — les mots consultés passent en{" "}
           <span style={{ color: "var(--green)", fontWeight: 600 }}>vert</span>.

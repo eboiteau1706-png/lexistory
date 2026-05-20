@@ -160,10 +160,10 @@ export default function Sidebar() {
 
         {/* Histoires passées — visible pour tous, cliquable seulement Premium */}
         <div className={styles.card}>
-          <p className={styles.cardTitle}>
-            📅 Histoires passées
-            {!isPremium && <span className={styles.premiumTag}>Premium</span>}
-          </p>
+          <div className={styles.cardTitleRow}>
+  <p className={styles.cardTitle} style={{margin:0}}>📅 Histoires passées</p>
+  {!isPremium && <span className={styles.premiumTag}>Premium</span>}
+</div>
           <button
             className={styles.historyBtn}
             onClick={() => setShowHistory(!showHistory)}
