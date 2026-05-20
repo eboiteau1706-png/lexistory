@@ -15,7 +15,6 @@ export default function Rangs() {
           Lis des histoires chaque jour pour gagner de l&apos;XP et monter en rang !
         </p>
 
-        {/* Comment gagner de l'XP */}
         <div className={styles.section}>
           <h2 className={styles.sectionTitle}>Comment gagner de l&apos;XP ?</h2>
           <div className={styles.xpRules}>
@@ -23,7 +22,24 @@ export default function Rangs() {
               <span className={styles.xpIcon}>📖</span>
               <div>
                 <div className={styles.xpRuleName}>Lire une histoire</div>
-                <div className={styles.xpRuleVal}>+10 XP <span className={styles.premium}>(+15 XP Premium)</span></div>
+                <div className={styles.xpRuleVal}>+3 XP <span className={styles.premium}>(+4 XP Premium)</span></div>
+                <div className={styles.xpRuleNote}>3 histoires disponibles par jour — jusqu&apos;à +9 XP/jour</div>
+              </div>
+            </div>
+            <div className={styles.xpRule}>
+              <span className={styles.xpIcon}>🎮</span>
+              <div>
+                <div className={styles.xpRuleName}>Mini-jeux du jour</div>
+                <div className={styles.xpRuleVal}>+3 XP par jeu réussi <span className={styles.premium}>(+4 XP Premium)</span></div>
+                <div className={styles.xpRuleNote}>Définition mystère, anagramme, citation — jusqu&apos;à +9 XP/jour</div>
+              </div>
+            </div>
+            <div className={styles.xpRule}>
+              <span className={styles.xpIcon}>🎮✨</span>
+              <div>
+                <div className={styles.xpRuleName}>Mini-jeux Premium exclusifs</div>
+                <div className={styles.xpRuleVal}><span className={styles.premium}>+3 XP par jeu réussi (Premium)</span></div>
+                <div className={styles.xpRuleNote}>4 jeux exclusifs supplémentaires — jusqu&apos;à +12 XP/jour</div>
               </div>
             </div>
             <div className={styles.xpRule}>
@@ -58,13 +74,34 @@ export default function Rangs() {
               <span className={styles.xpIcon}>✨</span>
               <div>
                 <div className={styles.xpRuleName}>Boost Premium</div>
-                <div className={styles.xpRuleVal}>x1.5 sur tout l&apos;XP gagné</div>
+                <div className={styles.xpRuleVal}>x1,5 sur histoires, jeux gratuits et streak</div>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Les rangs */}
+        <div className={styles.section}>
+          <h2 className={styles.sectionTitle}>XP gagnable par jour</h2>
+          <div className={styles.xpRules}>
+            <div className={styles.xpRule}>
+              <span className={styles.xpIcon}>🆓</span>
+              <div>
+                <div className={styles.xpRuleName}>Gratuit (sans streak)</div>
+                <div className={styles.xpRuleVal}>~18 XP/jour max</div>
+                <div className={styles.xpRuleNote}>9 XP histoires + 9 XP jeux</div>
+              </div>
+            </div>
+            <div className={`${styles.xpRule} ${styles.xpRulePremium}`}>
+              <span className={styles.xpIcon}>✨</span>
+              <div>
+                <div className={styles.xpRuleName}>Premium (sans streak)</div>
+                <div className={styles.xpRuleVal}>~36 XP/jour max</div>
+                <div className={styles.xpRuleNote}>12 XP histoires + 12 XP jeux + 12 XP jeux Premium</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <div className={styles.section}>
           <h2 className={styles.sectionTitle}>Les 10 rangs</h2>
           <div className={styles.levels}>

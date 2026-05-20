@@ -36,7 +36,6 @@ const GAME_WORDS = [
   { word: "qualia", def: "La façon dont les choses nous semblent ressenties de l'intérieur. Le rouge de ta vision, la douleur que tu sens.", etym: "Du latin qualis, de quelle nature" },
 ];
 
-// Mots Premium — plus rares et difficiles
 const PREMIUM_WORDS = [
   { word: "apophtegme", def: "Une courte parole mémorable d'un personnage célèbre, souvent pleine de sagesse.", etym: "Du grec apophthegma, sentence" },
   { word: "bathyscaphe", def: "Un engin submersible capable de plonger à de très grandes profondeurs océaniques.", etym: "Du grec bathys (profond) + skaphos (bateau)" },
@@ -103,7 +102,6 @@ const CITATIONS = [
   { text: "Aristote distinguait deux formes de bien-être : l'hédoné, le plaisir immédiat, et l'***, le bonheur comme épanouissement.", answer: "eudaimonia", choices: ["eudaimonia", "ataraxia", "aponia", "sophia"] },
 ];
 
-// Citations Premium — plus complexes
 const PREMIUM_CITATIONS = [
   { text: "L'art est une *** qui nous permet de réaliser notre vérité.", answer: "mensonge", choices: ["mensonge", "vérité", "illusion", "réalité"] },
   { text: "La conscience est le seul endroit au monde où la *** ne peut pas entrer.", answer: "médiocrité", choices: ["médiocrité", "beauté", "vérité", "douleur"] },
@@ -176,59 +174,51 @@ function getAnagramme(word: string, seed: number): string {
 
 export default function JeuxPage() {
   const supabase = createClient();
-  const [userId, setUserId]                 = useState<string | null>(null);
-  const [isPremium, setIsPremium]           = useState(false);
-  const [defAnswer, setDefAnswer]           = useState<string | null>(null);
-  const [anagAnswer, setAnagAnswer]         = useState("");
-  const [anagResult, setAnagResult]         = useState<boolean | null>(null);
-  const [citAnswer, setCitAnswer]           = useState<string | null>(null);
-  const [pDefAnswer, setPDefAnswer]         = useState<string | null>(null);
-  const [pAnagAnswer, setPAnagAnswer]       = useState("");
-  const [pAnagResult, setPAnagResult]       = useState<boolean | null>(null);
-  const [pCitAnswer, setPCitAnswer]         = useState<string | null>(null);
-  const [xpGained, setXpGained]             = useState<number | null>(null);
+  const [userId, setUserId]           = useState<string | null>(null);
+  const [isPremium, setIsPremium]     = useState(false);
+  const [defAnswer, setDefAnswer]     = useState<string | null>(null);
+  const [anagAnswer, setAnagAnswer]   = useState("");
+  const [anagResult, setAnagResult]   = useState<boolean | null>(null);
+  const [citAnswer, setCitAnswer]     = useState<string | null>(null);
+  const [pDefAnswer, setPDefAnswer]   = useState<string | null>(null);
+  const [pAnagAnswer, setPAnagAnswer] = useState("");
+  const [pAnagResult, setPAnagResult] = useState<boolean | null>(null);
+  const [pCitAnswer, setPCitAnswer]   = useState<string | null>(null);
+  const [xpGained, setXpGained]       = useState<number | null>(null);
 
   const todayKey = getParisDateKey();
   const dayIdx   = getDayIndex(GAME_WORDS);
   const pDayIdx  = getDayIndex(PREMIUM_WORDS);
 
-  // Gratuit
- // Ordre aléatoire mais fixe — chaque jeu a sa propre permutation
-const shuffledForWord = shuffle([...Array(GAME_WORDS.length).keys()], 11111);
-const shuffledForDef  = shuffle([...Array(GAME_WORDS.length).keys()], 22222);
-const shuffledForAnag = shuffle([...Array(GAME_WORDS.length).keys()], 33333);
-
-const wordIdx = shuffledForWord[dayIdx % GAME_WORDS.length];
-let defIdx    = shuffledForDef[dayIdx % GAME_WORDS.length];
-let anagIdx   = shuffledForAnag[dayIdx % GAME_WORDS.length];
-
-// Garantit que les 3 mots sont différents
-if (defIdx === wordIdx) defIdx = (defIdx + 1) % GAME_WORDS.length;
-if (anagIdx === wordIdx || anagIdx === defIdx) anagIdx = (anagIdx + 2) % GAME_WORDS.length;
-
-const wordOfDay = GAME_WORDS[wordIdx];
-const defWord   = GAME_WORDS[defIdx];
-const anagWord  = GAME_WORDS[anagIdx];
+  // Gratuit — ordre aléatoire fixe par jeu
+  const shuffledForWord = shuffle([...Array(GAME_WORDS.length).keys()], 11111);
+  const shuffledForDef  = shuffle([...Array(GAME_WORDS.length).keys()], 22222);
+  const shuffledForAnag = shuffle([...Array(GAME_WORDS.length).keys()], 33333);
+  const wordIdx = shuffledForWord[dayIdx % GAME_WORDS.length];
+  let defIdx    = shuffledForDef[dayIdx % GAME_WORDS.length];
+  let anagIdx   = shuffledForAnag[dayIdx % GAME_WORDS.length];
+  if (defIdx === wordIdx) defIdx = (defIdx + 1) % GAME_WORDS.length;
+  if (anagIdx === wordIdx || anagIdx === defIdx) anagIdx = (anagIdx + 2) % GAME_WORDS.length;
+  const wordOfDay = GAME_WORDS[wordIdx];
+  const defWord   = GAME_WORDS[defIdx];
+  const anagWord  = GAME_WORDS[anagIdx];
   const citation  = CITATIONS[getDayIndex(CITATIONS)];
   const anagramme = getAnagramme(anagWord.word, dayIdx * 31337);
   const wrongChoices = GAME_WORDS.filter(w => w.word !== defWord.word).slice(0, 3).map(w => w.word);
   const defChoices   = shuffle([defWord.word, ...wrongChoices], dayIdx * 99991);
 
-  // Premium
- const pShuffledForWord = shuffle([...Array(PREMIUM_WORDS.length).keys()], 44444);
-const pShuffledForDef  = shuffle([...Array(PREMIUM_WORDS.length).keys()], 55555);
-const pShuffledForAnag = shuffle([...Array(PREMIUM_WORDS.length).keys()], 66666);
-
-const pWordIdx = pShuffledForWord[pDayIdx % PREMIUM_WORDS.length];
-let pDefIdx    = pShuffledForDef[pDayIdx % PREMIUM_WORDS.length];
-let pAnagIdx   = pShuffledForAnag[pDayIdx % PREMIUM_WORDS.length];
-
-if (pDefIdx === pWordIdx) pDefIdx = (pDefIdx + 1) % PREMIUM_WORDS.length;
-if (pAnagIdx === pWordIdx || pAnagIdx === pDefIdx) pAnagIdx = (pAnagIdx + 2) % PREMIUM_WORDS.length;
-
-const pWordOfDay = PREMIUM_WORDS[pWordIdx];
-const pDefWord   = PREMIUM_WORDS[pDefIdx];
-const pAnagWord  = PREMIUM_WORDS[pAnagIdx];
+  // Premium — ordre aléatoire fixe par jeu
+  const pShuffledForWord = shuffle([...Array(PREMIUM_WORDS.length).keys()], 44444);
+  const pShuffledForDef  = shuffle([...Array(PREMIUM_WORDS.length).keys()], 55555);
+  const pShuffledForAnag = shuffle([...Array(PREMIUM_WORDS.length).keys()], 66666);
+  const pWordIdx = pShuffledForWord[pDayIdx % PREMIUM_WORDS.length];
+  let pDefIdx    = pShuffledForDef[pDayIdx % PREMIUM_WORDS.length];
+  let pAnagIdx   = pShuffledForAnag[pDayIdx % PREMIUM_WORDS.length];
+  if (pDefIdx === pWordIdx) pDefIdx = (pDefIdx + 1) % PREMIUM_WORDS.length;
+  if (pAnagIdx === pWordIdx || pAnagIdx === pDefIdx) pAnagIdx = (pAnagIdx + 2) % PREMIUM_WORDS.length;
+  const pWordOfDay = PREMIUM_WORDS[pWordIdx];
+  const pDefWord   = PREMIUM_WORDS[pDefIdx];
+  const pAnagWord  = PREMIUM_WORDS[pAnagIdx];
   const pCitation  = PREMIUM_CITATIONS[getDayIndex(PREMIUM_CITATIONS)];
   const pAnagramme = getAnagramme(pAnagWord.word, pDayIdx * 73331);
   const pWrongChoices = PREMIUM_WORDS.filter(w => w.word !== pDefWord.word).slice(0, 3).map(w => w.word);
@@ -255,9 +245,9 @@ const pAnagWord  = PREMIUM_WORDS[pAnagIdx];
           .then(({ data }) => { if (data?.is_premium) setIsPremium(true); });
       }
       const { defKey, anagKey, citKey, pDefKey, pAnagKey, pCitKey } = getKeys(uid);
-      const savedDef  = localStorage.getItem(defKey);
-      const savedAnag = localStorage.getItem(anagKey);
-      const savedCit  = localStorage.getItem(citKey);
+      const savedDef   = localStorage.getItem(defKey);
+      const savedAnag  = localStorage.getItem(anagKey);
+      const savedCit   = localStorage.getItem(citKey);
       const savedPDef  = localStorage.getItem(pDefKey);
       const savedPAnag = localStorage.getItem(pAnagKey);
       const savedPCit  = localStorage.getItem(pCitKey);
@@ -270,12 +260,23 @@ const pAnagWord  = PREMIUM_WORDS[pAnagIdx];
     });
   }, []);
 
+  // Jeux gratuits — avec boost x1.5 Premium
   async function addXp(amount: number) {
     if (!userId) return;
     const bonus = isPremium ? Math.round(amount * 1.5) : amount;
     const { data } = await supabase.from("profiles").select("xp").eq("id", userId).single();
     await supabase.from("profiles").update({ xp: (data?.xp ?? 0) + bonus }).eq("id", userId);
     setXpGained(bonus);
+    setTimeout(() => setXpGained(null), 3000);
+    window.dispatchEvent(new CustomEvent("lexistory:story-read"));
+  }
+
+  // Jeux Premium — sans boost, toujours 3 XP fixe
+  async function addXpNoBoost(amount: number) {
+    if (!userId) return;
+    const { data } = await supabase.from("profiles").select("xp").eq("id", userId).single();
+    await supabase.from("profiles").update({ xp: (data?.xp ?? 0) + amount }).eq("id", userId);
+    setXpGained(amount);
     setTimeout(() => setXpGained(null), 3000);
     window.dispatchEvent(new CustomEvent("lexistory:story-read"));
   }
@@ -305,12 +306,13 @@ const pAnagWord  = PREMIUM_WORDS[pAnagIdx];
     if (choice === citation.answer) addXp(3);
   }
 
+  // ↓ Jeux Premium — addXpNoBoost (pas de x1.5)
   function handlePDefAnswer(choice: string) {
     if (!isPremium || pDefAnswer) return;
     setPDefAnswer(choice);
     const { pDefKey } = getKeys(userId);
     localStorage.setItem(pDefKey, choice);
-    if (choice === pDefWord.word) addXp(3);
+    if (choice === pDefWord.word) addXpNoBoost(3);
   }
 
   function handlePAnagSubmit() {
@@ -319,7 +321,7 @@ const pAnagWord  = PREMIUM_WORDS[pAnagIdx];
     setPAnagResult(correct);
     const { pAnagKey } = getKeys(userId);
     localStorage.setItem(pAnagKey, correct.toString());
-    if (correct) addXp(3);
+    if (correct) addXpNoBoost(3);
   }
 
   function handlePCitAnswer(choice: string) {
@@ -327,7 +329,7 @@ const pAnagWord  = PREMIUM_WORDS[pAnagIdx];
     setPCitAnswer(choice);
     const { pCitKey } = getKeys(userId);
     localStorage.setItem(pCitKey, choice);
-    if (choice === pCitation.answer) addXp(3);
+    if (choice === pCitation.answer) addXpNoBoost(3);
   }
 
   const citParts  = citation.text.split("***");
@@ -340,7 +342,6 @@ const pAnagWord  = PREMIUM_WORDS[pAnagIdx];
         <p className={styles.subtitle}>Renouvelés chaque jour à minuit — heure de Paris · Jour {dayIdx + 1}/30</p>
       </div>
 
-      {/* ── SECTION GRATUITE ── */}
       <div className={styles.sectionTitle}>📚 Jeux du jour</div>
       <div className={styles.grid}>
 
@@ -423,7 +424,6 @@ const pAnagWord  = PREMIUM_WORDS[pAnagIdx];
         </div>
       </div>
 
-      {/* ── SECTION PREMIUM ── */}
       <div className={styles.sectionTitle}>
         ✨ Jeux Premium <span className={styles.premiumBadge}>Premium</span>
       </div>
@@ -514,10 +514,9 @@ const pAnagWord  = PREMIUM_WORDS[pAnagIdx];
       )}
 
       {xpGained !== null && (
-        <div className={styles.xpPopup}>+{xpGained} XP ✨{isPremium ? " (x1.5 Premium)" : ""}</div>
+        <div className={styles.xpPopup}>+{xpGained} XP ✨</div>
       )}
       <a href="/" className={styles.back}>← Retour aux histoires</a>
     </div>
   );
 }
-/* Append to jeux.module.css */

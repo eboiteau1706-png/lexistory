@@ -45,6 +45,17 @@ export function getStreakBonus(streak: number, isPremium: boolean): number {
   return isPremium ? Math.round(bonus * 1.5) : bonus;
 }
 
+// Histoires : 3 XP gratuit, 4 XP Premium (x1.5)
 export function getStoryXp(isPremium: boolean): number {
-  return isPremium ? 15 : 10;
+  return isPremium ? 4 : 3;
+}
+
+// Jeux gratuits : toujours 3 XP, avec boost x1.5 Premium
+export function getGameXp(isPremium: boolean): number {
+  return isPremium ? 4 : 3;
+}
+
+// Jeux Premium exclusifs : toujours 3 XP fixe, pas de bonus x1.5
+export function getPremiumGameXp(): number {
+  return 3;
 }

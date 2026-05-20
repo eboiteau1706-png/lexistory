@@ -8,7 +8,7 @@ const STEPS = [
   {
     emoji: "📖",
     title: "Une histoire par jour",
-    desc: "Chaque jour, une nouvelle histoire renouvelée à minuit. Choisis ton niveau de vocabulaire : Curieux (simple), Lecteur (intermédiaire) ou Érudit (avancé). Plus tu lis, plus tu progresses.",
+    desc: "Chaque jour, une nouvelle histoire renouvelée à minuit. Choisis ton niveau : Curieux (simple), Lecteur (intermédiaire) ou Érudit (avancé). Chaque histoire lue rapporte +3 XP !",
   },
   {
     emoji: "💡",
@@ -18,7 +18,7 @@ const STEPS = [
   {
     emoji: "🎮",
     title: "4 mini-jeux quotidiens",
-    desc: "Chaque jour, 4 jeux t'attendent : le Mot du jour, une Définition mystère (trouve le mot depuis sa définition), un Anagramme et une Citation à compléter. Gagne jusqu'à +9 XP par jour !",
+    desc: "Chaque jour, 4 jeux t'attendent : le Mot du jour, une Définition mystère, un Anagramme et une Citation à compléter. Gagne jusqu'à +9 XP par jour !",
   },
   {
     emoji: "👥",
@@ -28,7 +28,7 @@ const STEPS = [
   {
     emoji: "🏆",
     title: "10 niveaux à débloquer",
-    desc: "Gagne des XP en lisant les histoires, en jouant aux mini-jeux et en maintenant ta série quotidienne. Passe de Graine à Légende en 10 niveaux. Plus ta série est longue, plus tu gagnes de bonus XP !",
+    desc: "Gagne des XP en lisant les histoires (+3 XP chacune) et en jouant aux mini-jeux (+3 XP par jeu). Maintiens ta série quotidienne pour des bonus XP ! Passe de Graine à Légende en 10 niveaux.",
   },
   {
     emoji: "✨",
@@ -37,9 +37,9 @@ const STEPS = [
     isPremium: true,
     perks: [
       "📅 Accès à toutes les histoires passées",
-      "⚡ Boost XP ×1.5 sur tout le site",
+      "⚡ Boost XP ×1,5 — +4 XP par histoire au lieu de 3",
       "📊 Stats avancées : rang, record, assiduité",
-      "🎮 4 mini-jeux Premium exclusifs (plus difficiles)",
+      "🎮 4 mini-jeux exclusifs supplémentaires par jour (+12 XP)",
     ],
   },
 ];
@@ -92,12 +92,10 @@ export default function OnboardingPopup() {
                 <div key={i} className={`${styles.dot} ${i === step ? styles.dotActive : i < step ? styles.dotDone : ""}`} />
               ))}
             </div>
-
             <div className={styles.emoji}>{current.emoji}</div>
             <h2 className={`${styles.title} ${current.isPremium ? styles.titlePremium : ""}`}>
               {current.title}
             </h2>
-
             {current.isPremium ? (
               <div className={styles.perks}>
                 {current.perks!.map((p, i) => (
@@ -108,7 +106,6 @@ export default function OnboardingPopup() {
             ) : (
               <p className={styles.desc}>{current.desc}</p>
             )}
-
             <div className={styles.btns}>
               <button className={styles.btnNext} onClick={handleNext}>
                 {step < STEPS.length - 1 ? "Suivant →" : "Commencer →"}
@@ -127,7 +124,7 @@ export default function OnboardingPopup() {
             </p>
             <div className={styles.btns}>
               <button className={styles.btnNext} onClick={handleLogin}>
-                Se connecter / S'inscrire →
+                Se connecter / S&apos;inscrire →
               </button>
               <button className={styles.btnSkip} onClick={handleContinueWithout}>
                 Continuer sans compte
