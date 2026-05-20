@@ -9,6 +9,16 @@ import type { Story } from "@/lib/stories";
 
 interface Props { story: Story; }
 
+// Clé localStorage pour sauvegarder la progression
+function getProgressKey(slug: string, userId: string | null) {
+  return `lx_progress_${userId ?? "guest"}_${slug}`;
+}
+
+// Convertit une date en date Paris
+function toParisDateStr(date: Date): string {
+  return new Date(date.toLocaleString("en-US", { timeZone: "Europe/Paris" })).toDateString();
+}
+
 export default function StoryCard({ story }: Props) {
   const [seenWords, setSeenWords]               = useState<Set<string>>(new Set());
   const [activeWord, setActiveWord]             = useState<string | null>(null);
@@ -38,7 +48,6 @@ export default function StoryCard({ story }: Props) {
     setSeenWords(new Set());
     setActiveWord(null);
     setXpGained(null);
-    setReadPct(0);
     setAlreadyCompleted(false);
     doneRef.current = false;
     if (intervalRef.current) {
@@ -46,7 +55,24 @@ export default function StoryCard({ story }: Props) {
       intervalRef.current = null;
     }
 
-    if (!userId) return;
+    // Restaure la progression sauvegardée depuis localStorage
+    const savedPct = parseInt(localStorage.getItem(getProgressKey(story.slug, userId)) ?? "0");
+    setReadPct(savedPct);
+
+    if (!userId) {
+      // Pas connecté : démarre quand même la barre mais ne sauvegarde pas en DB
+      if (savedPct < 100) {
+        intervalRef.current = setInterval(() => {
+          setReadPct(prev => {
+            const next = prev >= 100 ? 100 : prev + 1;
+            localStorage.setItem(getProgressKey(story.slug, null), String(next));
+            if (next >= 100 && intervalRef.current) clearInterval(intervalRef.current);
+            return next;
+          });
+        }, 600);
+      }
+      return;
+    }
 
     const currentSlug = story.slug;
 
@@ -59,15 +85,17 @@ export default function StoryCard({ story }: Props) {
 
         if (data) {
           setAlreadyCompleted(true);
+          setReadPct(100);
           doneRef.current = true;
-        } else {
+          localStorage.removeItem(getProgressKey(story.slug, userId));
+        } else if (savedPct < 100) {
+          // Reprend depuis où on s'était arrêté
           intervalRef.current = setInterval(() => {
             setReadPct(prev => {
-              if (prev >= 100) {
-                if (intervalRef.current) clearInterval(intervalRef.current);
-                return 100;
-              }
-              return prev + 1;
+              const next = prev >= 100 ? 100 : prev + 1;
+              localStorage.setItem(getProgressKey(story.slug, userId), String(next));
+              if (next >= 100 && intervalRef.current) clearInterval(intervalRef.current);
+              return next;
             });
           }, 600);
         }
@@ -99,30 +127,39 @@ export default function StoryCard({ story }: Props) {
         story_level: story.level,
       });
 
-      // Calcul streak
+      // Supprime la progression sauvegardée
+      localStorage.removeItem(getProgressKey(story.slug, userId));
+
+      // Calcul streak en heure Paris
       const { data: reads } = await supabase
         .from("stories_read").select("read_at")
         .eq("user_id", userId).order("read_at", { ascending: false });
 
       let streak = 1;
       if (reads && reads.length > 1) {
-        const dates = [...new Set(reads.map((d: any) => new Date(d.read_at).toDateString()))];
-        for (let i = 1; i < dates.length; i++) {
-          const diff = (new Date(dates[i-1]).getTime() - new Date(dates[i]).getTime()) / 86400000;
-          if (diff === 1) streak++; else break;
+        // Utilise les dates en heure Paris pour le streak
+        const dates = [...new Set(reads.map((d: any) => toParisDateStr(new Date(d.read_at))))];
+        const todayParis = toParisDateStr(new Date());
+        const yesterdayParis = toParisDateStr(new Date(Date.now() - 86400000));
+
+        // Vérifie que le streak est actif
+        if (dates[0] !== todayParis && dates[0] !== yesterdayParis) {
+          streak = 1;
+        } else {
+          for (let i = 1; i < dates.length; i++) {
+            const d1 = new Date(dates[i-1]);
+            const d2 = new Date(dates[i]);
+            const diff = (d1.getTime() - d2.getTime()) / 86400000;
+            if (Math.round(diff) === 1) streak++; else break;
+          }
         }
       }
 
-      // Vérifie si le bonus streak a déjà été donné aujourd'hui
-      // On compte combien d'histoires ont été lues aujourd'hui (heure Paris)
-      const parisToday = new Date(new Date().toLocaleString("en-US", { timeZone: "Europe/Paris" }));
-      const todayStr = parisToday.toDateString();
+      // Bonus streak 1x par jour (heure Paris)
+      const todayParis = toParisDateStr(new Date());
       const readsTodayCount = reads
-        ? reads.filter((d: any) => new Date(d.read_at).toDateString() === todayStr).length
+        ? reads.filter((d: any) => toParisDateStr(new Date(d.read_at)) === todayParis).length
         : 0;
-
-      // Le bonus streak ne s'applique qu'à la PREMIÈRE histoire lue aujourd'hui
-      // readsTodayCount inclut déjà l'histoire qu'on vient d'insérer
       const isFirstTodayRead = readsTodayCount <= 1;
 
       const storyXp = getStoryXp(isPremium);
@@ -212,8 +249,8 @@ export default function StoryCard({ story }: Props) {
         </div>
 
         <div className={styles.source}>
-  📚 {story.source}
-</div>
+          📚 {story.source}
+        </div>
 
         <div className={styles.hint}>
           💡 Clique sur un mot pour voir sa définition — les mots consultés passent en{" "}
