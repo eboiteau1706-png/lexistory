@@ -103,6 +103,49 @@ export default function Nav() {
   const level = getLevel(xp);
   const { pct, current, needed } = getXpProgress(xp);
 
+  // Boutons nav — floutés si pas connecté
+  const navLinks = ready && !user ? (
+    <div className={styles.lockedNav}>
+      <span className={styles.lockedNavText}>
+        Connecte-toi pour accéder à toutes les fonctionnalités
+      </span>
+      <button className={styles.btnPrimary} onClick={() => router.push("/login")}>
+        Se connecter
+      </button>
+    </div>
+  ) : (
+    <>
+      <a href="/jeux" className={styles.btnGhost}>🎮 Jeux</a>
+      <a href="/classement" className={styles.btnGhost}>🏆 Classement</a>
+      <a href="/amis" className={styles.btnGhost} style={{ position: "relative" }}>
+        👥 Amis
+        {pendingCount > 0 && (
+          <span style={{
+            position: "absolute", top: "-6px", right: "-6px",
+            background: "#e88080", color: "white", borderRadius: "50%",
+            width: "18px", height: "18px", fontSize: "0.65rem", fontWeight: 700,
+            display: "flex", alignItems: "center", justifyContent: "center",
+          }}>
+            {pendingCount}
+          </span>
+        )}
+      </a>
+      {ready && (
+        <button className={styles.btnGhost} onClick={() => router.push("/profile")}>
+          Mon profil
+        </button>
+      )}
+      {ready && !isPremium && (
+        <button className={styles.btnPrimary} onClick={handlePremium} disabled={loading}>
+          {loading ? "..." : "Premium — 1,99€/mois"}
+        </button>
+      )}
+      {ready && isPremium && (
+        <div className={styles.premiumBadge}>✨ Premium</div>
+      )}
+    </>
+  );
+
   return (
     <>
       <nav className={styles.nav}>
@@ -122,47 +165,7 @@ export default function Nav() {
               </div>
             </div>
           )}
-
-          <a href="/jeux" className={styles.btnGhost}>🎮 Jeux</a>
-          <a href="/classement" className={styles.btnGhost}>🏆 Classement</a>
-
-          <a href="/amis" className={styles.btnGhost} style={{ position: "relative" }}>
-            👥 Amis
-            {pendingCount > 0 && (
-              <span style={{
-                position: "absolute",
-                top: "-6px",
-                right: "-6px",
-                background: "#e88080",
-                color: "white",
-                borderRadius: "50%",
-                width: "18px",
-                height: "18px",
-                fontSize: "0.65rem",
-                fontWeight: 700,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-              }}>
-                {pendingCount}
-              </span>
-            )}
-          </a>
-
-          {ready && (
-            <button className={styles.btnGhost} onClick={() => router.push(user ? "/profile" : "/login")}>
-              {user ? "Mon profil" : "Connexion"}
-            </button>
-          )}
-
-          {ready && !isPremium && (
-            <button className={styles.btnPrimary} onClick={handlePremium} disabled={loading}>
-              {loading ? "..." : "Premium — 1,99€/mois"}
-            </button>
-          )}
-          {ready && isPremium && (
-            <div className={styles.premiumBadge}>✨ Premium</div>
-          )}
+          {navLinks}
         </div>
 
         <button className={styles.hamburger} onClick={() => setMenuOpen(!menuOpen)} aria-label="Menu">
@@ -174,36 +177,43 @@ export default function Nav() {
 
       {menuOpen && (
         <div className={styles.mobileMenu}>
-          {ready && user && (
-            <div className={styles.mobileUserInfo}>
-              <span>🔥 {streak} jour{streak > 1 ? "s" : ""}</span>
-              <span>{level.emoji} {level.name} · {xp} XP</span>
-            </div>
-          )}
-          <button className={styles.mobileBtn} onClick={() => { setMenuOpen(false); router.push("/jeux"); }}>
-            🎮 Jeux
-          </button>
-          <button className={styles.mobileBtn} onClick={() => { setMenuOpen(false); router.push("/classement"); }}>
-            🏆 Classement
-          </button>
-          <button className={styles.mobileBtn} onClick={() => { setMenuOpen(false); router.push("/amis"); }}>
-            👥 Amis {pendingCount > 0 && `(${pendingCount})`}
-          </button>
-          <button className={styles.mobileBtn} onClick={() => { setMenuOpen(false); router.push("/rangs"); }}>
-            ⭐ Rangs & XP
-          </button>
-          {ready && (
-            <button className={styles.mobileBtn} onClick={() => { setMenuOpen(false); router.push(user ? "/profile" : "/login"); }}>
-              {user ? "👤 Mon profil" : "🔑 Connexion"}
-            </button>
-          )}
-          {ready && !isPremium && (
-            <button className={styles.mobilePremiumBtn} onClick={() => { setMenuOpen(false); handlePremium(); }} disabled={loading}>
-              {loading ? "..." : "✨ Premium — 1,99€/mois"}
-            </button>
-          )}
-          {ready && isPremium && (
-            <div className={styles.mobilePremiumBadge}>✨ Abonné Premium</div>
+          {ready && user ? (
+            <>
+              <div className={styles.mobileUserInfo}>
+                <span>🔥 {streak} jour{streak > 1 ? "s" : ""}</span>
+                <span>{level.emoji} {level.name} · {xp} XP</span>
+              </div>
+              <button className={styles.mobileBtn} onClick={() => { setMenuOpen(false); router.push("/jeux"); }}>
+                🎮 Jeux
+              </button>
+              <button className={styles.mobileBtn} onClick={() => { setMenuOpen(false); router.push("/classement"); }}>
+                🏆 Classement
+              </button>
+              <button className={styles.mobileBtn} onClick={() => { setMenuOpen(false); router.push("/amis"); }}>
+                👥 Amis {pendingCount > 0 && `(${pendingCount})`}
+              </button>
+              <button className={styles.mobileBtn} onClick={() => { setMenuOpen(false); router.push("/rangs"); }}>
+                ⭐ Rangs & XP
+              </button>
+              <button className={styles.mobileBtn} onClick={() => { setMenuOpen(false); router.push("/profile"); }}>
+                👤 Mon profil
+              </button>
+              {!isPremium && (
+                <button className={styles.mobilePremiumBtn} onClick={() => { setMenuOpen(false); handlePremium(); }} disabled={loading}>
+                  {loading ? "..." : "✨ Premium — 1,99€/mois"}
+                </button>
+              )}
+              {isPremium && (
+                <div className={styles.mobilePremiumBadge}>✨ Abonné Premium</div>
+              )}
+            </>
+          ) : (
+            <>
+              <p className={styles.mobileLockedText}>Connecte-toi pour accéder à toutes les fonctionnalités !</p>
+              <button className={styles.mobilePremiumBtn} onClick={() => { setMenuOpen(false); router.push("/login"); }}>
+                🔑 Se connecter
+              </button>
+            </>
           )}
         </div>
       )}

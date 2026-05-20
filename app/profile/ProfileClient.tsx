@@ -10,26 +10,26 @@ export default function ProfileClient({ user }: { user: User }) {
   const supabase = createClient();
   const router   = useRouter();
 
-  const [username, setUsername]             = useState("");
-  const [editing, setEditing]               = useState(false);
-  const [newUsername, setNewUsername]       = useState("");
-  const [saving, setSaving]                 = useState(false);
-  const [error, setError]                   = useState("");
-  const [isPremium, setIsPremium]           = useState(false);
+  const [username, setUsername]                 = useState("");
+  const [editing, setEditing]                   = useState(false);
+  const [newUsername, setNewUsername]           = useState("");
+  const [saving, setSaving]                     = useState(false);
+  const [error, setError]                       = useState("");
+  const [isPremium, setIsPremium]               = useState(false);
   const [stripeCustomerId, setStripeCustomerId] = useState<string | null>(null);
-  const [xp, setXp]                         = useState(0);
-  const [wordsCount, setWordsCount]         = useState(0);
-  const [storiesCount, setStoriesCount]     = useState(0);
-  const [streak, setStreak]                 = useState(0);
-  const [streakRecord, setStreakRecord]     = useState(0);
-  const [xpThisWeek, setXpThisWeek]         = useState(0);
-  const [completionRate, setCompletionRate] = useState(0);
-  const [myRank, setMyRank]                 = useState<number | null>(null);
-  const [topWords, setTopWords]             = useState<string[]>([]);
-  const [levelBreakdown, setLevelBreakdown] = useState<Record<string, number>>({});
+  const [xp, setXp]                             = useState(0);
+  const [wordsCount, setWordsCount]             = useState(0);
+  const [storiesCount, setStoriesCount]         = useState(0);
+  const [streak, setStreak]                     = useState(0);
+  const [streakRecord, setStreakRecord]         = useState(0);
+  const [xpThisWeek, setXpThisWeek]             = useState(0);
+  const [completionRate, setCompletionRate]     = useState(0);
+  const [myRank, setMyRank]                     = useState<number | null>(null);
+  const [topWords, setTopWords]                 = useState<string[]>([]);
+  const [levelBreakdown, setLevelBreakdown]     = useState<Record<string, number>>({});
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  const [deleting, setDeleting]             = useState(false);
-  const [portalLoading, setPortalLoading]   = useState(false);
+  const [deleting, setDeleting]                 = useState(false);
+  const [portalLoading, setPortalLoading]       = useState(false);
 
   useEffect(() => {
     supabase.from("profiles").select("username, is_premium, xp, stripe_customer_id").eq("id", user.id).single()
@@ -79,7 +79,7 @@ export default function ProfileClient({ user }: { user: User }) {
 
         const oneWeekAgo = new Date(Date.now() - 7 * 86400000);
         const recentStories = data.filter((d: any) => new Date(d.read_at) > oneWeekAgo);
-        setXpThisWeek(recentStories.length * 10);
+        setXpThisWeek(recentStories.length * 3);
 
         if (data.length > 0 && s > 0) {
           setCompletionRate(Math.min(100, Math.round((data.length / Math.max(s, 1)) * 100)));
@@ -129,22 +129,22 @@ export default function ProfileClient({ user }: { user: User }) {
     finally { setPortalLoading(false); }
   }
 
-async function handleDeleteAccount() {
-  setDeleting(true);
-  try {
-    const res = await fetch("/api/delete-account", { method: "POST" });
-    const data = await res.json();
-    if (data.success) {
-      await supabase.auth.signOut();
-      router.push("/");
-    } else {
+  async function handleDeleteAccount() {
+    setDeleting(true);
+    try {
+      const res = await fetch("/api/delete-account", { method: "POST" });
+      const data = await res.json();
+      if (data.success) {
+        await supabase.auth.signOut();
+        router.push("/");
+      } else {
+        alert("Erreur lors de la suppression. Contacte-nous à contact@lexistory.fr");
+      }
+    } catch {
       alert("Erreur lors de la suppression. Contacte-nous à contact@lexistory.fr");
     }
-  } catch {
-    alert("Erreur lors de la suppression. Contacte-nous à contact@lexistory.fr");
+    finally { setDeleting(false); }
   }
-  finally { setDeleting(false); }
-}
 
   const initial   = (username?.[0] || user.email?.[0] || "?").toUpperCase();
   const level     = getLevel(xp);
@@ -153,11 +153,20 @@ async function handleDeleteAccount() {
   const levelEmoji: Record<string, string> = { "Curieux": "🌱", "Lecteur": "📖", "Érudit": "🎓" };
   const maxStories = Math.max(...Object.values(levelBreakdown), 1);
 
+  // Badge Premium : à vie si pas de stripe_customer_id, sinon abonné normal
+  const premiumBadgeText = isPremium
+    ? stripeCustomerId ? "✨ Premium" : "✨ Premium à vie"
+    : null;
+
   return (
     <div className={styles.page}>
       <div className={styles.card}>
         <div className={styles.avatar}>{initial}</div>
-        {isPremium && <div className={styles.premiumBadge}>✨ Premium</div>}
+        {premiumBadgeText && (
+          <div className={`${styles.premiumBadge} ${!stripeCustomerId ? styles.premiumBadgeLifetime : ""}`}>
+            {premiumBadgeText}
+          </div>
+        )}
 
         {editing ? (
           <div className={styles.editWrap}>
@@ -270,7 +279,7 @@ async function handleDeleteAccount() {
           </button>
         ) : isPremium && !stripeCustomerId ? (
           <div className={styles.portalInfo}>
-            Pour résilier, contacte-nous à <a href="mailto:contact@lexistory.fr">contact@lexistory.fr</a>
+            🎁 Tu bénéficies du Premium à vie — offert par LexiStory !
           </div>
         ) : (
           <div className={styles.plan}>
