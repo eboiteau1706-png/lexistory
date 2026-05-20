@@ -18,6 +18,7 @@ export default function Sidebar() {
   const [streak, setStreak]             = useState(0);
   const [xp, setXp]                     = useState(0);
   const [showHistory, setShowHistory]   = useState(false);
+  const [showPremiumPopup, setShowPremiumPopup] = useState(false);
   const supabase = createClient();
   const router   = useRouter();
   const searchParams = useSearchParams();
@@ -74,18 +75,18 @@ export default function Sidebar() {
       }
     });
 
-    const onWordSeen  = () => {
-  supabase.auth.getSession().then(({ data: { session } }) => {
-    if (session?.user) loadStats(session.user.id);
-  });
-};
-const onStoryRead = () => {
-  supabase.auth.getSession().then(({ data: { session } }) => {
-    if (session?.user) loadStats(session.user.id);
-  });
-};
-window.addEventListener("lexistory:word-seen", onWordSeen);
-window.addEventListener("lexistory:story-read", onStoryRead);
+    const onWordSeen = () => {
+      supabase.auth.getSession().then(({ data: { session } }) => {
+        if (session?.user) loadStats(session.user.id);
+      });
+    };
+    const onStoryRead = () => {
+      supabase.auth.getSession().then(({ data: { session } }) => {
+        if (session?.user) loadStats(session.user.id);
+      });
+    };
+    window.addEventListener("lexistory:word-seen", onWordSeen);
+    window.addEventListener("lexistory:story-read", onStoryRead);
 
     return () => {
       listener.subscription.unsubscribe();
@@ -106,72 +107,86 @@ window.addEventListener("lexistory:story-read", onStoryRead);
     finally { setLoading(false); }
   }
 
+  function handleLockedStoryClick() {
+    setShowPremiumPopup(true);
+  }
+
   const lvl  = getLevel(xp);
   const { pct, current, needed } = getXpProgress(xp);
 
   if (!ready) return null;
 
   return (
-    <aside className={styles.sidebar}>
-      {user ? (
-        <>
-          <div className={styles.card}>
-            <p className={styles.cardTitle}>🔥 Ta série</p>
-            <div className={styles.streakDisplay}>
-              <div className={styles.streakNum}>{streak}</div>
-              <div className={styles.streakSub}>jour{streak > 1 ? "s" : ""} consécutif{streak > 1 ? "s" : ""}</div>
+    <>
+      <aside className={styles.sidebar}>
+        {user ? (
+          <>
+            <div className={styles.card}>
+              <p className={styles.cardTitle}>🔥 Ta série</p>
+              <div className={styles.streakDisplay}>
+                <div className={styles.streakNum}>{streak}</div>
+                <div className={styles.streakSub}>jour{streak > 1 ? "s" : ""} consécutif{streak > 1 ? "s" : ""}</div>
+              </div>
             </div>
-          </div>
 
-          <div className={styles.card}>
-            <p className={styles.cardTitle}>📊 Mes stats</p>
-            <div className={styles.statRow}>
-              <span className={styles.statLabel}>Mots appris</span>
-              <span className={`${styles.statVal} ${styles.green}`}>{wordsCount}</span>
+            <div className={styles.card}>
+              <p className={styles.cardTitle}>📊 Mes stats</p>
+              <div className={styles.statRow}>
+                <span className={styles.statLabel}>Mots appris</span>
+                <span className={`${styles.statVal} ${styles.green}`}>{wordsCount}</span>
+              </div>
+              <div className={styles.statRow}>
+                <span className={styles.statLabel}>Histoires lues</span>
+                <span className={styles.statVal}>{storiesCount}</span>
+              </div>
+              <div className={styles.statRow} style={{ cursor: "pointer" }} onClick={() => router.push("/rangs")}>
+                <span className={styles.statLabel}>Niveau actuel</span>
+                <span className={`${styles.statVal} ${styles.gold}`}>{lvl.emoji} {lvl.name}</span>
+              </div>
+              <div className={styles.xpBarSidebar}>
+                <div className={styles.xpBarFillSidebar} style={{ width: `${pct}%` }} />
+              </div>
+              <div className={styles.xpLabelSidebar}>{xp} XP · {current}/{needed}</div>
             </div>
-            <div className={styles.statRow}>
-              <span className={styles.statLabel}>Histoires lues</span>
-              <span className={styles.statVal}>{storiesCount}</span>
-            </div>
-            <div
-              className={styles.statRow}
-              style={{ cursor: "pointer" }}
-              onClick={() => router.push("/rangs")}
-            >
-              <span className={styles.statLabel}>Niveau actuel</span>
-              <span className={`${styles.statVal} ${styles.gold}`}>{lvl.emoji} {lvl.name}</span>
-            </div>
-            <div className={styles.xpBarSidebar}>
-              <div className={styles.xpBarFillSidebar} style={{ width: `${pct}%` }} />
-            </div>
-            <div className={styles.xpLabelSidebar}>{xp} XP · {current}/{needed}</div>
+          </>
+        ) : (
+          <div className={styles.loginCard}>
+            <div className={styles.loginIcon}>📖</div>
+            <div className={styles.loginTitle}>Suis ta progression</div>
+            <div className={styles.loginText}>Connecte-toi pour voir ta série, tes stats et tes mots appris.</div>
+            <button className={styles.loginBtn} onClick={() => router.push("/login")}>Se connecter</button>
           </div>
-        </>
-      ) : (
-        <div className={styles.loginCard}>
-          <div className={styles.loginIcon}>📖</div>
-          <div className={styles.loginTitle}>Suis ta progression</div>
-          <div className={styles.loginText}>Connecte-toi pour voir ta série, tes stats et tes mots appris.</div>
-          <button className={styles.loginBtn} onClick={() => router.push("/login")}>Se connecter</button>
-        </div>
-      )}
+        )}
 
-      {isPremium ? (
+        {/* Histoires passées — visible pour tous, cliquable seulement Premium */}
         <div className={styles.card}>
-          <p className={styles.cardTitle}>✨ Abonné Premium</p>
-          <button className={styles.historyBtn} onClick={() => setShowHistory(!showHistory)}>
-            {showHistory ? "↑ Fermer" : "📅 Histoires passées"}
+          <p className={styles.cardTitle}>
+            📅 Histoires passées
+            {!isPremium && <span className={styles.premiumTag}>Premium</span>}
+          </p>
+          <button
+            className={styles.historyBtn}
+            onClick={() => setShowHistory(!showHistory)}
+          >
+            {showHistory ? "↑ Fermer" : "Voir les histoires →"}
           </button>
+
           {showHistory && (
-            <div className={styles.historyList}>
+            <div className={`${styles.historyList} ${!isPremium ? styles.historyListBlurred : ""}`}>
               {availableStories.map((s, i) => {
                 const realIndex = currentIndex - i;
                 const isToday = realIndex === currentIndex;
                 return (
                   <button
                     key={s.slug}
-                    className={`${styles.historyItem} ${isToday ? styles.historyItemActive : ""}`}
-                    onClick={() => router.push(`/?level=${level}&day=${realIndex}`)}
+                    className={`${styles.historyItem} ${isToday ? styles.historyItemActive : ""} ${!isPremium && !isToday ? styles.historyItemLocked : ""}`}
+                    onClick={() => {
+                      if (!isPremium && !isToday) {
+                        handleLockedStoryClick();
+                        return;
+                      }
+                      router.push(`/?level=${level}&day=${realIndex}`);
+                    }}
                   >
                     <span className={styles.historyDot} />
                     <div className={styles.historyContent}>
@@ -180,31 +195,87 @@ window.addEventListener("lexistory:story-read", onStoryRead);
                       </span>
                       <span className={styles.historyTitle}>{s.title}</span>
                     </div>
+                    {!isPremium && !isToday && <span className={styles.lockIcon}>🔒</span>}
                   </button>
                 );
               })}
             </div>
           )}
         </div>
-      ) : (
-        <div className={styles.premiumCard}>
-          <div className={styles.premiumTitle}>✨ Passe Premium</div>
-          <div className={styles.premiumText}>Histoires illimitées, stats avancées et accès aux histoires passées.</div>
-          <div className={styles.premiumPrice}>1,99€ <span>/ mois</span></div>
-          <button className={styles.btnUpgrade} onClick={handlePremium} disabled={loading}>
-            {loading ? "Chargement..." : "Passer Premium →"}
-          </button>
-        </div>
-      )}
 
-      {!isPremium && (
-        <div className={styles.lockedCard}>
-          <div className={styles.lockedIcon}>🔒</div>
-          <div className={styles.lockedText}>
-            En Premium, accède à toutes les histoires passées.
+        {!isPremium && (
+          <div className={styles.premiumCard}>
+            <div className={styles.premiumTitle}>✨ Passe Premium</div>
+            <div className={styles.premiumText}>Histoires illimitées, stats avancées et accès aux histoires passées.</div>
+            <div className={styles.premiumPrice}>1,99€ <span>/ mois</span></div>
+            <button className={styles.btnUpgrade} onClick={handlePremium} disabled={loading}>
+              {loading ? "Chargement..." : "Passer Premium →"}
+            </button>
+          </div>
+        )}
+      </aside>
+
+      {/* Popup Premium si clic sur histoire verrouillée */}
+      {showPremiumPopup && (
+        <div
+          onClick={() => setShowPremiumPopup(false)}
+          style={{
+            position: "fixed", inset: 0, zIndex: 300,
+            display: "flex", alignItems: "center", justifyContent: "center",
+            background: "rgba(0,0,0,0.6)", backdropFilter: "blur(4px)",
+            padding: "24px",
+          }}
+        >
+          <div
+            onClick={e => e.stopPropagation()}
+            style={{
+              background: "var(--surface)",
+              border: "1px solid rgba(232,201,122,0.3)",
+              borderRadius: "16px",
+              padding: "28px",
+              maxWidth: "340px",
+              width: "100%",
+              display: "flex",
+              flexDirection: "column",
+              gap: "12px",
+              alignItems: "center",
+              textAlign: "center",
+            }}
+          >
+            <div style={{ fontSize: "2rem" }}>✨</div>
+            <p style={{ fontFamily: "var(--font-playfair)", fontSize: "1.1rem", fontWeight: 700, color: "var(--text)" }}>
+              Fonctionnalité Premium
+            </p>
+            <p style={{ fontSize: "0.88rem", color: "var(--text-muted)", lineHeight: 1.6 }}>
+              Accède à toutes les histoires passées avec LexiStory Premium.
+            </p>
+            <div style={{ fontSize: "1.1rem", fontWeight: 700, color: "var(--accent)" }}>
+              1,99€ / mois — sans engagement
+            </div>
+            <button
+              style={{
+                width: "100%", padding: "12px", borderRadius: "10px",
+                background: "var(--accent)", border: "none",
+                color: "var(--bg)", fontFamily: "inherit",
+                fontSize: "0.95rem", fontWeight: 700, cursor: "pointer",
+              }}
+              onClick={() => { setShowPremiumPopup(false); handlePremium(); }}
+              disabled={loading}
+            >
+              {loading ? "Chargement..." : "Passer Premium →"}
+            </button>
+            <button
+              style={{
+                background: "none", border: "none", color: "var(--text-dim)",
+                fontFamily: "inherit", fontSize: "0.82rem", cursor: "pointer",
+              }}
+              onClick={() => setShowPremiumPopup(false)}
+            >
+              Plus tard
+            </button>
           </div>
         </div>
       )}
-    </aside>
+    </>
   );
 }

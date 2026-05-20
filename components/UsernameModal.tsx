@@ -60,9 +60,6 @@ export default function UsernameModal() {
         <button className={styles.btn} onClick={handleSave} disabled={saving || !username.trim()}>
           {saving ? "Sauvegarde..." : "Choisir ce pseudo →"}
         </button>
-        <button className={styles.skip} onClick={() => setShow(false)}>
-          Plus tard
-        </button>
       </div>
     </div>
   );
