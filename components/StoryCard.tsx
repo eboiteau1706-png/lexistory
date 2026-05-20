@@ -84,11 +84,23 @@ export default function StoryCard({ story }: Props) {
         if (currentSlug !== story.slug) return; // race condition guard
 
         if (data) {
-          setAlreadyCompleted(true);
-          setReadPct(100);
-          doneRef.current = true;
-          localStorage.removeItem(getProgressKey(story.slug, userId));
-        } else if (savedPct < 100) {
+  setAlreadyCompleted(true);
+  setReadPct(100);
+  doneRef.current = true;
+  localStorage.removeItem(getProgressKey(story.slug, userId));
+} else if (savedPct >= 100) {
+  // Histoire non lue mais progression à 100% sauvegardée → on repart à 0
+  localStorage.removeItem(getProgressKey(story.slug, userId));
+  setReadPct(0);
+  intervalRef.current = setInterval(() => {
+    setReadPct(prev => {
+      const next = prev >= 100 ? 100 : prev + 1;
+      localStorage.setItem(getProgressKey(story.slug, userId), String(next));
+      if (next >= 100 && intervalRef.current) clearInterval(intervalRef.current);
+      return next;
+    });
+  }, 600);
+} else if (savedPct < 100) {
           // Reprend depuis où on s'était arrêté
           intervalRef.current = setInterval(() => {
             setReadPct(prev => {
@@ -163,7 +175,19 @@ export default function StoryCard({ story }: Props) {
       const isFirstTodayRead = readsTodayCount <= 1;
 
       const storyXp = getStoryXp(isPremium);
-      const bonusXp = isFirstTodayRead ? getStreakBonus(streak, isPremium) : 0;
+      // Bonus streak seulement si on vient de franchir un nouveau palier
+function getStreakPalier(s: number) {
+  if (s >= 30) return 30;
+  if (s >= 10) return 10;
+  if (s >= 5) return 5;
+  if (s >= 3) return 3;
+  return 0;
+}
+const streakYesterday = streak - 1;
+const palierHier = getStreakPalier(streakYesterday);
+const palierAujourdhui = getStreakPalier(streak);
+const nouveauPalier = palierAujourdhui > palierHier;
+const bonusXp = (isFirstTodayRead && nouveauPalier) ? getStreakBonus(streak, isPremium) : 0;
       const totalXp = storyXp + bonusXp;
 
       const { data: profile } = await supabase

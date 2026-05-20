@@ -201,7 +201,7 @@ export default function JeuxPage() {
   // Gratuit
   const shuffledForWord = shuffle([...Array(GAME_WORDS.length).keys()], 11111);
   const shuffledForDef  = shuffle([...Array(GAME_WORDS.length).keys()], 22222);
-  const shuffledForAnag = shuffle([...Array(GAME_WORDS.length).keys()], 33333);
+  const shuffledForAnag = shuffle([...Array(GAME_WORDS.length).keys()], 77777);
   const wordIdx = shuffledForWord[dayIdx % GAME_WORDS.length];
   let defIdx    = shuffledForDef[dayIdx % GAME_WORDS.length];
   let anagIdx   = shuffledForAnag[dayIdx % GAME_WORDS.length];
@@ -218,7 +218,7 @@ export default function JeuxPage() {
   // Premium
   const pShuffledForWord = shuffle([...Array(PREMIUM_WORDS.length).keys()], 44444);
   const pShuffledForDef  = shuffle([...Array(PREMIUM_WORDS.length).keys()], 55555);
-  const pShuffledForAnag = shuffle([...Array(PREMIUM_WORDS.length).keys()], 66666);
+  const pShuffledForAnag = shuffle([...Array(PREMIUM_WORDS.length).keys()], 88888);
   const pWordIdx = pShuffledForWord[pDayIdx % PREMIUM_WORDS.length];
   let pDefIdx    = pShuffledForDef[pDayIdx % PREMIUM_WORDS.length];
   let pAnagIdx   = pShuffledForAnag[pDayIdx % PREMIUM_WORDS.length];
