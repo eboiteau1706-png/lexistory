@@ -31,18 +31,40 @@ export async function GET() {
     }
 
     const sub = subscriptions.data[0];
-    const periodEnd = (sub as any).current_period_end ?? (sub as any).billing_cycle_anchor;
-    const renewalDate = new Date(Number(periodEnd) * 1000);
+
+    // Log pour débugger
+    console.log("Subscription keys:", Object.keys(sub));
+    console.log("current_period_end:", (sub as any).current_period_end);
+    console.log("billing_cycle_anchor:", (sub as any).billing_cycle_anchor);
+
+    // Stripe renvoie current_period_end en secondes Unix
+    const raw = sub.items?.data?.[0]?.subscription
+      ? null
+      : (sub as any).current_period_end;
+
+    // Fallback : cherche dans tous les endroits possibles
+    const periodEndSeconds =
+      (sub as any).current_period_end ||
+      (sub as any).current_period?.end ||
+      null;
+
+    if (!periodEndSeconds) {
+      return NextResponse.json({ renewalDate: null, daysLeft: null });
+    }
+
+    const renewalDate = new Date(periodEndSeconds * 1000);
     const now = new Date();
     const daysLeft = Math.ceil((renewalDate.getTime() - now.getTime()) / 86400000);
     const renewalDateStr = renewalDate.toLocaleDateString("fr-FR", {
-  day: "numeric",
-  month: "long",
-  timeZone: "Europe/Paris",
-});
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+      timeZone: "Europe/Paris",
+    });
 
     return NextResponse.json({ renewalDate: renewalDateStr, daysLeft });
   } catch (err: any) {
+    console.error("Subscription error:", err);
     return NextResponse.json({ error: err.message }, { status: 500 });
   }
 }
