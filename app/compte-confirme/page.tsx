@@ -1,10 +1,10 @@
 "use client";
-import { useEffect } from "react";
+import { useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase";
 
-export default function CompteConfirmePage() {
-const searchParams = useSearchParams();
+function CompteConfirmeContent() {
+  const searchParams = useSearchParams();
   const supabase = createClient();
 
   useEffect(() => {
@@ -57,5 +57,13 @@ const searchParams = useSearchParams();
         Se connecter →
       </a>
     </div>
+  );
+}
+
+export default function CompteConfirmePage() {
+  return (
+    <Suspense>
+      <CompteConfirmeContent />
+    </Suspense>
   );
 }
