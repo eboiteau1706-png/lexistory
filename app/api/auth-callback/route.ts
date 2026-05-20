@@ -7,6 +7,8 @@ export async function GET(request: NextRequest) {
   const code = searchParams.get("code");
   const token_hash = searchParams.get("token_hash");
   const type = searchParams.get("type");
+
+  console.log("Auth callback:", { code: !!code, token_hash: !!token_hash, type });
  
   const cookieStore = await cookies();
   const supabase = createServerClient(
@@ -24,20 +26,20 @@ export async function GET(request: NextRequest) {
     }
   );
  
- if (token_hash && type) {
-  await supabase.auth.verifyOtp({ token_hash, type: type as any });
-  if (type === "signup") {
-    return NextResponse.redirect(`${origin}/compte-confirme`);
+  if (token_hash && type) {
+    await supabase.auth.verifyOtp({ token_hash, type: type as any });
+    if (type === "signup") {
+      return NextResponse.redirect(`${origin}/compte-confirme`);
+    }
+    if (type === "recovery") {
+      return NextResponse.redirect(`${origin}/login`);
+    }
   }
-  if (type === "recovery") {
-    return NextResponse.redirect(`${origin}/login`);
-  }
-}
 
-if (code) {
-  await supabase.auth.exchangeCodeForSession(code);
-  return NextResponse.redirect(`${origin}/`);
-}
+  if (code) {
+    await supabase.auth.exchangeCodeForSession(code);
+    return NextResponse.redirect(`${origin}/`);
+  }
  
   return NextResponse.redirect(`${origin}/`);
 }
