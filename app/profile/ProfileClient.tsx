@@ -37,18 +37,27 @@ export default function ProfileClient({ user }: { user: User }) {
   const [cancelAtPeriodEnd, setCancelAtPeriodEnd] = useState(false);
 
   // Email
+  const [currentEmail, setCurrentEmail]   = useState(user.email ?? "");
   const [editingEmail, setEditingEmail]   = useState(false);
   const [newEmail, setNewEmail]           = useState("");
   const [emailSaving, setEmailSaving]     = useState(false);
   const [emailError, setEmailError]       = useState("");
   const [emailSent, setEmailSent]         = useState(false);
+  const [emailUpdated, setEmailUpdated]   = useState(false);
 
   useEffect(() => {
+    // Vérifie si on revient d'un changement d'email confirmé
     const params = new URLSearchParams(window.location.search);
-if (params.get("emailUpdated")) {
-  setEmailSent(false);
-  // Optionnel : afficher un message de succès
-}
+    if (params.get("emailUpdated")) {
+      setEmailUpdated(true);
+      window.history.replaceState({}, "", "/profile");
+    }
+
+    // Rafraîchit la session pour avoir le bon email
+    supabase.auth.getSession().then(({ data }) => {
+      if (data.session?.user?.email) setCurrentEmail(data.session.user.email);
+    });
+
     supabase.from("profiles").select("username, is_premium, xp, stripe_customer_id").eq("id", user.id).single()
       .then(({ data }) => {
         if (data?.username) setUsername(data.username);
@@ -124,7 +133,7 @@ if (params.get("emailUpdated")) {
   async function handleSaveEmail() {
     if (!newEmail.trim()) return;
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(newEmail.trim())) { setEmailError("Email invalide."); return; }
-    if (newEmail.trim() === user.email) { setEmailError("C'est déjà ton adresse email."); return; }
+    if (newEmail.trim() === currentEmail) { setEmailError("C'est déjà ton adresse email."); return; }
     setEmailSaving(true); setEmailError("");
     const { error } = await supabase.auth.updateUser({ email: newEmail.trim() });
     setEmailSaving(false);
@@ -175,7 +184,7 @@ if (params.get("emailUpdated")) {
     finally { setDeleting(false); }
   }
 
-  const initial    = (username?.[0] || user.email?.[0] || "?").toUpperCase();
+  const initial    = (username?.[0] || currentEmail?.[0] || "?").toUpperCase();
   const level      = getLevel(xp);
   const { current, needed, pct } = getXpProgress(xp);
   const nextLevel  = LEVELS.find(l => l.level === level.level + 1);
@@ -219,16 +228,21 @@ if (params.get("emailUpdated")) {
         {/* Email */}
         <div className={styles.emailSection}>
           <div className={styles.emailRow}>
-            <span className={styles.emailLabel}>📧 {user.email}</span>
+            <span className={styles.emailLabel}>📧 {currentEmail}</span>
             {!editingEmail && (
-              <button className={styles.editBtn} onClick={() => { setEditingEmail(true); setEmailSent(false); setEmailError(""); }}>
+              <button className={styles.editBtn} onClick={() => { setEditingEmail(true); setEmailSent(false); setEmailError(""); setEmailUpdated(false); }}>
                 Changer
               </button>
             )}
           </div>
-          {emailSent && (
+          {emailUpdated && (
             <p style={{ fontSize: "0.8rem", color: "var(--green)", margin: "4px 0 0" }}>
-              ✅ Un email de confirmation a été envoyé à {newEmail || "ta nouvelle adresse"}.
+              ✅ Adresse email mise à jour avec succès !
+            </p>
+          )}
+          {emailSent && !emailUpdated && (
+            <p style={{ fontSize: "0.8rem", color: "var(--accent)", margin: "4px 0 0" }}>
+              📬 Un lien de confirmation a été envoyé à ta nouvelle adresse. Clique dessus pour valider le changement.
             </p>
           )}
           {editingEmail && (
