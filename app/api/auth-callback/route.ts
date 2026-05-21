@@ -27,17 +27,21 @@ export async function GET(request: NextRequest) {
   );
  
   if (token_hash && type) {
-    await supabase.auth.verifyOtp({ token_hash, type: type as any });
+  const { error } = await supabase.auth.verifyOtp({ token_hash, type: type as any });
+  console.log("verifyOtp result:", { error: error?.message, type });
+  
+  if (!error) {
     if (type === "signup") {
       return NextResponse.redirect(`${origin}/compte-confirme`);
     }
     if (type === "recovery") {
-  return NextResponse.redirect(`${origin}/reset-password`);
+      return NextResponse.redirect(`${origin}/reset-password`);
+    }
+    if (type === "email_change") {
+      return NextResponse.redirect(`${origin}/profile?emailUpdated=1`);
+    }
+  }
 }
-if (type === "email_change") {
-    return NextResponse.redirect(`${origin}/profile?emailUpdated=1`);
-  }
-  }
 
   if (code) {
     await supabase.auth.exchangeCodeForSession(code);
