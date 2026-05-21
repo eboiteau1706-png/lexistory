@@ -87,8 +87,9 @@ setReadPct(savedPct);
         if (data) {
   setAlreadyCompleted(true);
   setReadPct(100);
-  doneRef.current = true;
+  doneRef.current = true; // ← empêche markRead de se déclencher
   localStorage.removeItem(getProgressKey(story.slug, userId));
+  return; // ← sort immédiatement
 } else if (savedPct >= 100) {
   // Histoire non lue mais progression à 100% sauvegardée → on repart à 0
   localStorage.removeItem(getProgressKey(story.slug, userId));
@@ -124,9 +125,9 @@ setReadPct(savedPct);
 
   // Quand barre = 100% → marque comme lue + XP
   useEffect(() => {
-    if (readPct < 100 || !userId || doneRef.current) return;
-    doneRef.current = true;
-
+  if (readPct < 100 || !userId || doneRef.current || alreadyCompleted) return;
+  doneRef.current = true;
+  // ... reste du code
     const markRead = async () => {
       const { data: existing } = await supabase
         .from("stories_read").select("id")
