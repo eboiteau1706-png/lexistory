@@ -44,7 +44,7 @@ export async function GET() {
 
     const renewalDate = new Date(Number(periodEndSeconds) * 1000);
     const nowParis = new Date(new Date().toLocaleString("en-US", { timeZone: "Europe/Paris" }));
-const daysLeft = Math.ceil((renewalDate.getTime() - nowParis.getTime()) / 86400000);
+const daysLeft = Math.floor((renewalDate.getTime() - nowParis.getTime()) / 86400000);
     const renewalDateStr = renewalDate.toLocaleDateString("fr-FR", {
       day: "numeric",
       month: "long",
