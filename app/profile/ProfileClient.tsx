@@ -44,6 +44,11 @@ export default function ProfileClient({ user }: { user: User }) {
   const [emailSent, setEmailSent]         = useState(false);
 
   useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+if (params.get("emailUpdated")) {
+  setEmailSent(false);
+  // Optionnel : afficher un message de succès
+}
     supabase.from("profiles").select("username, is_premium, xp, stripe_customer_id").eq("id", user.id).single()
       .then(({ data }) => {
         if (data?.username) setUsername(data.username);

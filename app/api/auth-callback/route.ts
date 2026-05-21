@@ -34,6 +34,9 @@ export async function GET(request: NextRequest) {
     if (type === "recovery") {
   return NextResponse.redirect(`${origin}/reset-password`);
 }
+if (type === "email_change") {
+    return NextResponse.redirect(`${origin}/profile?emailUpdated=1`);
+  }
   }
 
   if (code) {
