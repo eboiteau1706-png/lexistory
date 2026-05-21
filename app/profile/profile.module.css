@@ -558,3 +558,15 @@
   flex-shrink: 0;
   font-size: 0.95rem;
 }
+
+.emailSection { margin: 4px 0 12px; }
+.emailRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.emailLabel {
+  font-size: 0.82rem;
+  color: var(--text-dim);
+}

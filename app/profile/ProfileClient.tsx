@@ -36,6 +36,13 @@ export default function ProfileClient({ user }: { user: User }) {
   const [daysLeft, setDaysLeft]                 = useState<number | null>(null);
   const [cancelAtPeriodEnd, setCancelAtPeriodEnd] = useState(false);
 
+  // Email
+  const [editingEmail, setEditingEmail]   = useState(false);
+  const [newEmail, setNewEmail]           = useState("");
+  const [emailSaving, setEmailSaving]     = useState(false);
+  const [emailError, setEmailError]       = useState("");
+  const [emailSent, setEmailSent]         = useState(false);
+
   useEffect(() => {
     supabase.from("profiles").select("username, is_premium, xp, stripe_customer_id").eq("id", user.id).single()
       .then(({ data }) => {
@@ -107,6 +114,23 @@ export default function ProfileClient({ user }: { user: User }) {
     setSaving(false);
     if (error) setError(error.message.includes("unique") ? "Ce pseudo est déjà pris !" : "Erreur, réessaie.");
     else { setUsername(newUsername.trim()); setEditing(false); setNewUsername(""); }
+  }
+
+  async function handleSaveEmail() {
+    if (!newEmail.trim()) return;
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(newEmail.trim())) { setEmailError("Email invalide."); return; }
+    if (newEmail.trim() === user.email) { setEmailError("C'est déjà ton adresse email."); return; }
+    setEmailSaving(true); setEmailError("");
+    const { error } = await supabase.auth.updateUser({ email: newEmail.trim() });
+    setEmailSaving(false);
+    if (error) {
+      if (error.message.includes("already")) setEmailError("Cette adresse email est déjà utilisée.");
+      else setEmailError("Erreur, réessaie.");
+    } else {
+      setEmailSent(true);
+      setEditingEmail(false);
+      setNewEmail("");
+    }
   }
 
   async function handleLogout() {
@@ -187,6 +211,43 @@ export default function ProfileClient({ user }: { user: User }) {
           </div>
         )}
 
+        {/* Email */}
+        <div className={styles.emailSection}>
+          <div className={styles.emailRow}>
+            <span className={styles.emailLabel}>📧 {user.email}</span>
+            {!editingEmail && (
+              <button className={styles.editBtn} onClick={() => { setEditingEmail(true); setEmailSent(false); setEmailError(""); }}>
+                Changer
+              </button>
+            )}
+          </div>
+          {emailSent && (
+            <p style={{ fontSize: "0.8rem", color: "var(--green)", margin: "4px 0 0" }}>
+              ✅ Un email de confirmation a été envoyé à {newEmail || "ta nouvelle adresse"}.
+            </p>
+          )}
+          {editingEmail && (
+            <div className={styles.editWrap} style={{ marginTop: 8 }}>
+              <input
+                className={styles.input}
+                type="email"
+                placeholder="nouvelle@adresse.com"
+                value={newEmail}
+                onChange={e => setNewEmail(e.target.value)}
+                onKeyDown={e => e.key === "Enter" && handleSaveEmail()}
+                autoFocus
+              />
+              {emailError && <p className={styles.error}>{emailError}</p>}
+              <div className={styles.editBtns}>
+                <button className={styles.btnCancel} onClick={() => { setEditingEmail(false); setEmailError(""); setNewEmail(""); }}>Annuler</button>
+                <button className={styles.btnSave} onClick={handleSaveEmail} disabled={emailSaving || !newEmail}>
+                  {emailSaving ? "Envoi..." : "Envoyer le lien"}
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+
         <div className={styles.since}>
           Membre depuis le {new Date(user.created_at).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" })}
         </div>
@@ -244,7 +305,6 @@ export default function ProfileClient({ user }: { user: User }) {
           )}
         </div>
 
-        {/* Gestion abonnement */}
         {isPremium && stripeCustomerId ? (
           <div className={styles.subscriptionBox}>
             <div className={styles.subscriptionInfo}>
@@ -293,7 +353,6 @@ export default function ProfileClient({ user }: { user: User }) {
         </div>
       </div>
 
-      {/* Popup résiliation */}
       {showCancelConfirm && (
         <div onClick={() => setShowCancelConfirm(false)} style={{ position: "fixed", inset: 0, zIndex: 300, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(0,0,0,0.6)", backdropFilter: "blur(4px)", padding: "24px" }}>
           <div onClick={e => e.stopPropagation()} style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: "16px", padding: "28px", maxWidth: "360px", width: "100%", display: "flex", flexDirection: "column", gap: "14px" }}>
@@ -312,7 +371,6 @@ export default function ProfileClient({ user }: { user: User }) {
         </div>
       )}
 
-      {/* Popup suppression compte */}
       {showDeleteConfirm && (
         <div onClick={() => setShowDeleteConfirm(false)} style={{ position: "fixed", inset: 0, zIndex: 300, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(0,0,0,0.6)", backdropFilter: "blur(4px)", padding: "24px" }}>
           <div onClick={e => e.stopPropagation()} style={{ background: "var(--surface)", border: "1px solid #e07070", borderRadius: "16px", padding: "28px", maxWidth: "360px", width: "100%", display: "flex", flexDirection: "column", gap: "14px" }}>
