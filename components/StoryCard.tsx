@@ -56,8 +56,9 @@ export default function StoryCard({ story }: Props) {
     }
 
     // Restaure la progression sauvegardée depuis localStorage
-    const savedPct = parseInt(localStorage.getItem(getProgressKey(story.slug, userId)) ?? "0");
-    setReadPct(savedPct);
+    const savedRaw = parseInt(localStorage.getItem(getProgressKey(story.slug, userId)) ?? "0");
+const savedPct = isNaN(savedRaw) ? 0 : savedRaw;
+setReadPct(savedPct);
 
     if (!userId) {
       // Pas connecté : démarre quand même la barre mais ne sauvegarde pas en DB
