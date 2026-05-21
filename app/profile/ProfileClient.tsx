@@ -229,46 +229,45 @@ export default function ProfileClient({ user }: { user: User }) {
         )}
 
         {/* Email */}
-        <div className={styles.emailSection}>
-          <div className={styles.emailRow}>
-            <span className={styles.emailLabel}>📧 {currentEmail}</span>
-            {!editingEmail && (
-              <button className={styles.editBtn} onClick={() => { setEditingEmail(true); setEmailSent(false); setEmailError(""); setEmailUpdated(false); }}>
-                Changer
-              </button>
-            )}
-          </div>
-          {emailUpdated && (
-            <p style={{ fontSize: "0.8rem", color: "var(--green)", margin: "4px 0 0" }}>
-              ✅ Adresse email mise à jour avec succès !
-            </p>
-          )}
-          {emailSent && !emailUpdated && (
-            <p style={{ fontSize: "0.8rem", color: "var(--accent)", margin: "4px 0 0" }}>
-              📬 Un lien de confirmation a été envoyé à ta nouvelle adresse. Clique dessus pour valider le changement.
-            </p>
-          )}
-          {editingEmail && (
-            <div className={styles.editWrap} style={{ marginTop: 8 }}>
-              <input
-                className={styles.input}
-                type="email"
-                placeholder="nouvelle@adresse.com"
-                value={newEmail}
-                onChange={e => setNewEmail(e.target.value)}
-                onKeyDown={e => e.key === "Enter" && handleSaveEmail()}
-                autoFocus
-              />
-              {emailError && <p className={styles.error}>{emailError}</p>}
-              <div className={styles.editBtns}>
-                <button className={styles.btnCancel} onClick={() => { setEditingEmail(false); setEmailError(""); setNewEmail(""); }}>Annuler</button>
-                <button className={styles.btnSave} onClick={handleSaveEmail} disabled={emailSaving || !newEmail}>
-                  {emailSaving ? "Envoi..." : "Envoyer le lien"}
-                </button>
-              </div>
-            </div>
-          )}
-        </div>
+<div className={styles.emailSection}>
+  <div className={styles.emailRow}>
+    <span className={styles.emailLabel}>📧 {currentEmail}</span>
+    {!editingEmail && user.app_metadata?.provider !== "google" && (
+      <button className={styles.editBtn} onClick={() => { setEditingEmail(true); setEmailSent(false); setEmailError(""); setEmailUpdated(false); }}>
+        Changer
+      </button>
+    )}
+  </div>
+  {user.app_metadata?.provider === "google" && (
+    <p style={{ fontSize: "0.78rem", color: "var(--text-dim)", fontStyle: "italic", marginTop: "4px" }}>
+      🔗 Connecté via Google — email non modifiable
+    </p>
+  )}
+  {emailUpdated && (
+    <p style={{ fontSize: "0.8rem", color: "var(--green)", margin: "4px 0 0" }}>
+      ✅ Adresse email mise à jour avec succès !
+    </p>
+  )}
+  {emailSent && !emailUpdated && (
+    <p style={{ fontSize: "0.8rem", color: "var(--accent)", margin: "4px 0 0" }}>
+      📬 Un lien de confirmation a été envoyé à ta nouvelle adresse.
+    </p>
+  )}
+  {editingEmail && (
+    <div className={styles.editWrap} style={{ marginTop: 8 }}>
+      <input className={styles.input} type="email" placeholder="nouvelle@adresse.com"
+        value={newEmail} onChange={e => setNewEmail(e.target.value)}
+        onKeyDown={e => e.key === "Enter" && handleSaveEmail()} autoFocus />
+      {emailError && <p className={styles.error}>{emailError}</p>}
+      <div className={styles.editBtns}>
+        <button className={styles.btnCancel} onClick={() => { setEditingEmail(false); setEmailError(""); setNewEmail(""); }}>Annuler</button>
+        <button className={styles.btnSave} onClick={handleSaveEmail} disabled={emailSaving || !newEmail}>
+          {emailSaving ? "Envoi..." : "Envoyer le lien"}
+        </button>
+      </div>
+    </div>
+  )}
+</div>
 
         <div className={styles.since}>
           Membre depuis le {new Date(user.created_at).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" })}
