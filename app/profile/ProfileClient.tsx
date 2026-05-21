@@ -51,6 +51,7 @@ export default function ProfileClient({ user }: { user: User }) {
     if (params.get("emailUpdated")) {
       setEmailUpdated(true);
       window.history.replaceState({}, "", "/profile");
+      router.refresh();
     }
 
     // Rafraîchit la session pour avoir le bon email
