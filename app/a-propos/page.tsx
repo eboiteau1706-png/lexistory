@@ -19,7 +19,7 @@ export default function APropos() {
             LexiStory est né d&apos;une idée simple : apprendre de nouveaux mots ne devrait pas ressembler à une corvée scolaire. Une histoire courte, quelques minutes par jour, et la curiosité fait le reste.
           </p>
           <p>
-            Le site a été créé par <strong>Enzo Boiteau</strong>, depuis Osny, en France. L&apos;objectif était de créer un outil que même quelqu&apos;un qui n&apos;aime pas lire aurait envie d&apos;utiliser chaque matin.
+            L&apos;objectif était de créer un outil que même quelqu&apos;un qui n&apos;aime pas lire aurait envie d&apos;utiliser chaque matin.
           </p>
           <p>
             Chaque jour, trois nouvelles histoires sont disponibles — une pour chaque niveau. On clique sur un mot qu&apos;on ne connaît pas, et on obtient sa définition. Pas de mémorisation forcée, juste de la lecture.
