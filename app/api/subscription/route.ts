@@ -43,8 +43,8 @@ export async function GET() {
     }
 
     const renewalDate = new Date(Number(periodEndSeconds) * 1000);
-    const now = new Date();
-    const daysLeft = Math.ceil((renewalDate.getTime() - now.getTime()) / 86400000);
+    const nowParis = new Date(new Date().toLocaleString("en-US", { timeZone: "Europe/Paris" }));
+const daysLeft = Math.ceil((renewalDate.getTime() - nowParis.getTime()) / 86400000);
     const renewalDateStr = renewalDate.toLocaleDateString("fr-FR", {
       day: "numeric",
       month: "long",
