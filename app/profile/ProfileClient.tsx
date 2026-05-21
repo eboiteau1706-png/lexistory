@@ -51,13 +51,15 @@ export default function ProfileClient({ user }: { user: User }) {
     if (params.get("emailUpdated")) {
       setEmailUpdated(true);
       window.history.replaceState({}, "", "/profile");
-      router.refresh();
+      window.location.reload();
     }
 
     // Rafraîchit la session pour avoir le bon email
-    supabase.auth.getSession().then(({ data }) => {
-      if (data.session?.user?.email) setCurrentEmail(data.session.user.email);
-    });
+    supabase.auth.refreshSession().then(() => {
+  supabase.auth.getSession().then(({ data }) => {
+    if (data.session?.user?.email) setCurrentEmail(data.session.user.email);
+  });
+});
 
     supabase.from("profiles").select("username, is_premium, xp, stripe_customer_id").eq("id", user.id).single()
       .then(({ data }) => {
