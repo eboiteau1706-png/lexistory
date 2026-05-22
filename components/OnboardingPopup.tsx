@@ -21,16 +21,6 @@ const STEPS = [
     desc: "Chaque jour, 4 jeux t'attendent : le Mot du jour, une Définition mystère, un Anagramme et une Citation à compléter. Gagne jusqu'à +9 XP par jour !",
   },
   {
-    emoji: "👥",
-    title: "Amis et classement",
-    desc: "Ajoute tes amis par pseudo et retrouve-les dans le classement. Compare vos XP, vos séries de lecture et montez de niveau ensemble. Un classement global te montre où tu te situes parmi tous les joueurs.",
-  },
-  {
-    emoji: "🏆",
-    title: "10 niveaux à débloquer",
-    desc: "Gagne des XP en lisant les histoires (+3 XP chacune) et en jouant aux mini-jeux (+3 XP par jeu). Maintiens ta série quotidienne pour des bonus XP ! Passe de Graine à Légende en 10 niveaux.",
-  },
-  {
     emoji: "✨",
     title: "LexiStory Premium",
     desc: "",
@@ -42,6 +32,17 @@ const STEPS = [
       "🎮 4 mini-jeux exclusifs supplémentaires par jour (+12 XP)",
     ],
   },
+  {
+    emoji: "👥",
+    title: "Amis et classement",
+    desc: "Ajoute tes amis par pseudo et retrouve-les dans le classement. Compare vos XP, vos séries de lecture et montez de niveau ensemble. Un classement global te montre où tu te situes parmi tous les joueurs.",
+  },
+  {
+    emoji: "🏆",
+    title: "10 niveaux à débloquer",
+    desc: "Gagne des XP en lisant les histoires (+3 XP chacune) et en jouant aux mini-jeux (+3 XP par jeu). Maintiens ta série quotidienne pour des bonus XP ! Passe de Graine à Légende en 10 niveaux.",
+  },
+  
 ];
 
 export default function OnboardingPopup() {
