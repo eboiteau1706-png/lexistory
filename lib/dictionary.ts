@@ -5,324 +5,6 @@ export interface Definition {
   defSimple: string;
 }
 
-// Jour 6 — Café, Pourquoi pleure-t-on, Problème difficile de la conscience
-// NOUVEAUX mots uniquement (pas déjà dans la lib)
-
-export const definitions: Record<string, { defOrig: string; defSimple: string; etym: string; exemple: string }> = {
-
-  // ══ CAFÉ ══
-  "caféine": {
-    defOrig: "Alcaloïde stimulant présent dans le café, le thé et certaines boissons, agissant sur le système nerveux central.",
-    defSimple: "La substance dans le café qui te réveille et te donne de l'énergie.",
-    etym: "De café + suffixe chimique -ine",
-    exemple: "La caféine bloque les récepteurs de somnolence dans le cerveau.",
-  },
-  "alcaloïde": {
-    defOrig: "Composé organique azoté d'origine végétale, aux effets physiologiques puissants sur l'organisme.",
-    defSimple: "Une substance chimique naturelle produite par les plantes qui a un effet fort sur le corps humain.",
-    etym: "De l'arabe al-qaly (soude) + grec eïdos (forme)",
-    exemple: "La morphine, la nicotine et la caféine sont des alcaloïdes.",
-  },
-  "torréfaction": {
-    defOrig: "Procédé de chauffage à haute température des grains de café pour développer leurs arômes.",
-    defSimple: "L'action de griller les grains de café pour leur donner leur goût et leur couleur.",
-    etym: "Du latin torrefacere, faire griller",
-    exemple: "Une torréfaction poussée donne un café au goût plus amer et corsé.",
-  },
-  "torréfié": {
-    defOrig: "Se dit d'un aliment soumis à la torréfaction, notamment les grains de café chauffés pour développer leurs arômes.",
-    defSimple: "Grillé à haute température pour faire ressortir les saveurs.",
-    etym: "Du latin torrefacere, faire griller",
-    exemple: "Les grains torréfiés dégagent une odeur intense et caractéristique.",
-  },
-  "arabica": {
-    defOrig: "Variété de caféier originaire d'Éthiopie, produisant un café doux et aromatique, la plus cultivée au monde.",
-    defSimple: "Le type de café le plus courant, avec un goût doux et parfumé.",
-    etym: "Du latin scientifique Coffea arabica, café d'Arabie",
-    exemple: "L'arabica représente environ 60% de la production mondiale de café.",
-  },
-  "robusta": {
-    defOrig: "Variété de caféier à la saveur plus forte et amère que l'arabica, avec une teneur en caféine plus élevée.",
-    defSimple: "Un type de café plus fort et plus amer que l'arabica, avec plus de caféine.",
-    etym: "Du latin robustus, fort, solide",
-    exemple: "Le robusta est souvent utilisé dans les mélanges pour expresso.",
-  },
-  "expresso": {
-    defOrig: "Café obtenu par passage forcé d'eau chaude sous pression à travers du café finement moulu.",
-    defSimple: "Un café court et fort préparé sous pression, concentré en arômes.",
-    etym: "De l'italien espresso, exprès, pressé",
-    exemple: "Un expresso bien préparé doit avoir une crème dorée en surface.",
-  },
-  "diurétique": {
-    defOrig: "Substance qui augmente la production d'urine en stimulant les reins.",
-    defSimple: "Quelque chose qui te fait aller plus souvent aux toilettes en augmentant la production d'urine.",
-    etym: "Du grec diouretikos, qui fait uriner",
-    exemple: "Le café a un effet diurétique modéré sur l'organisme.",
-  },
-  "adénosine": {
-    defOrig: "Molécule produite par le cerveau qui s'accumule pendant l'éveil et provoque la somnolence.",
-    defSimple: "Une substance que ton cerveau fabrique quand tu es réveillé et qui te donne envie de dormir.",
-    etym: "De adénine + -ose (sucre) + -ine",
-    exemple: "La caféine bloque les récepteurs d'adénosine, retardant la sensation de fatigue.",
-  },
-  "cortisol": {
-    defOrig: "Hormone du stress sécrétée par les glandes surrénales, régulant de nombreuses fonctions physiologiques.",
-    defSimple: "L'hormone du stress dans ton corps, qui te met en état d'alerte.",
-    etym: "Du latin cortex (écorce) + stérol",
-    exemple: "Le taux de cortisol est naturellement élevé le matin au réveil.",
-  },
-  "arôme": {
-    defOrig: "Ensemble des molécules volatiles qui donnent à une substance son odeur et sa saveur caractéristiques.",
-    defSimple: "L'odeur et le goût particulier d'un aliment ou d'une boisson.",
-    etym: "Du grec aroma, parfum, épice",
-    exemple: "Le café contient plus de 800 composés aromatiques différents.",
-  },
-  "percolation": {
-    defOrig: "Passage lent d'un liquide à travers un filtre ou une substance poreuse pour en extraire les composés solubles.",
-    defSimple: "Quand l'eau traverse lentement le café moulu pour en extraire le goût.",
-    etym: "Du latin percolare, filtrer",
-    exemple: "La percolation lente donne un café moins amer qu'un expresso.",
-  },
-  "infusion": {
-    defOrig: "Extraction des principes actifs d'une substance végétale par immersion dans un liquide chaud.",
-    defSimple: "Faire tremper une plante ou du café dans de l'eau chaude pour en extraire les saveurs.",
-    etym: "Du latin infusio, action de verser dans",
-    exemple: "Le café à la française se prépare par infusion directe dans l'eau.",
-  },
-  "stimulant": {
-    defOrig: "Substance qui augmente temporairement l'activité du système nerveux central, améliorant la vigilance.",
-    defSimple: "Quelque chose qui donne un coup de boost à ton cerveau et te rend plus alerte.",
-    etym: "Du latin stimulare, piquer, aiguillonner",
-    exemple: "Le café est le stimulant légal le plus consommé dans le monde.",
-  },
-  "dépendance": {
-    defOrig: "État dans lequel un organisme a besoin d'une substance pour fonctionner normalement, avec sevrage en son absence.",
-    defSimple: "Quand ton corps ne peut plus se passer de quelque chose sans ressentir des effets désagréables.",
-    etym: "Du latin dependere, être suspendu à",
-    exemple: "Une consommation régulière de café peut créer une légère dépendance.",
-  },
-  "sevrage": {
-    defOrig: "Processus d'arrêt progressif ou brutal d'une substance créant une dépendance, accompagné de symptômes.",
-    defSimple: "Les effets désagréables que ressent le corps quand on arrête brusquement une substance dont on dépendait.",
-    etym: "De sevrer, priver du sein",
-    exemple: "Le sevrage au café peut provoquer des maux de tête et de la fatigue.",
-  },
-  "antioxydant": {
-    defOrig: "Molécule qui neutralise les radicaux libres, protégeant les cellules contre le stress oxydatif.",
-    defSimple: "Une substance qui protège tes cellules contre le vieillissement et les dommages.",
-    etym: "Du grec anti (contre) + oxydant",
-    exemple: "Le café est l'une des principales sources d'antioxydants dans l'alimentation occidentale.",
-  },
-  "acide chlorogénique": {
-    defOrig: "Polyphénol antioxydant présent en grande quantité dans le café vert, aux propriétés bénéfiques pour la santé.",
-    defSimple: "Un composé naturel du café qui protège les cellules et a des effets bénéfiques sur la santé.",
-    etym: "Du grec khlôros (vert) + gennan (produire)",
-    exemple: "L'acide chlorogénique est partiellement détruit lors de la torréfaction.",
-  },
-
-  // ══ POURQUOI PLEURE-T-ON ══
-  "lacrymal": {
-    defOrig: "Qui se rapporte aux larmes et aux glandes qui les produisent.",
-    defSimple: "Tout ce qui concerne les larmes — les glandes lacrymales produisent les larmes.",
-    etym: "Du latin lacrima, larme",
-    exemple: "Les glandes lacrymales produisent en permanence un film protecteur sur l'œil.",
-    },
-  "lacrymale": {
-    defOrig: "Qui se rapporte aux larmes et aux glandes productrices de larmes.",
-    defSimple: "Qui concerne les larmes.",
-    etym: "Du latin lacrima, larme",
-    exemple: "La glande lacrymale est située sous le sourcil.",
-  },
-  "prolactine": {
-    defOrig: "Hormone sécrétée par l'hypophyse, impliquée dans la lactation et la régulation émotionnelle.",
-    defSimple: "Une hormone du cerveau qui joue un rôle dans les larmes émotionnelles et l'allaitement.",
-    etym: "Du latin pro (pour) + lac (lait)",
-    exemple: "La prolactine est plus élevée chez les femmes, ce qui explique en partie qu'elles pleurent plus souvent.",
-  },
-  "enképhaline": {
-    defOrig: "Neuropeptide opioïde naturel produit par le cerveau, ayant un effet analgésique et régulateur de l'humeur.",
-    defSimple: "Un analgésique naturel fabriqué par le cerveau qui soulage la douleur et améliore l'humeur.",
-    etym: "Du grec enkephalos, cerveau",
-    exemple: "Les larmes contiennent des enképhalines qui contribuent au soulagement ressenti après avoir pleuré.",
-  },
-  "catharsis": {
-    defOrig: "Purification émotionnelle obtenue par l'expression ou la libération d'émotions refoulées.",
-    defSimple: "Le soulagement qu'on ressent après avoir exprimé ses émotions, comme après avoir pleuré.",
-    etym: "Du grec katharsis, purification",
-    exemple: "Pleurer devant un film triste peut procurer une véritable catharsis émotionnelle.",
-  },
-  "larmoyant": {
-    defOrig: "Qui pleure facilement ou inspire les pleurs ; qui a tendance à l'attendrissement excessif.",
-    defSimple: "Qui pleure souvent ou facilement, ou qui donne envie de pleurer.",
-    etym: "De larmoyer, pleurer",
-    exemple: "Ce film larmoyant a ému toute la salle.",
-  },
-  "empathie": {
-    defOrig: "Capacité à ressentir et comprendre les émotions d'autrui en se mettant à sa place.",
-    defSimple: "La capacité de ressentir ce que les autres ressentent, de se mettre à leur place.",
-    etym: "Du grec empatheia, passion",
-    exemple: "Les pleurs de contagion émotionnelle témoignent d'une grande empathie.",
-  },
-  "neurone miroir": {
-    defOrig: "Neurone qui s'active aussi bien lors de l'exécution d'une action que lors de son observation chez autrui.",
-    defSimple: "Des cellules du cerveau qui s'allument quand tu fais quelque chose ET quand tu vois quelqu'un d'autre le faire.",
-    etym: "Du grec neuron (nerf) + latin mirror (refléter)",
-    exemple: "Les neurones miroirs expliqueraient pourquoi on pleure en voyant quelqu'un d'autre pleurer.",
-  },
-  "bâillement": {
-    defOrig: "Réflexe involontaire d'ouverture large de la bouche avec inspiration profonde, souvent contagieux.",
-    defSimple: "Quand tu ouvres grand la bouche involontairement, souvent quand tu es fatigué ou que tu en vois un autre.",
-    etym: "Du latin batare, ouvrir la bouche",
-    exemple: "Comme le bâillement, les pleurs peuvent être contagieux par empathie.",
-  },
-  "ocytocine": {
-    defOrig: "Hormone peptidique produite par l'hypothalamus, favorisant les liens sociaux et la confiance.",
-    defSimple: "L'hormone du lien social et de la confiance, souvent appelée l'hormone de l'amour.",
-    etym: "Du grec okytokos, accouchement rapide",
-    exemple: "Pleurer en présence de proches libère de l'ocytocine et renforce les liens.",
-  },
-  "système limbique": {
-    defOrig: "Ensemble de structures cérébrales impliquées dans la régulation des émotions, de la mémoire et du comportement.",
-    defSimple: "La partie du cerveau qui gère tes émotions et tes souvenirs.",
-    etym: "Du latin limbus, bordure",
-    exemple: "Le système limbique est activé lors des pleurs émotionnels.",
-  },
-  "amygdale": {
-    defOrig: "Structure cérébrale en forme d'amande jouant un rôle central dans le traitement des émotions, notamment la peur.",
-    defSimple: "Une petite zone du cerveau en forme d'amande qui gère la peur et les émotions fortes.",
-    etym: "Du grec amygdalê, amande",
-    exemple: "L'amygdale s'active fortement lors des situations de détresse qui déclenchent les pleurs.",
-  },
-  "réflexe": {
-    defOrig: "Réaction automatique et involontaire du système nerveux à un stimulus, sans intervention de la volonté.",
-    defSimple: "Une réaction automatique de ton corps que tu ne contrôles pas consciemment.",
-    etym: "Du latin reflexus, retourné",
-    exemple: "Pleurer en se faisant mal est un réflexe involontaire.",
-  },
-  "inhibition": {
-    defOrig: "Processus de blocage ou de suppression d'une réaction physiologique ou psychologique.",
-    defSimple: "Le fait de retenir ou bloquer une réaction naturelle, comme retenir ses larmes.",
-    etym: "Du latin inhibere, retenir",
-    exemple: "L'inhibition des pleurs dans certaines cultures peut nuire à la santé émotionnelle.",
-  },
-  "régulation émotionnelle": {
-    defOrig: "Ensemble des processus permettant de moduler l'intensité et la durée des réponses émotionnelles.",
-    defSimple: "La capacité à gérer et contrôler ses émotions pour ne pas être submergé par elles.",
-    etym: "Du latin regulare (réguler) + emotio (émotion)",
-    exemple: "Pleurer est l'une des stratégies naturelles de régulation émotionnelle.",
-  },
-
-  // ══ PROBLÈME DIFFICILE DE LA CONSCIENCE ══
-  "conscience": {
-    defOrig: "Faculté mentale permettant à un être de se percevoir lui-même et le monde qui l'entoure comme sujet d'expérience.",
-    defSimple: "Le fait d'être conscient de soi, de ressentir et de percevoir le monde de l'intérieur.",
-    etym: "Du latin conscientia, connaissance partagée",
-    exemple: "La conscience est ce qui fait que tu sais que tu existes et que tu ressens des choses.",
-  },
-  "qualia": {
-    defOrig: "Propriétés subjectives et qualitatives de l'expérience consciente, irréductibles à leur description physique.",
-    defSimple: "La façon dont les choses te semblent de l'intérieur — le rouge que tu vois, la douleur que tu ressens.",
-    etym: "Du latin qualis, de quelle nature",
-    exemple: "Le rouge que tu perçois est un quale — personne ne peut savoir si tu le vois exactement comme moi.",
-  },
-  "subjectivité": {
-    defOrig: "Caractère de ce qui appartient au sujet percevant, à son point de vue intérieur et personnel.",
-    defSimple: "Ce qui appartient à ton expérience personnelle et intérieure, que les autres ne peuvent pas directement partager.",
-    etym: "Du latin subjectus, placé dessous",
-    exemple: "La subjectivité de l'expérience consciente est au cœur du problème difficile.",
-  },
-  "physicalisme": {
-    defOrig: "Doctrine philosophique selon laquelle tout ce qui existe, y compris la conscience, est de nature physique.",
-    defSimple: "La théorie que tout dans l'univers, même nos pensées, est fait de matière physique.",
-    etym: "Du grec physikos, naturel",
-    exemple: "Le physicalisme peine à expliquer comment la matière peut donner naissance à l'expérience subjective.",
-  },
-  "dualisme": {
-    defOrig: "Doctrine affirmant que le corps et l'esprit sont deux substances distinctes et irréductibles l'une à l'autre.",
-    defSimple: "L'idée que le corps et l'esprit sont deux choses complètement différentes et séparées.",
-    etym: "Du latin dualis, double",
-    exemple: "Descartes est le père du dualisme corps-esprit avec son célèbre 'cogito ergo sum'.",
-  },
-  "matérialisme": {
-    defOrig: "Position philosophique selon laquelle seule la matière existe et que l'esprit en est un produit.",
-    defSimple: "La théorie que tout est fait de matière, et que même nos pensées sont produites par notre cerveau physique.",
-    etym: "Du latin materia, matière",
-    exemple: "Le matérialisme affirme que la conscience n'est rien d'autre que l'activité des neurones.",
-  },
-  "émergence": {
-    defOrig: "Apparition de propriétés nouvelles et irréductibles dans un système complexe, absentes de ses composants isolés.",
-    defSimple: "Quand un ensemble de choses simples donne naissance à quelque chose de complexe qu'aucune pièce seule ne pourrait créer.",
-    etym: "Du latin emergere, surgir",
-    exemple: "La conscience pourrait être une propriété émergente de la complexité du cerveau.",
-  },
-  "neurosciences": {
-    defOrig: "Ensemble des disciplines scientifiques étudiant le système nerveux et ses fonctions, notamment cérébrales.",
-    defSimple: "Les sciences qui étudient le cerveau et comment il fonctionne.",
-    etym: "Du grec neuron (nerf) + latin scientia (connaissance)",
-    exemple: "Les neurosciences cherchent les corrélats neuronaux de la conscience.",
-  },
-  "corrélat neuronal": {
-    defOrig: "Activité cérébrale minimale suffisante pour produire un état de conscience particulier.",
-    defSimple: "L'activité du cerveau qui correspond à une expérience consciente précise.",
-    etym: "Du latin correlatus + neuron (nerf)",
-    exemple: "Identifier le corrélat neuronal de la douleur ne dit pas pourquoi on la ressent.",
-  },
-  "panpsychisme": {
-    defOrig: "Doctrine selon laquelle la conscience ou l'expérience subjective est une propriété fondamentale de toute matière.",
-    defSimple: "L'idée que tout dans l'univers, même les atomes, aurait une forme de conscience ou d'expérience intérieure.",
-    etym: "Du grec pan (tout) + psyche (âme)",
-    exemple: "Le panpsychisme est une tentative de résoudre le problème difficile en rendant la conscience universelle.",
-  },
-  "épiphénomène": {
-    defOrig: "Phénomène secondaire accompagnant un phénomène principal sans en être la cause ni avoir d'effet causal.",
-    defSimple: "Quelque chose qui existe en parallèle d'autre chose sans vraiment influencer quoi que ce soit.",
-    etym: "Du grec epi (sur) + phainomenon (ce qui apparaît)",
-    exemple: "Certains pensent que la conscience est un épiphénomène sans effet réel sur nos actions.",
-  },
-  "intentionnalité": {
-    defOrig: "Propriété des états mentaux d'être dirigés vers un objet ou un contenu, d'être 'à propos' de quelque chose.",
-    defSimple: "La capacité de l'esprit à être tourné vers quelque chose — quand tu penses, tu penses toujours à quelque chose.",
-    etym: "Du latin intentio, tension vers",
-    exemple: "L'intentionnalité est une caractéristique fondamentale de la conscience : elle est toujours dirigée.",
-  },
-  "zombie philosophique": {
-    defOrig: "Être hypothétique physiquement identique à un humain mais dépourvu de toute expérience subjective consciente.",
-    defSimple: "Un humain imaginaire qui se comporte exactement comme toi mais sans rien ressentir de l'intérieur.",
-    etym: "Du mot zombie + philosophie",
-    exemple: "L'argument du zombie philosophique suggère que la conscience ne peut pas être réduite au physique.",
-  },
-  "réductionnisme": {
-    defOrig: "Approche consistant à expliquer un phénomène complexe en le ramenant à ses composants les plus élémentaires.",
-    defSimple: "Expliquer quelque chose de complexe en le décomposant en parties plus simples.",
-    etym: "Du latin reducere, ramener en arrière",
-    exemple: "Le réductionnisme pense qu'on peut expliquer la conscience en comprenant tous les neurones.",
-  },
-  "introspection": {
-    defOrig: "Observation et analyse de ses propres états mentaux, émotions et pensées.",
-    defSimple: "Se regarder à l'intérieur de soi pour observer et comprendre ce qu'on ressent et pense.",
-    etym: "Du latin introspicere, regarder à l'intérieur",
-    exemple: "L'introspection est notre seul accès direct à notre propre conscience.",
-  },
-  "philosophie de l'esprit": {
-    defOrig: "Branche de la philosophie qui étudie la nature de l'esprit, des états mentaux et de leur rapport au corps.",
-    defSimple: "La partie de la philosophie qui cherche à comprendre ce qu'est l'esprit et comment il est lié au cerveau.",
-    etym: "Du grec philosophia + latin spiritus",
-    exemple: "La philosophie de l'esprit débat depuis des siècles du problème difficile de la conscience.",
-  },
-  "David Chalmers": {
-    defOrig: "Philosophe australien né en 1966, auteur du concept de 'problème difficile de la conscience'.",
-    defSimple: "Le philosophe qui a inventé l'expression 'problème difficile de la conscience' dans les années 1990.",
-    etym: "Nom propre",
-    exemple: "David Chalmers distingue les problèmes faciles de la conscience du vrai problème difficile.",
-  },
-  "cognition": {
-    defOrig: "Ensemble des processus mentaux impliqués dans l'acquisition, le traitement et l'utilisation des connaissances.",
-    defSimple: "Tout ce que fait ton cerveau pour penser, apprendre, mémoriser et comprendre.",
-    etym: "Du latin cognitio, connaissance",
-    exemple: "La cognition englobe la mémoire, l'attention, le langage et le raisonnement.",
-  },
-};
-
 const DICT: Record<string, Definition> = {
 
   "alzheimer": { etym: "Du nom du Dr Alois Alzheimer", defOrig: "Maladie neurodégénérative provoquant une perte progressive de la mémoire.", defSimple: "Une maladie du cerveau qui fait perdre la mémoire petit à petit. Elle touche surtout les personnes âgées." },
@@ -1381,6 +1063,46 @@ const DICT: Record<string, Definition> = {
   "possède":         { etym: "Du latin possidere, tenir en son pouvoir", defOrig: "A en sa propriété, appartient à.", defSimple: "A comme propriété. Qui possède nos données = à qui appartiennent nos informations." },
   "reflètent":       { etym: "Du latin reflectere, renvoyer", defOrig: "Montrent, donnent une image de quelque chose.", defSimple: "Montrent une image. Les données reflètent = les données montrent ce qu'on fait." },
 
+  // Jour 6 — À coller dans lib/dictionary.ts avant le }; final
+
+  "caféine":           { etym: "De café + suffixe chimique -ine", defOrig: "Alcaloïde stimulant présent dans le café, le thé et certaines boissons, agissant sur le système nerveux central.", defSimple: "La substance dans le café qui te réveille et te donne de l'énergie." },
+  "alcaloïde":         { etym: "De l'arabe al-qaly (soude) + grec eïdos (forme)", defOrig: "Composé organique azoté d'origine végétale, aux effets physiologiques puissants sur l'organisme.", defSimple: "Une substance chimique naturelle produite par les plantes qui a un effet fort sur le corps humain." },
+  "torréfaction":      { etym: "Du latin torrefacere, faire griller", defOrig: "Procédé de chauffage à haute température des grains de café pour développer leurs arômes.", defSimple: "L'action de griller les grains de café pour leur donner leur goût et leur couleur." },
+  "arabica":           { etym: "Du latin scientifique Coffea arabica, café d'Arabie", defOrig: "Variété de caféier originaire d'Éthiopie, produisant un café doux et aromatique, la plus cultivée au monde.", defSimple: "Le type de café le plus courant, avec un goût doux et parfumé." },
+  "robusta":           { etym: "Du latin robustus, fort, solide", defOrig: "Variété de caféier à la saveur plus forte et amère que l'arabica, avec une teneur en caféine plus élevée.", defSimple: "Un type de café plus fort et plus amer que l'arabica, avec plus de caféine." },
+  "expresso":          { etym: "De l'italien espresso, exprès, pressé", defOrig: "Café obtenu par passage forcé d'eau chaude sous pression à travers du café finement moulu.", defSimple: "Un café court et fort préparé sous pression, concentré en arômes." },
+  "diurétique":        { etym: "Du grec diouretikos, qui fait uriner", defOrig: "Substance qui augmente la production d'urine en stimulant les reins.", defSimple: "Quelque chose qui te fait aller plus souvent aux toilettes en augmentant la production d'urine." },
+  "adénosine":         { etym: "De adénine + -ose (sucre) + -ine", defOrig: "Molécule produite par le cerveau qui s'accumule pendant l'éveil et provoque la somnolence.", defSimple: "Une substance que ton cerveau fabrique quand tu es réveillé et qui te donne envie de dormir." },
+  "cortisol":          { etym: "Du latin cortex (écorce) + stérol", defOrig: "Hormone du stress sécrétée par les glandes surrénales, régulant de nombreuses fonctions physiologiques.", defSimple: "L'hormone du stress dans ton corps, qui te met en état d'alerte." },
+  "arôme":             { etym: "Du grec aroma, parfum, épice", defOrig: "Ensemble des molécules volatiles qui donnent à une substance son odeur et sa saveur caractéristiques.", defSimple: "L'odeur et le goût particulier d'un aliment ou d'une boisson." },
+  "percolation":       { etym: "Du latin percolare, filtrer", defOrig: "Passage lent d'un liquide à travers un filtre ou une substance poreuse pour en extraire les composés solubles.", defSimple: "Quand l'eau traverse lentement le café moulu pour en extraire le goût." },
+  "stimulant":         { etym: "Du latin stimulare, piquer, aiguillonner", defOrig: "Substance qui augmente temporairement l'activité du système nerveux central, améliorant la vigilance.", defSimple: "Quelque chose qui donne un coup de boost à ton cerveau et te rend plus alerte." },
+  "dépendance":        { etym: "Du latin dependere, être suspendu à", defOrig: "État dans lequel un organisme a besoin d'une substance pour fonctionner normalement, avec sevrage en son absence.", defSimple: "Quand ton corps ne peut plus se passer de quelque chose sans ressentir des effets désagréables." },
+  "sevrage":           { etym: "De sevrer, priver du sein", defOrig: "Processus d'arrêt progressif ou brutal d'une substance créant une dépendance, accompagné de symptômes.", defSimple: "Les effets désagréables que ressent le corps quand on arrête brusquement une substance dont on dépendait." },
+  "antioxydant":       { etym: "Du grec anti (contre) + oxydant", defOrig: "Molécule qui neutralise les radicaux libres, protégeant les cellules contre le stress oxydatif.", defSimple: "Une substance qui protège tes cellules contre le vieillissement et les dommages." },
+  "infusion":          { etym: "Du latin infusio, action de verser dans", defOrig: "Extraction des principes actifs d'une substance végétale par immersion dans un liquide chaud.", defSimple: "Faire tremper une plante ou du café dans de l'eau chaude pour en extraire les saveurs." },
+
+  "lacrymal":          { etym: "Du latin lacrima, larme", defOrig: "Qui se rapporte aux larmes et aux glandes qui les produisent.", defSimple: "Tout ce qui concerne les larmes — les glandes lacrymales produisent les larmes." },
+  "lacrymale":         { etym: "Du latin lacrima, larme", defOrig: "Qui se rapporte aux larmes et aux glandes productrices de larmes.", defSimple: "Qui concerne les larmes." },
+  "prolactine":        { etym: "Du latin pro (pour) + lac (lait)", defOrig: "Hormone sécrétée par l'hypophyse, impliquée dans la lactation et la régulation émotionnelle.", defSimple: "Une hormone du cerveau qui joue un rôle dans les larmes émotionnelles et l'allaitement." },
+  "enképhaline":       { etym: "Du grec enkephalos, cerveau", defOrig: "Neuropeptide opioïde naturel produit par le cerveau, ayant un effet analgésique et régulateur de l'humeur.", defSimple: "Un analgésique naturel fabriqué par le cerveau qui soulage la douleur et améliore l'humeur." },
+  "larmoyant":         { etym: "De larmoyer, pleurer", defOrig: "Qui pleure facilement ou inspire les pleurs ; qui a tendance à l'attendrissement excessif.", defSimple: "Qui pleure souvent ou facilement, ou qui donne envie de pleurer." },
+  "neurone miroir":    { etym: "Du grec neuron (nerf) + latin mirror (refléter)", defOrig: "Neurone qui s'active aussi bien lors de l'exécution d'une action que lors de son observation chez autrui.", defSimple: "Des cellules du cerveau qui s'allument quand tu fais quelque chose ET quand tu vois quelqu'un d'autre le faire." },
+  "ocytocine":         { etym: "Du grec okytokos, accouchement rapide", defOrig: "Hormone peptidique produite par l'hypothalamus, favorisant les liens sociaux et la confiance.", defSimple: "L'hormone du lien social et de la confiance, souvent appelée l'hormone de l'amour." },
+  "système limbique":  { etym: "Du latin limbus, bordure", defOrig: "Ensemble de structures cérébrales impliquées dans la régulation des émotions, de la mémoire et du comportement.", defSimple: "La partie du cerveau qui gère tes émotions et tes souvenirs." },
+  "inhibition":        { etym: "Du latin inhibere, retenir", defOrig: "Processus de blocage ou de suppression d'une réaction physiologique ou psychologique.", defSimple: "Le fait de retenir ou bloquer une réaction naturelle, comme retenir ses larmes." },
+
+  "physicalisme":      { etym: "Du grec physikos, naturel", defOrig: "Doctrine philosophique selon laquelle tout ce qui existe, y compris la conscience, est de nature physique.", defSimple: "La théorie que tout dans l'univers, même nos pensées, est fait de matière physique." },
+  "dualisme":          { etym: "Du latin dualis, double", defOrig: "Doctrine affirmant que le corps et l'esprit sont deux substances distinctes et irréductibles l'une à l'autre.", defSimple: "L'idée que le corps et l'esprit sont deux choses complètement différentes et séparées." },
+  "matérialisme":      { etym: "Du latin materia, matière", defOrig: "Position philosophique selon laquelle seule la matière existe et que l'esprit en est un produit.", defSimple: "La théorie que tout est fait de matière, et que même nos pensées sont produites par notre cerveau physique." },
+  "émergence":         { etym: "Du latin emergere, surgir", defOrig: "Apparition de propriétés nouvelles et irréductibles dans un système complexe, absentes de ses composants isolés.", defSimple: "Quand un ensemble de choses simples donne naissance à quelque chose de complexe qu'aucune pièce seule ne pourrait créer." },
+  "corrélat neuronal": { etym: "Du latin correlatus + neuron (nerf)", defOrig: "Activité cérébrale minimale suffisante pour produire un état de conscience particulier.", defSimple: "L'activité du cerveau qui correspond à une expérience consciente précise." },
+  "panpsychisme":      { etym: "Du grec pan (tout) + psyche (âme)", defOrig: "Doctrine selon laquelle la conscience ou l'expérience subjective est une propriété fondamentale de toute matière.", defSimple: "L'idée que tout dans l'univers, même les atomes, aurait une forme de conscience ou d'expérience intérieure." },
+  "épiphénomène":      { etym: "Du grec epi (sur) + phainomenon (ce qui apparaît)", defOrig: "Phénomène secondaire accompagnant un phénomène principal sans en être la cause ni avoir d'effet causal.", defSimple: "Quelque chose qui existe en parallèle d'autre chose sans vraiment influencer quoi que ce soit." },
+  "intentionnalité":   { etym: "Du latin intentio, tension vers", defOrig: "Propriété des états mentaux d'être dirigés vers un objet ou un contenu, d'être 'à propos' de quelque chose.", defSimple: "La capacité de l'esprit à être tourné vers quelque chose — quand tu penses, tu penses toujours à quelque chose." },
+  "réductionnisme":    { etym: "Du latin reducere, ramener en arrière", defOrig: "Approche consistant à expliquer un phénomène complexe en le ramenant à ses composants les plus élémentaires.", defSimple: "Expliquer quelque chose de complexe en le décomposant en parties plus simples." },
+  "philosophie de l'esprit": { etym: "Du grec philosophia + latin spiritus", defOrig: "Branche de la philosophie qui étudie la nature de l'esprit, des états mentaux et de leur rapport au corps.", defSimple: "La partie de la philosophie qui cherche à comprendre ce qu'est l'esprit et comment il est lié au cerveau." },
+  "cognition":         { etym: "Du latin cognitio, connaissance", defOrig: "Ensemble des processus mentaux impliqués dans l'acquisition, le traitement et l'utilisation des connaissances.", defSimple: "Tout ce que fait ton cerveau pour penser, apprendre, mémoriser et comprendre." },
   
 };
 
