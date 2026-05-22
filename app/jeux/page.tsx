@@ -137,7 +137,7 @@ const PREMIUM_CITATIONS = [
 
 type Letter = { char: string; id: number };
 
-function getParisDateKey() {
+function getParisDateStr() {
   const paris = new Date(new Date().toLocaleString("en-US", { timeZone: "Europe/Paris" }));
   const y = paris.getFullYear();
   const m = String(paris.getMonth() + 1).padStart(2, "0");
@@ -174,35 +174,32 @@ function getAnagramme(word: string, seed: number): string {
   return shuffled.join("");
 }
 
-// Clés localStorage — toujours basées sur l'uid réel ou "guest"
-function getKeys(uid: string | null | undefined) {
-  const todayKey = getParisDateKey();
-  const prefix = uid ? `${uid}_` : "guest_";
+// Fallback localStorage pour les non-connectés
+function getLocalKeys(date: string) {
   return {
-    defKey:   `lx_def_${prefix}${todayKey}`,
-    anagKey:  `lx_anag_${prefix}${todayKey}`,
-    citKey:   `lx_cit_${prefix}${todayKey}`,
-    pDefKey:  `lx_pdef_${prefix}${todayKey}`,
-    pAnagKey: `lx_panag_${prefix}${todayKey}`,
-    pCitKey:  `lx_pcit_${prefix}${todayKey}`,
+    defKey:   `lx_def_guest_${date}`,
+    anagKey:  `lx_anag_guest_${date}`,
+    citKey:   `lx_cit_guest_${date}`,
+    pDefKey:  `lx_pdef_guest_${date}`,
+    pAnagKey: `lx_panag_guest_${date}`,
+    pCitKey:  `lx_pcit_guest_${date}`,
   };
 }
 
 export default function JeuxPage() {
   const supabase = createClient();
 
-  // Auth — chargé en premier, AVANT d'initialiser les états des jeux
-  const [userId, setUserId]       = useState<string | null | undefined>(undefined); // undefined = pas encore chargé
-  const [isPremium, setIsPremium] = useState(false);
-  const [xpGained, setXpGained]   = useState<number | null>(null);
+  const [userId, setUserId]           = useState<string | null | undefined>(undefined);
+  const [isPremium, setIsPremium]     = useState(false);
+  const [xpGained, setXpGained]       = useState<number | null>(null);
   const [initialized, setInitialized] = useState(false);
 
   // Jeux gratuits
-  const [defAnswer, setDefAnswer]         = useState<string | null>(null);
-  const [anagLetters, setAnagLetters]     = useState<Letter[]>([]);
-  const [anagSelected, setAnagSelected]   = useState<Letter[]>([]);
-  const [anagResult, setAnagResult]       = useState<boolean | null>(null);
-  const [citAnswer, setCitAnswer]         = useState<string | null>(null);
+  const [defAnswer, setDefAnswer]       = useState<string | null>(null);
+  const [anagLetters, setAnagLetters]   = useState<Letter[]>([]);
+  const [anagSelected, setAnagSelected] = useState<Letter[]>([]);
+  const [anagResult, setAnagResult]     = useState<boolean | null>(null);
+  const [citAnswer, setCitAnswer]       = useState<string | null>(null);
 
   // Jeux Premium
   const [pDefAnswer, setPDefAnswer]       = useState<string | null>(null);
@@ -211,10 +208,11 @@ export default function JeuxPage() {
   const [pAnagResult, setPAnagResult]     = useState<boolean | null>(null);
   const [pCitAnswer, setPCitAnswer]       = useState<string | null>(null);
 
-  const dayIdx  = getDayIndex(GAME_WORDS);
-  const pDayIdx = getDayIndex(PREMIUM_WORDS);
+  const todayStr = getParisDateStr();
+  const dayIdx   = getDayIndex(GAME_WORDS);
+  const pDayIdx  = getDayIndex(PREMIUM_WORDS);
 
-  // Calculs des mots/jeux du jour
+  // Calculs jeux du jour
   const shuffledForWord = shuffle([...Array(GAME_WORDS.length).keys()], 11111);
   const shuffledForDef  = shuffle([...Array(GAME_WORDS.length).keys()], 22222);
   const shuffledForAnag = shuffle([...Array(GAME_WORDS.length).keys()], 77777);
@@ -247,7 +245,7 @@ export default function JeuxPage() {
   const pWrongChoices = PREMIUM_WORDS.filter(w => w.word !== pDefWord.word).slice(0, 3).map(w => w.word);
   const pDefChoices   = shuffle([pDefWord.word, ...pWrongChoices], pDayIdx * 11117);
 
-  // Étape 1 : charge la session
+  // Étape 1 : charge session
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       const uid = session?.user?.id ?? null;
@@ -259,44 +257,93 @@ export default function JeuxPage() {
     });
   }, []);
 
-  // Étape 2 : initialise les jeux SEULEMENT quand userId est connu (null ou string)
+  // Étape 2 : charge état des jeux depuis Supabase ou localStorage
   useEffect(() => {
-    if (userId === undefined) return; // pas encore chargé
-    if (initialized) return; // déjà initialisé
+    if (userId === undefined) return;
+    if (initialized) return;
     setInitialized(true);
 
-    const { defKey, anagKey, citKey, pDefKey, pAnagKey, pCitKey } = getKeys(userId);
+    if (userId) {
+      // Connecté → charge depuis Supabase
+      supabase
+        .from("game_completions")
+        .select("*")
+        .eq("user_id", userId)
+        .eq("game_date", todayStr)
+        .maybeSingle()
+        .then(({ data }) => {
+          if (data) {
+            if (data.def_answer)  setDefAnswer(data.def_answer);
+            if (data.cit_answer)  setCitAnswer(data.cit_answer);
+            if (data.p_def_answer) setPDefAnswer(data.p_def_answer);
+            if (data.p_cit_answer) setPCitAnswer(data.p_cit_answer);
 
-    const savedDef   = localStorage.getItem(defKey);
-    const savedAnag  = localStorage.getItem(anagKey);
-    const savedCit   = localStorage.getItem(citKey);
-    const savedPDef  = localStorage.getItem(pDefKey);
-    const savedPAnag = localStorage.getItem(pAnagKey);
-    const savedPCit  = localStorage.getItem(pCitKey);
+            if (data.anag_done) {
+              setAnagResult(true);
+              setAnagLetters([]);
+              setAnagSelected(anagWord.word.split("").map((char, i) => ({ char, id: i })));
+            } else {
+              setAnagLetters(anagramme.split("").map((char, i) => ({ char, id: i })));
+              setAnagSelected([]);
+            }
 
-    if (savedDef)  setDefAnswer(savedDef);
-    if (savedCit)  setCitAnswer(savedCit);
-    if (savedPDef) setPDefAnswer(savedPDef);
-    if (savedPCit) setPCitAnswer(savedPCit);
-
-    if (savedAnag) {
-      setAnagResult(savedAnag === "true");
-      setAnagLetters([]);
-      setAnagSelected(anagWord.word.split("").map((char, i) => ({ char, id: i })));
+            if (data.p_anag_done) {
+              setPAnagResult(true);
+              setPAnagLetters([]);
+              setPAnagSelected(pAnagWord.word.split("").map((char, i) => ({ char, id: i })));
+            } else {
+              setPAnagLetters(pAnagramme.split("").map((char, i) => ({ char, id: i })));
+              setPAnagSelected([]);
+            }
+          } else {
+            // Pas encore joué aujourd'hui
+            setAnagLetters(anagramme.split("").map((char, i) => ({ char, id: i })));
+            setPAnagLetters(pAnagramme.split("").map((char, i) => ({ char, id: i })));
+          }
+        });
     } else {
-      setAnagLetters(anagramme.split("").map((char, i) => ({ char, id: i })));
-      setAnagSelected([]);
-    }
+      // Non connecté → localStorage
+      const keys = getLocalKeys(todayStr);
+      const savedDef   = localStorage.getItem(keys.defKey);
+      const savedAnag  = localStorage.getItem(keys.anagKey);
+      const savedCit   = localStorage.getItem(keys.citKey);
+      const savedPDef  = localStorage.getItem(keys.pDefKey);
+      const savedPAnag = localStorage.getItem(keys.pAnagKey);
+      const savedPCit  = localStorage.getItem(keys.pCitKey);
 
-    if (savedPAnag) {
-      setPAnagResult(savedPAnag === "true");
-      setPAnagLetters([]);
-      setPAnagSelected(pAnagWord.word.split("").map((char, i) => ({ char, id: i })));
-    } else {
-      setPAnagLetters(pAnagramme.split("").map((char, i) => ({ char, id: i })));
-      setPAnagSelected([]);
+      if (savedDef)  setDefAnswer(savedDef);
+      if (savedCit)  setCitAnswer(savedCit);
+      if (savedPDef) setPDefAnswer(savedPDef);
+      if (savedPCit) setPCitAnswer(savedPCit);
+
+      if (savedAnag) {
+        setAnagResult(savedAnag === "true");
+        setAnagLetters([]);
+        setAnagSelected(anagWord.word.split("").map((char, i) => ({ char, id: i })));
+      } else {
+        setAnagLetters(anagramme.split("").map((char, i) => ({ char, id: i })));
+        setAnagSelected([]);
+      }
+
+      if (savedPAnag) {
+        setPAnagResult(savedPAnag === "true");
+        setPAnagLetters([]);
+        setPAnagSelected(pAnagWord.word.split("").map((char, i) => ({ char, id: i })));
+      } else {
+        setPAnagLetters(pAnagramme.split("").map((char, i) => ({ char, id: i })));
+        setPAnagSelected([]);
+      }
     }
   }, [userId]);
+
+  // Sauvegarde dans Supabase (upsert)
+  async function saveToSupabase(updates: Record<string, any>) {
+    if (!userId) return;
+    await supabase.from("game_completions").upsert(
+      { user_id: userId, game_date: todayStr, ...updates },
+      { onConflict: "user_id,game_date" }
+    );
+  }
 
   async function addXp(amount: number) {
     if (!userId) return;
@@ -317,10 +364,12 @@ export default function JeuxPage() {
     window.dispatchEvent(new CustomEvent("lexistory:story-read"));
   }
 
+  // Handlers gratuits
   function handleDefAnswer(choice: string) {
     if (defAnswer) return;
     setDefAnswer(choice);
-    localStorage.setItem(getKeys(userId).defKey, choice);
+    if (userId) saveToSupabase({ def_answer: choice });
+    else localStorage.setItem(getLocalKeys(todayStr).defKey, choice);
     if (choice === defWord.word) addXp(3);
   }
 
@@ -339,21 +388,25 @@ export default function JeuxPage() {
     const answer = anagSelected.map(l => l.char).join("");
     const correct = answer.toLowerCase() === anagWord.word.toLowerCase();
     setAnagResult(correct);
-    localStorage.setItem(getKeys(userId).anagKey, correct.toString());
+    if (userId) saveToSupabase({ anag_done: correct });
+    else localStorage.setItem(getLocalKeys(todayStr).anagKey, correct.toString());
     if (correct) addXp(3);
   }
 
   function handleCitAnswer(choice: string) {
     if (citAnswer) return;
     setCitAnswer(choice);
-    localStorage.setItem(getKeys(userId).citKey, choice);
+    if (userId) saveToSupabase({ cit_answer: choice });
+    else localStorage.setItem(getLocalKeys(todayStr).citKey, choice);
     if (choice === citation.answer) addXp(3);
   }
 
+  // Handlers Premium
   function handlePDefAnswer(choice: string) {
     if (!isPremium || pDefAnswer) return;
     setPDefAnswer(choice);
-    localStorage.setItem(getKeys(userId).pDefKey, choice);
+    if (userId) saveToSupabase({ p_def_answer: choice });
+    else localStorage.setItem(getLocalKeys(todayStr).pDefKey, choice);
     if (choice === pDefWord.word) addXpNoBoost(3);
   }
 
@@ -372,21 +425,22 @@ export default function JeuxPage() {
     const answer = pAnagSelected.map(l => l.char).join("");
     const correct = answer.toLowerCase() === pAnagWord.word.toLowerCase();
     setPAnagResult(correct);
-    localStorage.setItem(getKeys(userId).pAnagKey, correct.toString());
+    if (userId) saveToSupabase({ p_anag_done: correct });
+    else localStorage.setItem(getLocalKeys(todayStr).pAnagKey, correct.toString());
     if (correct) addXpNoBoost(3);
   }
 
   function handlePCitAnswer(choice: string) {
     if (!isPremium || pCitAnswer) return;
     setPCitAnswer(choice);
-    localStorage.setItem(getKeys(userId).pCitKey, choice);
+    if (userId) saveToSupabase({ p_cit_answer: choice });
+    else localStorage.setItem(getLocalKeys(todayStr).pCitKey, choice);
     if (choice === pCitation.answer) addXpNoBoost(3);
   }
 
   const citParts  = citation.text.split("***");
   const pCitParts = pCitation.text.split("***");
 
-  // Affiche un loader pendant que l'auth se charge
   if (userId === undefined) {
     return (
       <div className={styles.page} style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "60vh" }}>
