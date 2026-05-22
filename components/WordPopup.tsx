@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
+import { createClient } from "@/lib/supabase";
 import { lookup } from "@/lib/dictionary";
 import styles from "./WordPopup.module.css";
 
@@ -17,11 +18,25 @@ interface WiktDef {
 }
 
 export default function WordPopup({ word, seenCount, onClose }: Props) {
+  const supabase = createClient();
   const localDef = lookup(word);
   const [wiktDef, setWiktDef]     = useState<WiktDef | null>(null);
   const [loading, setLoading]     = useState(false);
+  const [userId, setUserId]       = useState<string | null>(null);
+  const [isFav, setIsFav]         = useState(false);
+  const [favLoading, setFavLoading] = useState(false);
 
-  // Si pas dans le dico local, cherche sur Wiktionnaire
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      const uid = session?.user?.id ?? null;
+      setUserId(uid);
+      if (uid) {
+        supabase.from("word_favorites").select("id").eq("user_id", uid).eq("word", word).maybeSingle()
+          .then(({ data }) => setIsFav(!!data));
+      }
+    });
+  }, [word]);
+
   useEffect(() => {
     if (localDef) return;
     setLoading(true);
@@ -38,6 +53,19 @@ export default function WordPopup({ word, seenCount, onClose }: Props) {
     return () => window.removeEventListener("keydown", handler);
   }, [onClose]);
 
+  async function toggleFav() {
+    if (!userId) return;
+    setFavLoading(true);
+    if (isFav) {
+      await supabase.from("word_favorites").delete().eq("user_id", userId).eq("word", word);
+      setIsFav(false);
+    } else {
+      await supabase.from("word_favorites").upsert({ user_id: userId, word }, { onConflict: "user_id,word" });
+      setIsFav(true);
+    }
+    setFavLoading(false);
+  }
+
   const defOrig   = localDef?.defOrig   || wiktDef?.defOrig   || "";
   const defSimple = localDef?.defSimple || "";
   const etym      = localDef?.etym      || "";
@@ -47,7 +75,20 @@ export default function WordPopup({ word, seenCount, onClose }: Props) {
       <div className={styles.popup}>
         <button className={styles.close} onClick={onClose}>✕</button>
 
-        <div className={styles.word}>{word}</div>
+        <div className={styles.wordRow}>
+  <div className={styles.word}>{word}</div>
+  {userId && (
+    <button
+      className={styles.favBtn}
+      onClick={toggleFav}
+      disabled={favLoading}
+      data-active={isFav}
+    >
+      ⭐
+    </button>
+  )}
+</div>
+
         {etym && <div className={styles.etym}>{etym}</div>}
 
         {loading ? (
