@@ -17,6 +17,7 @@ export default function Nav() {
   const [xp, setXp]                     = useState(0);
   const [menuOpen, setMenuOpen]         = useState(false);
   const [pendingCount, setPendingCount] = useState(0);
+  const [isAdmin, setIsAdmin] = useState(false);
   const supabase = createClient();
   const router   = useRouter();
   const pathname = usePathname();
@@ -40,6 +41,7 @@ export default function Nav() {
       }
     }
     setXp(profile?.xp ?? 0);
+    if (userId === "0450c58e-35b2-47e6-9600-13db5626e96d") setIsAdmin(true);
 
     const { data: reads } = await supabase
       .from("stories_read").select("read_at")
@@ -145,6 +147,9 @@ export default function Nav() {
           {loading ? "..." : "Premium — 1,99€/mois"}
         </button>
       )}
+      {isAdmin && (
+  <a href="/admin" className={styles.btnGhost} style={{ fontSize: "0.75rem", opacity: 0.5 }}>⚙️</a>
+)}
       {ready && premiumBadge}
     </>
   );
@@ -191,6 +196,9 @@ export default function Nav() {
               </button>
               <button className={styles.mobileBtn} onClick={() => { setMenuOpen(false); router.push("/rangs"); }}>⭐ Rangs & XP</button>
               <button className={styles.mobileBtn} onClick={() => { setMenuOpen(false); router.push("/profile"); }}>👤 Mon profil</button>
+              {isAdmin && (
+  <button className={styles.mobileBtn} onClick={() => { setMenuOpen(false); router.push("/admin"); }}>⚙️ Admin</button>
+)}
               {!isPremium && (
                 <button className={styles.mobilePremiumBtn} onClick={() => { setMenuOpen(false); handlePremium(); }} disabled={loading}>
                   {loading ? "..." : "✨ Premium — 1,99€/mois"}
