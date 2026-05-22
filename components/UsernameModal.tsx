@@ -20,13 +20,23 @@ export default function UsernameModal() {
     });
   }, []);
 
- async function handleSave() {
-  if (!username.trim()) return;
-  if (!/^[a-zA-Z0-9_-]{2,20}$/.test(username.trim())) {
-    setError("Pseudo invalide. Lettres, chiffres, - ou _ uniquement.");
-    return;
-  }
-  setSaving(true); setError("");
+  // Bloque la barre de progression en arrière-plan
+  useEffect(() => {
+    if (show) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => { document.body.style.overflow = ""; };
+  }, [show]);
+
+  async function handleSave() {
+    if (!username.trim()) return;
+    if (!/^[a-zA-Z0-9_-]{2,20}$/.test(username.trim())) {
+      setError("Pseudo invalide. Lettres, chiffres, - ou _ uniquement.");
+      return;
+    }
+    setSaving(true); setError("");
     const { data: { session } } = await supabase.auth.getSession();
     if (!session?.user) return;
     const { error } = await supabase.from("profiles")
@@ -42,7 +52,7 @@ export default function UsernameModal() {
   if (!show) return null;
 
   return (
-    <div className={styles.overlay}>
+    <div className={styles.overlay} style={{ zIndex: 500 }}>
       <div className={styles.modal}>
         <div className={styles.emoji}>👋</div>
         <h2 className={styles.title}>Bienvenue sur LexiStory !</h2>
