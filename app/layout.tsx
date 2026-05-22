@@ -44,10 +44,7 @@ export const metadata: Metadata = {
     description: "Une histoire courte par jour pour enrichir ton vocabulaire en français. Gratuit, sans pub.",
     images: ["/favicon.png"],
   },
-  robots: {
-    index: true,
-    follow: true,
-  },
+  robots: { index: true, follow: true },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
