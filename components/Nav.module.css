@@ -23,14 +23,12 @@
 }
 .logo span { color: var(--text); font-weight: 400; font-style: italic; }
 
-/* ── DESKTOP ── */
 .desktopRight {
   display: flex;
   align-items: center;
   gap: 8px;
 }
 
-/* Stats groupées streak + niveau */
 .userStats {
   display: flex;
   align-items: center;
@@ -96,7 +94,6 @@
   white-space: nowrap;
 }
 
-/* Boutons */
 .btnGhost {
   padding: 7px 16px;
   border-radius: 50px;
@@ -148,8 +145,11 @@
   background: none;
   border: none;
   cursor: pointer;
-  padding: 4px;
+  padding: 8px;
+  border-radius: 10px;
+  transition: background 0.2s;
 }
+.hamburger:hover { background: var(--surface2); }
 
 .bar {
   display: block;
@@ -169,14 +169,14 @@
   top: 60px;
   left: 0; right: 0;
   z-index: 99;
-  background: rgba(14, 13, 11, 0.98);
-  backdrop-filter: blur(20px);
+  background: #0e0d0b;
   border-bottom: 1px solid var(--border);
-  padding: 16px 20px;
+  padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 10px;
   animation: slideDown 0.2s ease;
+  max-height: calc(100vh - 60px);
+  overflow-y: auto;
 }
 
 @keyframes slideDown {
@@ -184,51 +184,130 @@
   to   { opacity: 1; transform: translateY(0); }
 }
 
+/* Infos user en haut du menu mobile */
 .mobileUserInfo {
   display: flex;
+  align-items: center;
   justify-content: space-between;
-  font-size: 0.82rem;
-  color: var(--accent);
-  font-weight: 600;
-  padding: 8px 0;
+  padding: 14px 20px;
+  background: var(--surface);
   border-bottom: 1px solid var(--border);
 }
 
-.mobileBtn {
-  width: 100%;
-  padding: 12px;
+.mobileUserLeft {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.mobileUserName {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.mobileUserXp {
+  font-size: 0.75rem;
+  color: var(--text-dim);
+}
+
+.mobileXpBar {
+  width: 80px;
+  height: 3px;
+  background: var(--border);
+  border-radius: 2px;
+  overflow: hidden;
+  margin-top: 4px;
+}
+
+.mobileXpFill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent2), var(--accent));
+  border-radius: 2px;
+}
+
+.mobileStreak {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--accent);
+}
+
+/* Navigation links mobile */
+.mobileNavLinks {
+  display: flex;
+  flex-direction: column;
+  padding: 8px 12px;
+  gap: 4px;
+}
+
+.mobileNavLink {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
   border-radius: 12px;
-  background: var(--surface2);
-  border: 1px solid var(--border);
+  background: none;
+  border: none;
   color: var(--text);
   font-family: inherit;
-  font-size: 0.92rem;
-  font-weight: 600;
+  font-size: 1rem;
+  font-weight: 500;
   cursor: pointer;
   text-align: left;
-  transition: all 0.2s;
+  transition: background 0.15s;
+  width: 100%;
+  text-decoration: none;
 }
-.mobileBtn:hover { border-color: var(--text-muted); }
+.mobileNavLink:hover { background: var(--surface2); }
+
+.mobileNavIcon {
+  font-size: 1.2rem;
+  width: 28px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.mobileNavBadge {
+  margin-left: auto;
+  background: #e88080;
+  color: white;
+  border-radius: 50px;
+  padding: 2px 8px;
+  font-size: 0.7rem;
+  font-weight: 700;
+}
+
+.mobileDivider {
+  height: 1px;
+  background: var(--border);
+  margin: 4px 12px;
+}
+
+/* Premium section mobile */
+.mobilePremiumSection {
+  padding: 12px;
+}
 
 .mobilePremiumBtn {
   width: 100%;
-  padding: 12px;
+  padding: 14px;
   border-radius: 12px;
   background: var(--accent);
   border: none;
   color: var(--bg);
   font-family: inherit;
-  font-size: 0.92rem;
+  font-size: 0.95rem;
   font-weight: 700;
   cursor: pointer;
   transition: all 0.2s;
+  text-align: center;
 }
 .mobilePremiumBtn:hover:not(:disabled) { background: var(--accent2); }
 .mobilePremiumBtn:disabled { opacity: 0.6; }
 
 .mobilePremiumBadge {
   width: 100%;
-  padding: 12px;
+  padding: 14px;
   border-radius: 12px;
   background: linear-gradient(135deg, #1e1a0e, #2a2210);
   border: 1px solid rgba(232,201,122,0.3);
@@ -266,7 +345,7 @@
 
 /* ── RESPONSIVE ── */
 @media (max-width: 768px) {
-  .nav { padding: 0 20px; }
+  .nav { padding: 0 16px; }
   .desktopRight { display: none; }
   .hamburger { display: flex; }
 }
@@ -282,10 +361,17 @@
   color: var(--text-dim);
 }
 
+.mobileLockedSection {
+  padding: 20px 12px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
 .mobileLockedText {
   font-size: 0.88rem;
   color: var(--text-muted);
   text-align: center;
-  padding: 8px 16px;
   line-height: 1.5;
+  padding: 0 8px;
 }

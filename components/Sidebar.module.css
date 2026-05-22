@@ -21,6 +21,15 @@
   margin-bottom: 16px;
 }
 
+.cardTitleRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 16px;
+}
+
 /* Streak */
 .streakDisplay { text-align: center; padding: 8px 0; }
 .streakNum {
@@ -68,7 +77,7 @@
   margin-top: 3px;
 }
 
-/* Premium */
+/* Premium card */
 .premiumCard {
   background: linear-gradient(135deg, #1e1a0e, #2a2210);
   border: 1px solid rgba(232, 201, 122, 0.25);
@@ -120,19 +129,7 @@
 }
 .btnUpgrade:hover { background: var(--accent2); transform: translateY(-1px); }
 
-/* Locked */
-.lockedCard {
-  background: var(--surface);
-  border: 1px dashed var(--border);
-  border-radius: var(--radius);
-  padding: 28px 20px;
-  text-align: center;
-  opacity: 0.55;
-}
-.lockedIcon { font-size: 2rem; margin-bottom: 10px; }
-.lockedText { font-size: 0.85rem; color: var(--text-muted); line-height: 1.55; }
-
-/* Non connecté */
+/* Login card */
 .loginCard {
   background: var(--surface);
   border: 1px dashed var(--border);
@@ -151,11 +148,7 @@
   font-weight: 700;
   color: var(--text);
 }
-.loginText {
-  font-size: 0.82rem;
-  color: var(--text-muted);
-  line-height: 1.55;
-}
+.loginText { font-size: 0.82rem; color: var(--text-muted); line-height: 1.55; }
 .loginBtn {
   width: 100%;
   padding: 10px;
@@ -172,7 +165,7 @@
 }
 .loginBtn:hover { border-color: var(--accent); color: var(--accent); }
 
-/* Historique Premium */
+/* Historique */
 .historyBtn {
   width: 100%;
   margin-top: 8px;
@@ -215,29 +208,15 @@
   gap: 8px;
   transition: all 0.15s;
 }
-.historyItem:hover {
-  background: var(--surface2);
-  border-color: var(--border);
-  color: var(--text-muted);
-}
+.historyItem:hover { background: var(--surface2); border-color: var(--border); color: var(--text-muted); }
 .historyItemActive {
   background: rgba(232,201,122,0.06) !important;
   border-color: rgba(232,201,122,0.25) !important;
   color: var(--text) !important;
 }
-.historyDot {
-  width: 5px; height: 5px;
-  border-radius: 50%;
-  background: var(--border);
-  flex-shrink: 0;
-}
+.historyDot { width: 5px; height: 5px; border-radius: 50%; background: var(--border); flex-shrink: 0; }
 .historyItemActive .historyDot { background: var(--accent); }
-.historyContent {
-  display: flex;
-  flex-direction: column;
-  gap: 1px;
-  min-width: 0;
-}
+.historyContent { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
 .historyDay {
   font-size: 0.65rem;
   color: var(--text-dim);
@@ -254,27 +233,8 @@
   overflow: hidden;
   text-overflow: ellipsis;
 }
-
-/* ── MOBILE ── */
-@media (max-width: 680px) {
-  .sidebar {
-    /* Sur mobile la sidebar vient APRÈS le StoryCard */
-    order: 2;
-  }
-
-  /* Sur mobile on affiche la sidebar en grille horizontale compacte */
-  .card {
-    padding: 16px;
-  }
-
-  .streakNum { font-size: 2.2rem; }
-
-  /* Stats en ligne sur mobile */
-  .statRow { font-size: 0.82rem; }
-
-  /* Cache le streak card et les stats sur mobile — trop verbeux */
-  .lockedCard { display: none; }
-}
+.historyItemLocked { opacity: 0.5; cursor: pointer; }
+.lockIcon { font-size: 0.75rem; margin-left: auto; }
 
 .premiumTag {
   font-size: 0.65rem;
@@ -284,24 +244,33 @@
   border: 1px solid rgba(232,201,122,0.3);
   color: var(--accent);
   font-weight: 600;
-  margin-left: 8px;
 }
 
-.historyItemLocked {
-  opacity: 0.5;
-  cursor: pointer;
-}
+.lockedCard { display: none; }
 
-.lockIcon {
-  font-size: 0.75rem;
-  margin-left: auto;
-}
+/* ── MOBILE ── */
+@media (max-width: 680px) {
+  .sidebar {
+    order: 2;
+    /* Sur mobile : bande horizontale compacte avec les stats clés */
+  }
 
-.cardTitleRow {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 6px;
-  margin-bottom: 16px;
+  /* Cache les cartes streak et stats détaillées sur mobile
+     → tout est déjà dans la nav */
+  .card:nth-child(1),
+  .card:nth-child(2) {
+    display: none;
+  }
+
+  /* La carte historique devient compacte */
+  .card {
+    padding: 14px 16px;
+  }
+
+  /* Premium card reste visible */
+  .premiumCard {
+    padding: 16px;
+  }
+  .premiumTitle { font-size: 0.95rem; }
+  .premiumText { font-size: 0.8rem; margin-bottom: 10px; }
 }
