@@ -7,6 +7,11 @@ import { lookup } from "@/lib/dictionary";
 import type { User } from "@supabase/supabase-js";
 import styles from "./profile.module.css";
 
+interface FavWord {
+  word: string;
+  def_orig: string | null;
+}
+
 export default function ProfileClient({ user }: { user: User }) {
   const supabase = createClient();
   const router   = useRouter();
@@ -38,8 +43,8 @@ export default function ProfileClient({ user }: { user: User }) {
   const [cancelAtPeriodEnd, setCancelAtPeriodEnd] = useState(false);
 
   // Favoris
-  const [favorites, setFavorites]               = useState<string[]>([]);
-  const [favPopup, setFavPopup]                 = useState<string | null>(null);
+  const [favorites, setFavorites] = useState<FavWord[]>([]);
+  const [favPopup, setFavPopup]   = useState<FavWord | null>(null);
 
   // Email
   const [currentEmail, setCurrentEmail]   = useState(user.email ?? "");
@@ -125,17 +130,16 @@ export default function ProfileClient({ user }: { user: User }) {
       setMyRank((above ?? 0) + 1);
     });
 
-    // Charge les favoris
-    supabase.from("word_favorites").select("word").eq("user_id", user.id).order("created_at", { ascending: false })
+    supabase.from("word_favorites").select("word, def_orig").eq("user_id", user.id).order("created_at", { ascending: false })
       .then(({ data }) => {
-        if (data) setFavorites(data.map((d: any) => d.word));
+        if (data) setFavorites(data.map((d: any) => ({ word: d.word, def_orig: d.def_orig ?? null })));
       });
   }, []);
 
   async function removeFav(word: string) {
     await supabase.from("word_favorites").delete().eq("user_id", user.id).eq("word", word);
-    setFavorites(prev => prev.filter(w => w !== word));
-    if (favPopup === word) setFavPopup(null);
+    setFavorites(prev => prev.filter(f => f.word !== word));
+    if (favPopup?.word === word) setFavPopup(null);
   }
 
   async function handleSaveUsername() {
@@ -158,11 +162,7 @@ export default function ProfileClient({ user }: { user: User }) {
     if (error) {
       if (error.message.includes("already")) setEmailError("Cette adresse email est déjà utilisée.");
       else setEmailError("Erreur, réessaie.");
-    } else {
-      setEmailSent(true);
-      setEditingEmail(false);
-      setNewEmail("");
-    }
+    } else { setEmailSent(true); setEditingEmail(false); setNewEmail(""); }
   }
 
   async function handleLogout() {
@@ -179,11 +179,7 @@ export default function ProfileClient({ user }: { user: User }) {
   async function handleCancelSubscription() {
     setCancelling(true);
     try {
-      const res = await fetch("/api/portal", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ cancel: true }),
-      });
+      const res = await fetch("/api/portal", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ cancel: true }) });
       const data = await res.json();
       if (data.success) { setCancelDone(true); setShowCancelConfirm(false); }
       else alert("Erreur, réessaie ou contacte e.boiteau1706@gmail.com");
@@ -211,8 +207,11 @@ export default function ProfileClient({ user }: { user: User }) {
   const isLifetime = isPremium && !stripeCustomerId;
   const isCancelled = cancelAtPeriodEnd || cancelDone;
 
-  // Définition du mot favori affiché en popup
-  const favWordDef = favPopup ? lookup(favPopup.toLowerCase()) : null;
+  // Définition du mot favori : dico local en priorité, sinon def_orig stockée
+  const favLocalDef = favPopup ? lookup(favPopup.word.toLowerCase()) : null;
+  const favDefOrig  = favLocalDef?.defOrig  || favPopup?.def_orig || "";
+  const favDefSimple = favLocalDef?.defSimple || "";
+  const favEtym     = favLocalDef?.etym || "";
 
   return (
     <div className={styles.page}>
@@ -232,9 +231,7 @@ export default function ProfileClient({ user }: { user: User }) {
             {error && <p className={styles.error}>{error}</p>}
             <div className={styles.editBtns}>
               <button className={styles.btnCancel} onClick={() => { setEditing(false); setError(""); }}>Annuler</button>
-              <button className={styles.btnSave} onClick={handleSaveUsername} disabled={saving}>
-                {saving ? "Sauvegarde..." : "Valider"}
-              </button>
+              <button className={styles.btnSave} onClick={handleSaveUsername} disabled={saving}>{saving ? "Sauvegarde..." : "Valider"}</button>
             </div>
           </div>
         ) : (
@@ -246,31 +243,18 @@ export default function ProfileClient({ user }: { user: User }) {
           </div>
         )}
 
-        {/* Email */}
         <div className={styles.emailSection}>
           <div className={styles.emailRow}>
             <span className={styles.emailLabel}>📧 {currentEmail}</span>
             {!editingEmail && user.app_metadata?.provider !== "google" && (
-              <button className={styles.editBtn} onClick={() => { setEditingEmail(true); setEmailSent(false); setEmailError(""); setEmailUpdated(false); }}>
-                Changer
-              </button>
+              <button className={styles.editBtn} onClick={() => { setEditingEmail(true); setEmailSent(false); setEmailError(""); setEmailUpdated(false); }}>Changer</button>
             )}
           </div>
           {user.app_metadata?.provider === "google" && (
-            <p style={{ fontSize: "0.78rem", color: "var(--text-dim)", fontStyle: "italic", marginTop: "4px" }}>
-              🔗 Connecté via Google — email non modifiable
-            </p>
+            <p style={{ fontSize: "0.78rem", color: "var(--text-dim)", fontStyle: "italic", marginTop: "4px" }}>🔗 Connecté via Google — email non modifiable</p>
           )}
-          {emailUpdated && (
-            <p style={{ fontSize: "0.8rem", color: "var(--green)", margin: "4px 0 0" }}>
-              ✅ Adresse email mise à jour avec succès !
-            </p>
-          )}
-          {emailSent && !emailUpdated && (
-            <p style={{ fontSize: "0.8rem", color: "var(--accent)", margin: "4px 0 0" }}>
-              📬 Un lien de confirmation a été envoyé à ta nouvelle adresse.
-            </p>
-          )}
+          {emailUpdated && <p style={{ fontSize: "0.8rem", color: "var(--green)", margin: "4px 0 0" }}>✅ Adresse email mise à jour avec succès !</p>}
+          {emailSent && !emailUpdated && <p style={{ fontSize: "0.8rem", color: "var(--accent)", margin: "4px 0 0" }}>📬 Un lien de confirmation a été envoyé à ta nouvelle adresse.</p>}
           {editingEmail && (
             <div className={styles.editWrap} style={{ marginTop: 8 }}>
               <input className={styles.input} type="email" placeholder="nouvelle@adresse.com"
@@ -279,9 +263,7 @@ export default function ProfileClient({ user }: { user: User }) {
               {emailError && <p className={styles.error}>{emailError}</p>}
               <div className={styles.editBtns}>
                 <button className={styles.btnCancel} onClick={() => { setEditingEmail(false); setEmailError(""); setNewEmail(""); }}>Annuler</button>
-                <button className={styles.btnSave} onClick={handleSaveEmail} disabled={emailSaving || !newEmail}>
-                  {emailSaving ? "Envoi..." : "Envoyer le lien"}
-                </button>
+                <button className={styles.btnSave} onClick={handleSaveEmail} disabled={emailSaving || !newEmail}>{emailSaving ? "Envoi..." : "Envoyer le lien"}</button>
               </div>
             </div>
           )}
@@ -296,13 +278,10 @@ export default function ProfileClient({ user }: { user: User }) {
             <div className={styles.xpLevel}>{level.emoji} Niveau {level.level} — {level.name}</div>
             <div className={styles.xpTotal}>{xp} XP{isPremium ? " ✨" : ""}</div>
           </div>
-          <div className={styles.xpBarWrap}>
-            <div className={styles.xpBarFill} style={{ width: `${pct}%` }} />
-          </div>
+          <div className={styles.xpBarWrap}><div className={styles.xpBarFill} style={{ width: `${pct}%` }} /></div>
           <div className={styles.xpFooter}>
             <span>{current} / {needed} XP</span>
-            {nextLevel && <span>Prochain : {nextLevel.emoji} {nextLevel.name}</span>}
-            {!nextLevel && <span>👑 Niveau maximum !</span>}
+            {nextLevel ? <span>Prochain : {nextLevel.emoji} {nextLevel.name}</span> : <span>👑 Niveau maximum !</span>}
           </div>
           {isPremium && <div className={styles.xpBoost}>⚡ Boost Premium x1.5 actif</div>}
         </div>
@@ -348,12 +327,12 @@ export default function ProfileClient({ user }: { user: User }) {
         <div className={styles.favSection}>
           <div className={styles.favTitle}>⭐ Mots favoris ({favorites.length})</div>
           {favorites.length === 0 ? (
-            <p className={styles.favEmpty}>Clique sur ☆ dans une définition pour sauvegarder un mot ici.</p>
+            <p className={styles.favEmpty}>Clique sur ⭐ dans une définition pour sauvegarder un mot ici.</p>
           ) : (
             <div className={styles.favChips}>
-              {favorites.map(w => (
-                <button key={w} className={styles.favChip} onClick={() => setFavPopup(favPopup === w ? null : w)}>
-                  ⭐ {w}
+              {favorites.map(f => (
+                <button key={f.word} className={styles.favChip} onClick={() => setFavPopup(favPopup?.word === f.word ? null : f)}>
+                  ⭐ {f.word}
                 </button>
               ))}
             </div>
@@ -362,33 +341,22 @@ export default function ProfileClient({ user }: { user: User }) {
 
         {isPremium && stripeCustomerId ? (
           <div className={styles.subscriptionBox}>
-            <div className={styles.subscriptionInfo}>
-              <span>{isCancelled ? "⏳ Abonnement résilié" : "✨ Premium actif"}</span>
-            </div>
+            <div className={styles.subscriptionInfo}><span>{isCancelled ? "⏳ Abonnement résilié" : "✨ Premium actif"}</span></div>
             {renewalDate && (
               <div className={styles.renewalDate}>
                 {isCancelled
                   ? `Accès jusqu'au ${renewalDate} — ${daysLeft} jour${daysLeft !== 1 ? "s" : ""} restant${daysLeft !== 1 ? "s" : ""}`
-                  : `Renouvellement le ${renewalDate} — ${daysLeft} jour${daysLeft !== 1 ? "s" : ""} restant${daysLeft !== 1 ? "s" : ""}`
-                }
+                  : `Renouvellement le ${renewalDate} — ${daysLeft} jour${daysLeft !== 1 ? "s" : ""} restant${daysLeft !== 1 ? "s" : ""}`}
               </div>
             )}
-            {!isCancelled && (
-              <button className={styles.cancelBtn} onClick={() => setShowCancelConfirm(true)}>
-                Résilier mon abonnement
-              </button>
-            )}
+            {!isCancelled && <button className={styles.cancelBtn} onClick={() => setShowCancelConfirm(true)}>Résilier mon abonnement</button>}
           </div>
         ) : isPremium && !stripeCustomerId ? (
-          <div className={styles.portalInfo}>
-            🎁 Tu bénéficies du Premium à vie — offert par LexiStory !
-          </div>
+          <div className={styles.portalInfo}>🎁 Tu bénéficies du Premium à vie — offert par LexiStory !</div>
         ) : (
           <div className={styles.plan}>
             <span className={styles.planBadge}>Plan Gratuit</span>
-            <button className={styles.upgradeBtn} onClick={handlePremium}>
-              Passer Premium — 1,99€/mois ✨
-            </button>
+            <button className={styles.upgradeBtn} onClick={handlePremium}>Passer Premium — 1,99€/mois ✨</button>
           </div>
         )}
 
@@ -414,29 +382,27 @@ export default function ProfileClient({ user }: { user: User }) {
           onClick={() => setFavPopup(null)}>
           <div onClick={e => e.stopPropagation()} style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: "16px", padding: "24px", maxWidth: "380px", width: "100%", display: "flex", flexDirection: "column", gap: "12px" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <span style={{ fontFamily: "var(--font-playfair)", fontSize: "1.3rem", fontWeight: 700, color: "var(--accent)" }}>{favPopup}</span>
+              <span style={{ fontFamily: "var(--font-playfair)", fontSize: "1.3rem", fontWeight: 700, color: "var(--accent)" }}>{favPopup.word}</span>
               <button onClick={() => setFavPopup(null)} style={{ background: "none", border: "none", color: "var(--text-dim)", cursor: "pointer", fontSize: "1rem" }}>✕</button>
             </div>
-            {favWordDef?.etym && (
-              <div style={{ fontSize: "0.75rem", color: "var(--text-dim)", fontStyle: "italic" }}>{favWordDef.etym}</div>
-            )}
-            {favWordDef ? (
+            {favEtym && <div style={{ fontSize: "0.75rem", color: "var(--text-dim)", fontStyle: "italic" }}>{favEtym}</div>}
+            {favDefOrig ? (
               <>
                 <div>
                   <div style={{ fontSize: "0.7rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.8px", color: "var(--text-dim)", marginBottom: "4px" }}>Définition</div>
-                  <div style={{ fontSize: "0.9rem", color: "var(--text-muted)", lineHeight: 1.6 }}>{favWordDef.defOrig}</div>
+                  <div style={{ fontSize: "0.9rem", color: "var(--text-muted)", lineHeight: 1.6, padding: "10px 14px", background: "var(--surface2)", borderRadius: "10px", borderLeft: "3px solid var(--border)" }}>{favDefOrig}</div>
                 </div>
-                {favWordDef.defSimple && (
+                {favDefSimple && (
                   <div>
                     <div style={{ fontSize: "0.7rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.8px", color: "var(--text-dim)", marginBottom: "4px" }}>En clair 💡</div>
-                    <div style={{ fontSize: "0.88rem", color: "var(--text-muted)", lineHeight: 1.6 }}>{favWordDef.defSimple}</div>
+                    <div style={{ fontSize: "0.88rem", color: "var(--text)", lineHeight: 1.6, padding: "10px 14px", background: "rgba(232,201,122,0.06)", borderRadius: "10px", borderLeft: "3px solid var(--accent)" }}>{favDefSimple}</div>
                   </div>
                 )}
               </>
             ) : (
-              <div style={{ fontSize: "0.88rem", color: "var(--text-dim)" }}>Définition non disponible dans le dictionnaire local.</div>
+              <div style={{ fontSize: "0.88rem", color: "var(--text-dim)", fontStyle: "italic" }}>Définition non disponible.</div>
             )}
-            <button onClick={() => removeFav(favPopup)} style={{ marginTop: "4px", padding: "8px", borderRadius: "9px", background: "rgba(232,80,80,0.1)", border: "1px solid rgba(232,80,80,0.2)", color: "#e88080", cursor: "pointer", fontFamily: "inherit", fontSize: "0.82rem" }}>
+            <button onClick={() => removeFav(favPopup.word)} style={{ marginTop: "4px", padding: "8px", borderRadius: "9px", background: "rgba(232,80,80,0.1)", border: "1px solid rgba(232,80,80,0.2)", color: "#e88080", cursor: "pointer", fontFamily: "inherit", fontSize: "0.82rem" }}>
               🗑️ Retirer des favoris
             </button>
           </div>
@@ -448,14 +414,10 @@ export default function ProfileClient({ user }: { user: User }) {
           <div onClick={e => e.stopPropagation()} style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: "16px", padding: "28px", maxWidth: "360px", width: "100%", display: "flex", flexDirection: "column", gap: "14px" }}>
             <div style={{ fontSize: "1.8rem" }}>⚠️</div>
             <p style={{ fontFamily: "var(--font-playfair)", fontSize: "1.1rem", fontWeight: 700, color: "var(--text)" }}>Résilier mon abonnement ?</p>
-            <p style={{ fontSize: "0.88rem", color: "var(--text-muted)", lineHeight: 1.6 }}>
-              Tu garderas ton accès Premium jusqu'au {renewalDate ?? "fin de la période en cours"}. Après cette date, tu repasseras en compte gratuit.
-            </p>
+            <p style={{ fontSize: "0.88rem", color: "var(--text-muted)", lineHeight: 1.6 }}>Tu garderas ton accès Premium jusqu'au {renewalDate ?? "fin de la période en cours"}. Après cette date, tu repasseras en compte gratuit.</p>
             <div style={{ display: "flex", gap: "8px" }}>
               <button style={{ flex: 1, padding: "10px", borderRadius: "10px", background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text-muted)", cursor: "pointer", fontFamily: "inherit", fontSize: "0.88rem" }} onClick={() => setShowCancelConfirm(false)}>Annuler</button>
-              <button style={{ flex: 1, padding: "10px", borderRadius: "10px", background: "#e07070", border: "none", color: "white", cursor: "pointer", fontFamily: "inherit", fontSize: "0.88rem", fontWeight: 700, opacity: cancelling ? 0.6 : 1 }} onClick={handleCancelSubscription} disabled={cancelling}>
-                {cancelling ? "Résiliation..." : "Confirmer"}
-              </button>
+              <button style={{ flex: 1, padding: "10px", borderRadius: "10px", background: "#e07070", border: "none", color: "white", cursor: "pointer", fontFamily: "inherit", fontSize: "0.88rem", fontWeight: 700, opacity: cancelling ? 0.6 : 1 }} onClick={handleCancelSubscription} disabled={cancelling}>{cancelling ? "Résiliation..." : "Confirmer"}</button>
             </div>
           </div>
         </div>
@@ -466,15 +428,10 @@ export default function ProfileClient({ user }: { user: User }) {
           <div onClick={e => e.stopPropagation()} style={{ background: "var(--surface)", border: "1px solid #e07070", borderRadius: "16px", padding: "28px", maxWidth: "360px", width: "100%", display: "flex", flexDirection: "column", gap: "14px" }}>
             <div style={{ fontSize: "1.8rem" }}>⚠️</div>
             <p style={{ fontFamily: "var(--font-playfair)", fontSize: "1.1rem", fontWeight: 700, color: "var(--text)" }}>Supprimer mon compte ?</p>
-            <p style={{ fontSize: "0.88rem", color: "var(--text-muted)", lineHeight: 1.6 }}>
-              Cette action est irréversible. Toutes tes données seront supprimées.
-              {isPremium && stripeCustomerId && !isCancelled && " Résilie d'abord ton abonnement."}
-            </p>
+            <p style={{ fontSize: "0.88rem", color: "var(--text-muted)", lineHeight: 1.6 }}>Cette action est irréversible. Toutes tes données seront supprimées.{isPremium && stripeCustomerId && !isCancelled && " Résilie d'abord ton abonnement."}</p>
             <div style={{ display: "flex", gap: "8px" }}>
               <button style={{ flex: 1, padding: "10px", borderRadius: "10px", background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text-muted)", cursor: "pointer", fontFamily: "inherit", fontSize: "0.88rem" }} onClick={() => setShowDeleteConfirm(false)}>Annuler</button>
-              <button style={{ flex: 1, padding: "10px", borderRadius: "10px", background: "#e07070", border: "none", color: "white", cursor: "pointer", fontFamily: "inherit", fontSize: "0.88rem", fontWeight: 700, opacity: deleting ? 0.6 : 1 }} onClick={handleDeleteAccount} disabled={deleting}>
-                {deleting ? "Suppression..." : "Supprimer"}
-              </button>
+              <button style={{ flex: 1, padding: "10px", borderRadius: "10px", background: "#e07070", border: "none", color: "white", cursor: "pointer", fontFamily: "inherit", fontSize: "0.88rem", fontWeight: 700, opacity: deleting ? 0.6 : 1 }} onClick={handleDeleteAccount} disabled={deleting}>{deleting ? "Suppression..." : "Supprimer"}</button>
             </div>
           </div>
         </div>

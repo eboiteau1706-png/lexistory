@@ -17,10 +17,6 @@ interface WiktDef {
   etym?: string;
 }
 
-function normalize(str: string): string {
-  return str.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z]/g, "");
-}
-
 export default function WordPopup({ word, seenCount, onClose }: Props) {
   const supabase = createClient();
   const localDef = lookup(word);
@@ -57,6 +53,10 @@ export default function WordPopup({ word, seenCount, onClose }: Props) {
     return () => window.removeEventListener("keydown", handler);
   }, [onClose]);
 
+  const defOrig   = localDef?.defOrig   || wiktDef?.defOrig   || "";
+  const defSimple = localDef?.defSimple || "";
+  const etym      = localDef?.etym      || "";
+
   async function toggleFav() {
     if (!userId) return;
     setFavLoading(true);
@@ -65,15 +65,14 @@ export default function WordPopup({ word, seenCount, onClose }: Props) {
       await supabase.from("word_favorites").delete().eq("user_id", userId).eq("word", wordKey);
       setIsFav(false);
     } else {
-      await supabase.from("word_favorites").upsert({ user_id: userId, word: wordKey }, { onConflict: "user_id,word" });
+      await supabase.from("word_favorites").upsert(
+        { user_id: userId, word: wordKey, def_orig: defOrig || null },
+        { onConflict: "user_id,word" }
+      );
       setIsFav(true);
     }
     setFavLoading(false);
   }
-
-  const defOrig   = localDef?.defOrig   || wiktDef?.defOrig   || "";
-  const defSimple = localDef?.defSimple || "";
-  const etym      = localDef?.etym      || "";
 
   return (
     <div className={styles.overlay} onClick={(e) => e.target === e.currentTarget && onClose()}>
