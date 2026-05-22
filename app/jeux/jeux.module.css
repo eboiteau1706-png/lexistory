@@ -384,3 +384,18 @@
   border-radius: 10px; margin-top: 8px; align-items: center;
 }
 .anagPlaceholder { color: var(--text-dim); font-size: 0.82rem; font-style: italic; }
+
+.skipBtn {
+  width: 100%;
+  padding: 8px;
+  border-radius: 9px;
+  background: none;
+  border: 1px solid var(--border);
+  color: var(--text-dim);
+  font-family: inherit;
+  font-size: 0.82rem;
+  cursor: pointer;
+  margin-top: 6px;
+  transition: all 0.2s;
+}
+.skipBtn:hover { color: var(--text-muted); border-color: var(--text-muted); }

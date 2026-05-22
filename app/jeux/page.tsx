@@ -174,7 +174,6 @@ function getAnagramme(word: string, seed: number): string {
   return shuffled.join("");
 }
 
-// Fallback localStorage pour les non-connectés
 function getLocalKeys(date: string) {
   return {
     defKey:   `lx_def_guest_${date}`,
@@ -194,14 +193,12 @@ export default function JeuxPage() {
   const [xpGained, setXpGained]       = useState<number | null>(null);
   const [initialized, setInitialized] = useState(false);
 
-  // Jeux gratuits
   const [defAnswer, setDefAnswer]       = useState<string | null>(null);
   const [anagLetters, setAnagLetters]   = useState<Letter[]>([]);
   const [anagSelected, setAnagSelected] = useState<Letter[]>([]);
   const [anagResult, setAnagResult]     = useState<boolean | null>(null);
   const [citAnswer, setCitAnswer]       = useState<string | null>(null);
 
-  // Jeux Premium
   const [pDefAnswer, setPDefAnswer]       = useState<string | null>(null);
   const [pAnagLetters, setPAnagLetters]   = useState<Letter[]>([]);
   const [pAnagSelected, setPAnagSelected] = useState<Letter[]>([]);
@@ -212,7 +209,6 @@ export default function JeuxPage() {
   const dayIdx   = getDayIndex(GAME_WORDS);
   const pDayIdx  = getDayIndex(PREMIUM_WORDS);
 
-  // Calculs jeux du jour
   const shuffledForWord = shuffle([...Array(GAME_WORDS.length).keys()], 11111);
   const shuffledForDef  = shuffle([...Array(GAME_WORDS.length).keys()], 22222);
   const shuffledForAnag = shuffle([...Array(GAME_WORDS.length).keys()], 77777);
@@ -245,7 +241,6 @@ export default function JeuxPage() {
   const pWrongChoices = PREMIUM_WORDS.filter(w => w.word !== pDefWord.word).slice(0, 3).map(w => w.word);
   const pDefChoices   = shuffle([pDefWord.word, ...pWrongChoices], pDayIdx * 11117);
 
-  // Étape 1 : charge session
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       const uid = session?.user?.id ?? null;
@@ -257,27 +252,20 @@ export default function JeuxPage() {
     });
   }, []);
 
-  // Étape 2 : charge état des jeux depuis Supabase ou localStorage
   useEffect(() => {
     if (userId === undefined) return;
     if (initialized) return;
     setInitialized(true);
 
     if (userId) {
-      // Connecté → charge depuis Supabase
-      supabase
-        .from("game_completions")
-        .select("*")
-        .eq("user_id", userId)
-        .eq("game_date", todayStr)
-        .maybeSingle()
+      supabase.from("game_completions").select("*")
+        .eq("user_id", userId).eq("game_date", todayStr).maybeSingle()
         .then(({ data }) => {
           if (data) {
-            if (data.def_answer)  setDefAnswer(data.def_answer);
-            if (data.cit_answer)  setCitAnswer(data.cit_answer);
+            if (data.def_answer)   setDefAnswer(data.def_answer);
+            if (data.cit_answer)   setCitAnswer(data.cit_answer);
             if (data.p_def_answer) setPDefAnswer(data.p_def_answer);
             if (data.p_cit_answer) setPCitAnswer(data.p_cit_answer);
-
             if (data.anag_done) {
               setAnagResult(true);
               setAnagLetters([]);
@@ -286,7 +274,6 @@ export default function JeuxPage() {
               setAnagLetters(anagramme.split("").map((char, i) => ({ char, id: i })));
               setAnagSelected([]);
             }
-
             if (data.p_anag_done) {
               setPAnagResult(true);
               setPAnagLetters([]);
@@ -296,13 +283,11 @@ export default function JeuxPage() {
               setPAnagSelected([]);
             }
           } else {
-            // Pas encore joué aujourd'hui
             setAnagLetters(anagramme.split("").map((char, i) => ({ char, id: i })));
             setPAnagLetters(pAnagramme.split("").map((char, i) => ({ char, id: i })));
           }
         });
     } else {
-      // Non connecté → localStorage
       const keys = getLocalKeys(todayStr);
       const savedDef   = localStorage.getItem(keys.defKey);
       const savedAnag  = localStorage.getItem(keys.anagKey);
@@ -310,12 +295,10 @@ export default function JeuxPage() {
       const savedPDef  = localStorage.getItem(keys.pDefKey);
       const savedPAnag = localStorage.getItem(keys.pAnagKey);
       const savedPCit  = localStorage.getItem(keys.pCitKey);
-
       if (savedDef)  setDefAnswer(savedDef);
       if (savedCit)  setCitAnswer(savedCit);
       if (savedPDef) setPDefAnswer(savedPDef);
       if (savedPCit) setPCitAnswer(savedPCit);
-
       if (savedAnag) {
         setAnagResult(savedAnag === "true");
         setAnagLetters([]);
@@ -324,7 +307,6 @@ export default function JeuxPage() {
         setAnagLetters(anagramme.split("").map((char, i) => ({ char, id: i })));
         setAnagSelected([]);
       }
-
       if (savedPAnag) {
         setPAnagResult(savedPAnag === "true");
         setPAnagLetters([]);
@@ -336,7 +318,6 @@ export default function JeuxPage() {
     }
   }, [userId]);
 
-  // Sauvegarde dans Supabase (upsert)
   async function saveToSupabase(updates: Record<string, any>) {
     if (!userId) return;
     await supabase.from("game_completions").upsert(
@@ -349,8 +330,7 @@ export default function JeuxPage() {
     if (!userId) return;
     const bonus = isPremium ? Math.round(amount * 1.5) : amount;
     const { data } = await supabase.from("profiles").select("xp").eq("id", userId).single();
-    await supabase.from("profiles").update({ xp: (data?.xp ?? 0) + bonus }).eq("id", userId);
-    await supabase.from("profiles").update({ last_active_at: new Date().toISOString() }).eq("id", userId);
+    await supabase.from("profiles").update({ xp: (data?.xp ?? 0) + bonus, last_active_at: new Date().toISOString() }).eq("id", userId);
     setXpGained(bonus);
     setTimeout(() => setXpGained(null), 3000);
     window.dispatchEvent(new CustomEvent("lexistory:story-read"));
@@ -359,14 +339,12 @@ export default function JeuxPage() {
   async function addXpNoBoost(amount: number) {
     if (!userId) return;
     const { data } = await supabase.from("profiles").select("xp").eq("id", userId).single();
-    await supabase.from("profiles").update({ xp: (data?.xp ?? 0) + amount }).eq("id", userId);
-    await supabase.from("profiles").update({ last_active_at: new Date().toISOString() }).eq("id", userId);
+    await supabase.from("profiles").update({ xp: (data?.xp ?? 0) + amount, last_active_at: new Date().toISOString() }).eq("id", userId);
     setXpGained(amount);
     setTimeout(() => setXpGained(null), 3000);
     window.dispatchEvent(new CustomEvent("lexistory:story-read"));
   }
 
-  // Handlers gratuits
   function handleDefAnswer(choice: string) {
     if (defAnswer) return;
     setDefAnswer(choice);
@@ -394,6 +372,12 @@ export default function JeuxPage() {
     else localStorage.setItem(getLocalKeys(todayStr).anagKey, correct.toString());
     if (correct) addXp(3);
   }
+  function handleAnagSkip() {
+    if (anagResult !== null) return;
+    setAnagResult(false);
+    if (userId) saveToSupabase({ anag_done: false });
+    else localStorage.setItem(getLocalKeys(todayStr).anagKey, "false");
+  }
 
   function handleCitAnswer(choice: string) {
     if (citAnswer) return;
@@ -403,7 +387,6 @@ export default function JeuxPage() {
     if (choice === citation.answer) addXp(3);
   }
 
-  // Handlers Premium
   function handlePDefAnswer(choice: string) {
     if (!isPremium || pDefAnswer) return;
     setPDefAnswer(choice);
@@ -430,6 +413,12 @@ export default function JeuxPage() {
     if (userId) saveToSupabase({ p_anag_done: correct });
     else localStorage.setItem(getLocalKeys(todayStr).pAnagKey, correct.toString());
     if (correct) addXpNoBoost(3);
+  }
+  function handlePAnagSkip() {
+    if (!isPremium || pAnagResult !== null) return;
+    setPAnagResult(false);
+    if (userId) saveToSupabase({ p_anag_done: false });
+    else localStorage.setItem(getLocalKeys(todayStr).pAnagKey, "false");
   }
 
   function handlePCitAnswer(choice: string) {
@@ -512,9 +501,12 @@ export default function JeuxPage() {
                   ))
                 }
               </div>
-              {anagSelected.length === anagramme.length && (
-                <button className={styles.submitBtn} onClick={handleAnagSubmit}>Valider →</button>
-              )}
+              <div className={styles.anagBtns}>
+                {anagSelected.length === anagramme.length && (
+                  <button className={styles.submitBtn} onClick={handleAnagSubmit}>Valider →</button>
+                )}
+                <button className={styles.skipBtn} onClick={handleAnagSkip}>Je passe</button>
+              </div>
             </>
           ) : (
             <div className={anagResult ? styles.resultOk : styles.resultKo}>
@@ -612,9 +604,14 @@ export default function JeuxPage() {
                   ))
                 }
               </div>
-              {isPremium && pAnagSelected.length === pAnagramme.length && (
-                <button className={styles.submitBtn} onClick={handlePAnagSubmit}>Valider →</button>
-              )}
+              <div className={styles.anagBtns}>
+                {isPremium && pAnagSelected.length === pAnagramme.length && (
+                  <button className={styles.submitBtn} onClick={handlePAnagSubmit}>Valider →</button>
+                )}
+                {isPremium && (
+                  <button className={styles.skipBtn} onClick={handlePAnagSkip}>Je passe</button>
+                )}
+              </div>
             </>
           ) : (
             <div className={pAnagResult ? styles.resultOk : styles.resultKo}>
