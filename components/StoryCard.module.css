@@ -172,3 +172,12 @@
   border-top: 1px solid var(--border);
   line-height: 1.5;
 }
+
+.body {
+  font-size: 1.05rem; /* → 1.12rem */
+  line-height: 1.95;  /* → 2.05 */
+}
+
+@media (max-width: 680px) {
+  .body { font-size: 1rem; /* → 1.06rem */ }
+}
