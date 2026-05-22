@@ -17,13 +17,17 @@ interface WiktDef {
   etym?: string;
 }
 
+function normalize(str: string): string {
+  return str.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z]/g, "");
+}
+
 export default function WordPopup({ word, seenCount, onClose }: Props) {
   const supabase = createClient();
   const localDef = lookup(word);
-  const [wiktDef, setWiktDef]     = useState<WiktDef | null>(null);
-  const [loading, setLoading]     = useState(false);
-  const [userId, setUserId]       = useState<string | null>(null);
-  const [isFav, setIsFav]         = useState(false);
+  const [wiktDef, setWiktDef]       = useState<WiktDef | null>(null);
+  const [loading, setLoading]       = useState(false);
+  const [userId, setUserId]         = useState<string | null>(null);
+  const [isFav, setIsFav]           = useState(false);
   const [favLoading, setFavLoading] = useState(false);
 
   useEffect(() => {
@@ -31,7 +35,7 @@ export default function WordPopup({ word, seenCount, onClose }: Props) {
       const uid = session?.user?.id ?? null;
       setUserId(uid);
       if (uid) {
-        supabase.from("word_favorites").select("id").eq("user_id", uid).eq("word", word).maybeSingle()
+        supabase.from("word_favorites").select("id").eq("user_id", uid).eq("word", word.toLowerCase()).maybeSingle()
           .then(({ data }) => setIsFav(!!data));
       }
     });
@@ -56,11 +60,12 @@ export default function WordPopup({ word, seenCount, onClose }: Props) {
   async function toggleFav() {
     if (!userId) return;
     setFavLoading(true);
+    const wordKey = word.toLowerCase();
     if (isFav) {
-      await supabase.from("word_favorites").delete().eq("user_id", userId).eq("word", word);
+      await supabase.from("word_favorites").delete().eq("user_id", userId).eq("word", wordKey);
       setIsFav(false);
     } else {
-      await supabase.from("word_favorites").upsert({ user_id: userId, word }, { onConflict: "user_id,word" });
+      await supabase.from("word_favorites").upsert({ user_id: userId, word: wordKey }, { onConflict: "user_id,word" });
       setIsFav(true);
     }
     setFavLoading(false);
@@ -76,18 +81,25 @@ export default function WordPopup({ word, seenCount, onClose }: Props) {
         <button className={styles.close} onClick={onClose}>✕</button>
 
         <div className={styles.wordRow}>
-  <div className={styles.word}>{word}</div>
-  {userId && (
-    <button
-      className={styles.favBtn}
-      onClick={toggleFav}
-      disabled={favLoading}
-      data-active={isFav}
-    >
-      ⭐
-    </button>
-  )}
-</div>
+          <div className={styles.word}>{word}</div>
+          {userId && (
+            <button
+              className={styles.favBtn}
+              onClick={toggleFav}
+              disabled={favLoading}
+              data-active={isFav}
+              title={isFav ? "Retirer des favoris" : "Ajouter aux favoris"}
+            >
+              ⭐
+            </button>
+          )}
+        </div>
+
+        {userId && (
+          <div className={`${styles.favHint} ${isFav ? styles.favHintActive : ""}`}>
+            {isFav ? "⭐ Favori ajouté — retrouve-le dans ton profil" : "Clique sur ⭐ pour mettre en favori"}
+          </div>
+        )}
 
         {etym && <div className={styles.etym}>{etym}</div>}
 
@@ -102,14 +114,12 @@ export default function WordPopup({ word, seenCount, onClose }: Props) {
               <div className={styles.label}>Définition</div>
               <div className={styles.defOrig}>{defOrig}</div>
             </div>
-
             {defSimple && (
               <div className={styles.section}>
                 <div className={styles.label}>En clair 💡</div>
                 <div className={styles.defSimple}>{defSimple}</div>
               </div>
             )}
-
             {!localDef && wiktDef?.found && (
               <div className={styles.source}>Source : Wiktionnaire</div>
             )}
@@ -118,15 +128,11 @@ export default function WordPopup({ word, seenCount, onClose }: Props) {
           <>
             <div className={styles.section}>
               <div className={styles.label}>Définition</div>
-              <div className={styles.defOrig}>
-                Ce mot n&apos;est pas encore dans notre dictionnaire.
-              </div>
+              <div className={styles.defOrig}>Ce mot n&apos;est pas encore dans notre dictionnaire.</div>
             </div>
             <div className={styles.section}>
               <div className={styles.label}>En clair 💡</div>
-              <div className={styles.defSimple}>
-                Nous ajoutons de nouveaux mots régulièrement ! 📚
-              </div>
+              <div className={styles.defSimple}>Nous ajoutons de nouveaux mots régulièrement ! 📚</div>
             </div>
           </>
         )}

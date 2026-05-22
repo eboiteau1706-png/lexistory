@@ -212,7 +212,7 @@ export default function ProfileClient({ user }: { user: User }) {
   const isCancelled = cancelAtPeriodEnd || cancelDone;
 
   // Définition du mot favori affiché en popup
-  const favWordDef = favPopup ? lookup(favPopup) : null;
+  const favWordDef = favPopup ? lookup(favPopup.toLowerCase()) : null;
 
   return (
     <div className={styles.page}>
@@ -348,14 +348,14 @@ export default function ProfileClient({ user }: { user: User }) {
         <div className={styles.favSection}>
           <div className={styles.favTitle}>⭐ Mots favoris ({favorites.length})</div>
           {favorites.length === 0 ? (
-            <p className={styles.favEmpty}>Clique sur ⭐ dans une définition pour sauvegarder un mot ici.</p>
+            <p className={styles.favEmpty}>Clique sur ☆ dans une définition pour sauvegarder un mot ici.</p>
           ) : (
             <div className={styles.favChips}>
               {favorites.map(w => (
-  <button key={w} className={styles.favChip} onClick={() => setFavPopup(favPopup === w ? null : w)}>
-    ⭐ {w}
-  </button>
-))}
+                <button key={w} className={styles.favChip} onClick={() => setFavPopup(favPopup === w ? null : w)}>
+                  ⭐ {w}
+                </button>
+              ))}
             </div>
           )}
         </div>

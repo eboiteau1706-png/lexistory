@@ -570,3 +570,59 @@
   font-size: 0.82rem;
   color: var(--text-dim);
 }
+
+
+.favSection {
+  width: 100%;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 20px;
+}
+
+.favTitle {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: var(--text-dim);
+  margin-bottom: 14px;
+}
+
+.favEmpty {
+  font-size: 0.85rem;
+  color: var(--text-dim);
+  font-style: italic;
+  line-height: 1.6;
+  text-align: center;
+  padding: 12px 0;
+}
+
+.favChips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.favChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 14px;
+  border-radius: 50px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  font-family: inherit;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.favChip:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: rgba(232,201,122,0.06);
+  transform: translateY(-1px);
+}
