@@ -54,9 +54,7 @@ export default function OnboardingPopup() {
   const supabase = createClient();
 
   useEffect(() => {
-    // Ne pas afficher sur la page login ou compte-confirme
     if (pathname === "/login" || pathname === "/compte-confirme") return;
-
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null);
       if (!session?.user) setShow(true);
@@ -68,18 +66,13 @@ export default function OnboardingPopup() {
     else setShowLogin(true);
   }
 
-  function handleSkip() {
+  function handleLogin() {
     setShow(false);
     router.push("/login");
   }
 
   function handleContinueWithout() {
     setShow(false);
-  }
-
-  function handleLogin() {
-    setShow(false);
-    router.push("/login");
   }
 
   if (!show || user) return null;
@@ -113,9 +106,6 @@ export default function OnboardingPopup() {
             <div className={styles.btns}>
               <button className={styles.btnNext} onClick={handleNext}>
                 {step < STEPS.length - 1 ? "Suivant →" : "Commencer →"}
-              </button>
-              <button className={styles.btnSkip} onClick={handleSkip}>
-                Ignorer
               </button>
             </div>
           </>
