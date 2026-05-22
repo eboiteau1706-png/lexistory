@@ -266,14 +266,14 @@ export default function JeuxPage() {
             if (data.cit_answer)   setCitAnswer(data.cit_answer);
             if (data.p_def_answer) setPDefAnswer(data.p_def_answer);
             if (data.p_cit_answer) setPCitAnswer(data.p_cit_answer);
-            if (data.anag_done) {
-              setAnagResult(true);
-              setAnagLetters([]);
-              setAnagSelected(anagWord.word.split("").map((char, i) => ({ char, id: i })));
-            } else {
-              setAnagLetters(anagramme.split("").map((char, i) => ({ char, id: i })));
-              setAnagSelected([]);
-            }
+           if (data.anag_done !== null && data.anag_done !== undefined) {
+  setAnagResult(data.anag_done);
+  setAnagLetters([]);
+  setAnagSelected(anagWord.word.split("").map((char, i) => ({ char, id: i })));
+} else {
+  setAnagLetters(anagramme.split("").map((char, i) => ({ char, id: i })));
+  setAnagSelected([]);
+}
             if (data.p_anag_done) {
               setPAnagResult(true);
               setPAnagLetters([]);
