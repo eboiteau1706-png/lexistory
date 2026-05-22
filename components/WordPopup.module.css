@@ -202,8 +202,6 @@
   color: var(--accent);
 }
 
-/* ── À AJOUTER dans WordPopup.module.css ── */
-
 .wordRow {
   display: flex;
   align-items: center;
@@ -230,11 +228,6 @@
 
 .favBtn:disabled { opacity: 0.3; }
 
-<button
-  className={styles.favBtn}
-  onClick={toggleFav}
-  disabled={favLoading}
-  data-active={isFav}
->
-  ⭐
-</button>
+.favBtn[data-active="true"] {
+  filter: grayscale(0) opacity(1);
+}
