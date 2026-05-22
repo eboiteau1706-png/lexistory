@@ -350,6 +350,7 @@ export default function JeuxPage() {
     const bonus = isPremium ? Math.round(amount * 1.5) : amount;
     const { data } = await supabase.from("profiles").select("xp").eq("id", userId).single();
     await supabase.from("profiles").update({ xp: (data?.xp ?? 0) + bonus }).eq("id", userId);
+    await supabase.from("profiles").update({ last_active_at: new Date().toISOString() }).eq("id", userId);
     setXpGained(bonus);
     setTimeout(() => setXpGained(null), 3000);
     window.dispatchEvent(new CustomEvent("lexistory:story-read"));
@@ -359,6 +360,7 @@ export default function JeuxPage() {
     if (!userId) return;
     const { data } = await supabase.from("profiles").select("xp").eq("id", userId).single();
     await supabase.from("profiles").update({ xp: (data?.xp ?? 0) + amount }).eq("id", userId);
+    await supabase.from("profiles").update({ last_active_at: new Date().toISOString() }).eq("id", userId);
     setXpGained(amount);
     setTimeout(() => setXpGained(null), 3000);
     window.dispatchEvent(new CustomEvent("lexistory:story-read"));

@@ -5,6 +5,7 @@ import Footer from "@/components/Footer";
 import AdBanner from "@/components/AdBanner";
 import UsernameModal from "@/components/UsernameModal";
 import OnboardingPopup from "@/components/OnboardingPopup";
+import AnnouncementBanner from "@/components/Announcement";
 import "./globals.css";
 
 const playfair = Playfair_Display({
@@ -61,13 +62,14 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         />
       </head>
       <body className={`${playfair.variable} ${dmSans.variable}`}>
-        <Nav />
-        <OnboardingPopup />
-        <UsernameModal />
-        {children}
-        <AdBanner />
-        <Footer />
-      </body>
+  <Nav />
+  <AnnouncementBanner />
+  <OnboardingPopup />
+  <UsernameModal />
+  {children}
+  <AdBanner />
+  <Footer />
+</body>
     </html>
   );
 }

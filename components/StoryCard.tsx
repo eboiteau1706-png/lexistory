@@ -140,6 +140,7 @@ setReadPct(savedPct);
         story_slug: story.slug,
         story_level: story.level,
       });
+      await supabase.from("profiles").update({ last_active_at: new Date().toISOString() }).eq("id", userId);
 
       // Supprime la progression sauvegardée
       localStorage.removeItem(getProgressKey(story.slug, userId));

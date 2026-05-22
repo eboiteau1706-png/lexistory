@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { createClient } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
 import styles from "./admin.module.css";
@@ -9,58 +9,169 @@ const ADMIN_ID = "0450c58e-35b2-47e6-9600-13db5626e96d";
 interface Profile {
   id: string;
   username: string | null;
-  email?: string;
   xp: number;
   is_premium: boolean;
   stripe_customer_id: string | null;
   created_at?: string;
+  last_active_at?: string;
 }
+
+interface Announcement {
+  id: string;
+  message: string;
+  color: string;
+  expires_at: string;
+  created_at: string;
+}
+
+interface Stats {
+  totalPlayers: number;
+  activeToday: number;
+  premiumCount: number;
+  totalWordsClicked: number;
+  totalStoriesRead: number;
+  newPlayersToday: number;
+}
+
+type Tab = "dashboard" | "players" | "announcements" | "actions";
 
 export default function AdminPage() {
   const supabase = createClient();
   const router = useRouter();
 
-  const [loading, setLoading] = useState(true);
   const [authorized, setAuthorized] = useState(false);
+  const [activeTab, setActiveTab] = useState<Tab>("dashboard");
+
+  // Players
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [search, setSearch] = useState("");
   const [selected, setSelected] = useState<Profile | null>(null);
   const [editXp, setEditXp] = useState("");
   const [editUsername, setEditUsername] = useState("");
   const [editPremium, setEditPremium] = useState(false);
+  const [xpDelta, setXpDelta] = useState("");
   const [saving, setSaving] = useState(false);
   const [msg, setMsg] = useState("");
-  const [xpDelta, setXpDelta] = useState("");
+  const [playerStories, setPlayerStories] = useState<any[]>([]);
+  const [playerWords, setPlayerWords] = useState<any[]>([]);
+  const [playerGames, setPlayerGames] = useState<any[]>([]);
+  const [loadingDetail, setLoadingDetail] = useState(false);
+
+  // Stats
+  const [stats, setStats] = useState<Stats | null>(null);
+  const [topStories, setTopStories] = useState<any[]>([]);
+  const [topWords, setTopWords] = useState<any[]>([]);
+  const [gamesStats, setGamesStats] = useState<{ played: number; total: number } | null>(null);
+
+  // Announcements
+  const [announcements, setAnnouncements] = useState<Announcement[]>([]);
+  const [newMessage, setNewMessage] = useState("");
+  const [newColor, setNewColor] = useState("red");
+  const [newDuration, setNewDuration] = useState("1h");
+  const [newCustomDate, setNewCustomDate] = useState("");
+  const [postingAnn, setPostingAnn] = useState(false);
+
+  // Actions globales
   const [showResetConfirm, setShowResetConfirm] = useState(false);
+  const [showPremiumAll, setShowPremiumAll] = useState(false);
+  const [globalAction, setGlobalAction] = useState("");
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session?.user?.id !== ADMIN_ID) {
-        router.push("/");
-        return;
-      }
+      if (session?.user?.id !== ADMIN_ID) { router.push("/"); return; }
       setAuthorized(true);
       loadProfiles();
+      loadStats();
+      loadAnnouncements();
     });
   }, []);
 
   async function loadProfiles() {
-    setLoading(true);
     const { data } = await supabase
       .from("profiles")
-      .select("id, username, xp, is_premium, stripe_customer_id")
+      .select("id, username, xp, is_premium, stripe_customer_id, created_at, last_active_at")
       .order("xp", { ascending: false });
     if (data) setProfiles(data);
-    setLoading(false);
   }
 
-  function selectProfile(p: Profile) {
+  async function loadStats() {
+    const today = new Date().toISOString().slice(0, 10);
+
+    const { count: total } = await supabase.from("profiles").select("id", { count: "exact" });
+    const { count: premium } = await supabase.from("profiles").select("id", { count: "exact" }).eq("is_premium", true);
+    const { count: activeToday } = await supabase.from("profiles").select("id", { count: "exact" }).gte("last_active_at", today);
+    const { count: newToday } = await supabase.from("profiles").select("id", { count: "exact" }).gte("created_at", today);
+    const { count: wordsTotal } = await supabase.from("words_seen").select("id", { count: "exact" });
+    const { count: storiesTotal } = await supabase.from("stories_read").select("id", { count: "exact" });
+
+    setStats({
+      totalPlayers: total ?? 0,
+      premiumCount: premium ?? 0,
+      activeToday: activeToday ?? 0,
+      newPlayersToday: newToday ?? 0,
+      totalWordsClicked: wordsTotal ?? 0,
+      totalStoriesRead: storiesTotal ?? 0,
+    });
+
+    // Top histoires
+    const { data: storiesData } = await supabase
+      .from("stories_read")
+      .select("story_slug")
+      .limit(500);
+    if (storiesData) {
+      const counts: Record<string, number> = {};
+      storiesData.forEach((s: any) => { counts[s.story_slug] = (counts[s.story_slug] || 0) + 1; });
+      const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 5);
+      setTopStories(sorted);
+    }
+
+    // Top mots
+    const { data: wordsData } = await supabase
+      .from("words_seen")
+      .select("word")
+      .limit(1000);
+    if (wordsData) {
+      const counts: Record<string, number> = {};
+      wordsData.forEach((w: any) => { counts[w.word] = (counts[w.word] || 0) + 1; });
+      const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 10);
+      setTopWords(sorted);
+    }
+
+    // Jeux aujourd'hui
+    const { count: gamesPlayed } = await supabase
+      .from("game_completions")
+      .select("id", { count: "exact" })
+      .eq("game_date", today);
+    setGamesStats({ played: gamesPlayed ?? 0, total: total ?? 0 });
+  }
+
+  async function loadAnnouncements() {
+    const { data } = await supabase
+      .from("announcements")
+      .select("*")
+      .order("created_at", { ascending: false })
+      .limit(10);
+    if (data) setAnnouncements(data);
+  }
+
+  async function selectProfile(p: Profile) {
     setSelected(p);
     setEditXp(String(p.xp));
     setEditUsername(p.username ?? "");
     setEditPremium(p.is_premium);
     setXpDelta("");
     setMsg("");
+    setLoadingDetail(true);
+
+    const [stories, words, games] = await Promise.all([
+      supabase.from("stories_read").select("story_slug, story_level, read_at").eq("user_id", p.id).order("read_at", { ascending: false }).limit(10),
+      supabase.from("words_seen").select("word, seen_at").eq("user_id", p.id).order("seen_at", { ascending: false }).limit(10),
+      supabase.from("game_completions").select("game_date, def_answer, anag_done, cit_answer").eq("user_id", p.id).order("game_date", { ascending: false }).limit(7),
+    ]);
+    setPlayerStories(stories.data ?? []);
+    setPlayerWords(words.data ?? []);
+    setPlayerGames(games.data ?? []);
+    setLoadingDetail(false);
   }
 
   async function handleSave() {
@@ -72,7 +183,7 @@ export default function AdminPage() {
       is_premium: editPremium,
     };
     const { error } = await supabase.from("profiles").update(updates).eq("id", selected.id);
-    if (error) setMsg("❌ Erreur : " + error.message);
+    if (error) setMsg("❌ " + error.message);
     else {
       setMsg("✅ Sauvegardé !");
       setProfiles(prev => prev.map(p => p.id === selected.id ? { ...p, ...updates } : p));
@@ -86,9 +197,9 @@ export default function AdminPage() {
     const delta = parseInt(xpDelta);
     if (isNaN(delta)) return;
     setSaving(true); setMsg("");
-    const newXp = (selected.xp || 0) + delta;
+    const newXp = Math.max(0, (selected.xp || 0) + delta);
     const { error } = await supabase.from("profiles").update({ xp: newXp }).eq("id", selected.id);
-    if (error) setMsg("❌ Erreur : " + error.message);
+    if (error) setMsg("❌ " + error.message);
     else {
       setMsg(`✅ XP ${delta >= 0 ? "+" : ""}${delta} → ${newXp} XP`);
       setEditXp(String(newXp));
@@ -99,30 +210,102 @@ export default function AdminPage() {
     setSaving(false);
   }
 
-  async function handleResetAllXp() {
-    setSaving(true); setMsg("");
-    const { error } = await supabase.from("profiles").update({ xp: 0 }).neq("id", "00000000-0000-0000-0000-000000000000");
-    if (error) setMsg("❌ Erreur : " + error.message);
-    else {
-      setMsg("✅ Tous les XP remis à zéro !");
-      setProfiles(prev => prev.map(p => ({ ...p, xp: 0 })));
-      if (selected) setSelected(prev => prev ? { ...prev, xp: 0 } : null);
-    }
+  async function handleResetStreak() {
+    if (!selected) return;
+    setSaving(true);
+    await supabase.from("stories_read").delete().eq("user_id", selected.id);
+    setMsg("✅ Série et historique réinitialisés !");
     setSaving(false);
-    setShowResetConfirm(false);
   }
 
-  async function handleDeleteUser() {
+  async function handleGivePremiumLifetime() {
     if (!selected) return;
-    if (!confirm(`Supprimer définitivement ${selected.username || selected.id} ?`)) return;
+    setSaving(true);
+    await supabase.from("profiles").update({ is_premium: true, stripe_customer_id: null }).eq("id", selected.id);
+    setEditPremium(true);
+    setProfiles(prev => prev.map(p => p.id === selected.id ? { ...p, is_premium: true, stripe_customer_id: null } : p));
+    setSelected(prev => prev ? { ...prev, is_premium: true, stripe_customer_id: null } : null);
+    setMsg("✅ Premium à vie accordé !");
+    setSaving(false);
+  }
+
+  async function handleBan() {
+    if (!selected) return;
+    if (!confirm(`Supprimer ${selected.username || selected.id} ?`)) return;
     setSaving(true);
     await supabase.from("words_seen").delete().eq("user_id", selected.id);
     await supabase.from("stories_read").delete().eq("user_id", selected.id);
+    await supabase.from("game_completions").delete().eq("user_id", selected.id);
     await supabase.from("profiles").delete().eq("id", selected.id);
     setProfiles(prev => prev.filter(p => p.id !== selected.id));
     setSelected(null);
     setMsg("");
     setSaving(false);
+  }
+
+  async function handleExportCSV() {
+    const rows = ["ID,Pseudo,XP,Premium,Inscription,Dernière activité"];
+    profiles.forEach(p => {
+      rows.push(`${p.id},${p.username ?? ""},${p.xp},${p.is_premium},${p.created_at ?? ""},${p.last_active_at ?? ""}`);
+    });
+    const blob = new Blob([rows.join("\n")], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url; a.download = `lexistory_users_${new Date().toISOString().slice(0,10)}.csv`;
+    a.click();
+  }
+
+  async function handleResetAllXp() {
+    setSaving(true);
+    await supabase.from("profiles").update({ xp: 0 }).neq("id", "00000000-0000-0000-0000-000000000000");
+    setProfiles(prev => prev.map(p => ({ ...p, xp: 0 })));
+    setShowResetConfirm(false);
+    setGlobalAction("✅ Tous les XP remis à zéro !");
+    setSaving(false);
+  }
+
+  async function handlePremiumAll() {
+    setSaving(true);
+    await supabase.from("profiles").update({ is_premium: true }).neq("id", "00000000-0000-0000-0000-000000000000");
+    setProfiles(prev => prev.map(p => ({ ...p, is_premium: true })));
+    setShowPremiumAll(false);
+    setGlobalAction("✅ Premium accordé à tous !");
+    setSaving(false);
+  }
+
+  async function handlePostAnnouncement() {
+    if (!newMessage.trim()) return;
+    setPostingAnn(true);
+    let expiresAt: Date;
+    if (newDuration === "custom" && newCustomDate) {
+      expiresAt = new Date(newCustomDate);
+    } else {
+      expiresAt = new Date();
+      const hours = newDuration === "1h" ? 1 : newDuration === "6h" ? 6 : newDuration === "24h" ? 24 : newDuration === "72h" ? 72 : 1;
+      expiresAt.setHours(expiresAt.getHours() + hours);
+    }
+    await supabase.from("announcements").insert({
+      message: newMessage.trim(),
+      color: newColor,
+      expires_at: expiresAt.toISOString(),
+    });
+    setNewMessage("");
+    loadAnnouncements();
+    setPostingAnn(false);
+  }
+
+  async function handleDeleteAnnouncement(id: string) {
+    await supabase.from("announcements").delete().eq("id", id);
+    loadAnnouncements();
+  }
+
+  function formatDate(d?: string) {
+    if (!d) return "—";
+    return new Date(d).toLocaleString("fr-FR", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" });
+  }
+
+  function isExpired(d: string) {
+    return new Date(d) < new Date();
   }
 
   const filtered = profiles.filter(p =>
@@ -135,35 +318,74 @@ export default function AdminPage() {
   return (
     <div className={styles.page}>
       <div className={styles.header}>
-        <h1 className={styles.title}>⚙️ Admin Panel</h1>
+        <h1 className={styles.title}>⚙️ Admin LexiStory</h1>
         <div className={styles.headerActions}>
           <span className={styles.count}>{profiles.length} joueurs</span>
-          <button className={styles.dangerBtn} onClick={() => setShowResetConfirm(true)}>
-            🔄 Reset tous les XP
-          </button>
+          <button className={styles.exportBtn} onClick={handleExportCSV}>📥 Export CSV</button>
           <a href="/" className={styles.backBtn}>← Accueil</a>
         </div>
       </div>
 
-      <div className={styles.layout}>
-        {/* Liste joueurs */}
-        <div className={styles.panel}>
-          <input
-            className={styles.search}
-            placeholder="🔍 Rechercher par pseudo ou ID..."
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-          />
-          {loading ? (
-            <div className={styles.loading}>Chargement...</div>
-          ) : (
+      {/* Tabs */}
+      <div className={styles.tabs}>
+        {([["dashboard", "📊 Dashboard"], ["players", "👥 Joueurs"], ["announcements", "📢 Annonces"], ["actions", "⚙️ Actions"]] as [Tab, string][]).map(([tab, label]) => (
+          <button key={tab} className={`${styles.tab} ${activeTab === tab ? styles.tabActive : ""}`} onClick={() => setActiveTab(tab)}>
+            {label}
+          </button>
+        ))}
+      </div>
+
+      {/* ── DASHBOARD ── */}
+      {activeTab === "dashboard" && (
+        <div className={styles.dashGrid}>
+          {stats && (<>
+            <div className={styles.statCard}><div className={styles.statBig}>{stats.totalPlayers}</div><div className={styles.statLbl}>👥 Joueurs total</div></div>
+            <div className={styles.statCard}><div className={styles.statBig}>{stats.activeToday}</div><div className={styles.statLbl}>🟢 Actifs aujourd'hui</div></div>
+            <div className={styles.statCard}><div className={styles.statBig}>{stats.newPlayersToday}</div><div className={styles.statLbl}>🆕 Nouveaux aujourd'hui</div></div>
+            <div className={styles.statCard}><div className={styles.statBig}>{stats.premiumCount}</div><div className={styles.statLbl}>✨ Premium</div></div>
+            <div className={styles.statCard}><div className={styles.statBig}>{stats.totalStoriesRead}</div><div className={styles.statLbl}>📖 Histoires lues</div></div>
+            <div className={styles.statCard}><div className={styles.statBig}>{stats.totalWordsClicked}</div><div className={styles.statLbl}>✨ Mots consultés</div></div>
+          </>)}
+          {gamesStats && (
+            <div className={styles.statCard}><div className={styles.statBig}>{gamesStats.played}</div><div className={styles.statLbl}>🎮 Jeux joués aujourd'hui</div></div>
+          )}
+          {stats && (
+            <div className={styles.statCard}>
+              <div className={styles.statBig}>{stats.totalPlayers > 0 ? Math.round((stats.premiumCount / stats.totalPlayers) * 100) : 0}%</div>
+              <div className={styles.statLbl}>💰 Taux Premium</div>
+            </div>
+          )}
+
+          <div className={`${styles.statCardWide}`}>
+            <div className={styles.statLabel}>📖 Histoires les plus lues</div>
+            {topStories.map(([slug, count]) => (
+              <div key={slug} className={styles.topRow}>
+                <span className={styles.topName}>{slug}</span>
+                <span className={styles.topVal}>{count as number} lectures</span>
+              </div>
+            ))}
+          </div>
+
+          <div className={`${styles.statCardWide}`}>
+            <div className={styles.statLabel}>✨ Mots les plus consultés</div>
+            {topWords.map(([word, count]) => (
+              <div key={word} className={styles.topRow}>
+                <span className={styles.topName}>{word}</span>
+                <span className={styles.topVal}>{count as number}×</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* ── JOUEURS ── */}
+      {activeTab === "players" && (
+        <div className={styles.layout}>
+          <div className={styles.panel}>
+            <input className={styles.search} placeholder="🔍 Rechercher..." value={search} onChange={e => setSearch(e.target.value)} />
             <div className={styles.list}>
               {filtered.map(p => (
-                <div
-                  key={p.id}
-                  className={`${styles.item} ${selected?.id === p.id ? styles.itemActive : ""}`}
-                  onClick={() => selectProfile(p)}
-                >
+                <div key={p.id} className={`${styles.item} ${selected?.id === p.id ? styles.itemActive : ""}`} onClick={() => selectProfile(p)}>
                   <div className={styles.itemLeft}>
                     <div className={styles.itemName}>{p.username || <span className={styles.noName}>sans pseudo</span>}</div>
                     <div className={styles.itemId}>{p.id.slice(0, 8)}...</div>
@@ -175,76 +397,222 @@ export default function AdminPage() {
                 </div>
               ))}
             </div>
-          )}
+          </div>
+
+          <div className={styles.detail}>
+            {selected ? (
+              <>
+                <div className={styles.detailHeader}>
+                  <h2 className={styles.detailName}>{selected.username || "Sans pseudo"}</h2>
+                  <div className={styles.detailMeta}>
+                    <span>🗓 Inscription : {formatDate(selected.created_at)}</span>
+                    <span>🕐 Dernière activité : {formatDate(selected.last_active_at)}</span>
+                    <span className={styles.detailId}>{selected.id}</span>
+                  </div>
+                </div>
+
+                {msg && <div className={styles.msg}>{msg}</div>}
+
+                <div className={styles.detailSections}>
+                  {/* Modifier */}
+                  <div className={styles.detailSection}>
+                    <div className={styles.detailSectionTitle}>✏️ Modifier</div>
+                    <div className={styles.fields}>
+                      <label className={styles.label}>Pseudo</label>
+                      <input className={styles.input} value={editUsername} onChange={e => setEditUsername(e.target.value)} placeholder="Pseudo..." />
+                      <label className={styles.label}>XP total</label>
+                      <input className={styles.input} type="number" value={editXp} onChange={e => setEditXp(e.target.value)} />
+                      <label className={styles.label}>Modifier l'XP (delta)</label>
+                      <div className={styles.xpRow}>
+                        <input className={styles.input} type="number" value={xpDelta} onChange={e => setXpDelta(e.target.value)} placeholder="+100 ou -50" />
+                        <button className={styles.xpBtn} onClick={handleAddXp} disabled={saving || !xpDelta}>Appliquer</button>
+                      </div>
+                      <label className={styles.label}>Premium</label>
+                      <button className={`${styles.toggleBtn} ${editPremium ? styles.toggleOn : styles.toggleOff}`} onClick={() => setEditPremium(!editPremium)}>
+                        {editPremium ? "✨ Premium actif" : "Plan gratuit"}
+                      </button>
+                      <label className={styles.label}>Stripe ID</label>
+                      <div className={styles.readOnly}>{selected.stripe_customer_id || "—"}</div>
+                    </div>
+                    <div className={styles.actions}>
+                      <button className={styles.saveBtn} onClick={handleSave} disabled={saving}>{saving ? "..." : "💾 Sauvegarder"}</button>
+                    </div>
+                  </div>
+
+                  {/* Actions rapides */}
+                  <div className={styles.detailSection}>
+                    <div className={styles.detailSectionTitle}>⚡ Actions rapides</div>
+                    <div className={styles.quickActions}>
+                      <button className={styles.quickBtn} onClick={handleGivePremiumLifetime} disabled={saving}>🎁 Premium à vie</button>
+                      <button className={styles.quickBtn} onClick={handleResetStreak} disabled={saving}>🔄 Reset streak</button>
+                      <button className={`${styles.quickBtn} ${styles.quickBtnDanger}`} onClick={handleBan} disabled={saving}>🗑️ Supprimer</button>
+                    </div>
+                  </div>
+
+                  {/* Activité */}
+                  {loadingDetail ? (
+                    <div className={styles.loading}>Chargement activité...</div>
+                  ) : (
+                    <>
+                      <div className={styles.detailSection}>
+                        <div className={styles.detailSectionTitle}>📖 Dernières histoires lues</div>
+                        {playerStories.length === 0 ? <div className={styles.empty2}>Aucune histoire lue</div> : playerStories.map((s, i) => (
+                          <div key={i} className={styles.activityRow}>
+                            <span>{s.story_slug}</span>
+                            <span className={styles.activityDate}>{formatDate(s.read_at)}</span>
+                          </div>
+                        ))}
+                      </div>
+
+                      <div className={styles.detailSection}>
+                        <div className={styles.detailSectionTitle}>✨ Derniers mots consultés</div>
+                        <div className={styles.wordChips}>
+                          {playerWords.length === 0 ? <span className={styles.empty2}>Aucun mot</span> : playerWords.map((w, i) => (
+                            <span key={i} className={styles.wordChip}>{w.word}</span>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div className={styles.detailSection}>
+                        <div className={styles.detailSectionTitle}>🎮 Jeux récents</div>
+                        {playerGames.length === 0 ? <div className={styles.empty2}>Aucun jeu joué</div> : playerGames.map((g, i) => (
+                          <div key={i} className={styles.activityRow}>
+                            <span>{g.game_date}</span>
+                            <span className={styles.activityDate}>
+                              {[g.def_answer && "Déf✅", g.anag_done && "Anag✅", g.cit_answer && "Cit✅"].filter(Boolean).join(" · ") || "En cours"}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </>
+                  )}
+                </div>
+              </>
+            ) : (
+              <div className={styles.empty}><div className={styles.emptyIcon}>👆</div><p>Sélectionne un joueur</p></div>
+            )}
+          </div>
         </div>
+      )}
 
-        {/* Détail joueur */}
-        <div className={styles.detail}>
-          {selected ? (
-            <>
-              <div className={styles.detailHeader}>
-                <h2 className={styles.detailName}>{selected.username || "Sans pseudo"}</h2>
-                <div className={styles.detailId}>{selected.id}</div>
+      {/* ── ANNONCES ── */}
+      {activeTab === "announcements" && (
+        <div className={styles.annSection}>
+          <div className={styles.annForm}>
+            <div className={styles.detailSectionTitle}>📢 Nouvelle annonce</div>
+            <textarea
+              className={styles.annTextarea}
+              placeholder="Message à afficher à tous les utilisateurs..."
+              value={newMessage}
+              onChange={e => setNewMessage(e.target.value)}
+              rows={3}
+            />
+            <div className={styles.annOptions}>
+              <div>
+                <label className={styles.label}>Couleur</label>
+                <select className={styles.input} value={newColor} onChange={e => setNewColor(e.target.value)}>
+                  <option value="red">🔴 Rouge (urgent)</option>
+                  <option value="orange">🟠 Orange (avertissement)</option>
+                  <option value="blue">🔵 Bleu (info)</option>
+                  <option value="green">🟢 Vert (succès)</option>
+                  <option value="gold">🟡 Or (annonce)</option>
+                </select>
               </div>
-
-              {msg && <div className={styles.msg}>{msg}</div>}
-
-              <div className={styles.fields}>
-                <label className={styles.label}>Pseudo</label>
-                <input className={styles.input} value={editUsername} onChange={e => setEditUsername(e.target.value)} placeholder="Pseudo..." />
-
-                <label className={styles.label}>XP total</label>
-                <input className={styles.input} type="number" value={editXp} onChange={e => setEditXp(e.target.value)} />
-
-                <label className={styles.label}>Modifier l'XP (+ ou -)</label>
-                <div className={styles.xpRow}>
-                  <input className={styles.input} type="number" value={xpDelta} onChange={e => setXpDelta(e.target.value)} placeholder="+100 ou -50" />
-                  <button className={styles.xpBtn} onClick={handleAddXp} disabled={saving || !xpDelta}>Appliquer</button>
-                </div>
-
-                <label className={styles.label}>Premium</label>
-                <div className={styles.toggle}>
-                  <button
-                    className={`${styles.toggleBtn} ${editPremium ? styles.toggleOn : styles.toggleOff}`}
-                    onClick={() => setEditPremium(!editPremium)}
-                  >
-                    {editPremium ? "✨ Premium actif" : "Plan gratuit"}
-                  </button>
-                </div>
-
-                <label className={styles.label}>Stripe Customer ID</label>
-                <div className={styles.readOnly}>{selected.stripe_customer_id || "—"}</div>
+              <div>
+                <label className={styles.label}>Durée</label>
+                <select className={styles.input} value={newDuration} onChange={e => setNewDuration(e.target.value)}>
+                  <option value="1h">1 heure</option>
+                  <option value="6h">6 heures</option>
+                  <option value="24h">24 heures</option>
+                  <option value="72h">3 jours</option>
+                  <option value="custom">Date précise</option>
+                </select>
               </div>
-
-              <div className={styles.actions}>
-                <button className={styles.saveBtn} onClick={handleSave} disabled={saving}>
-                  {saving ? "Sauvegarde..." : "💾 Sauvegarder"}
-                </button>
-                <button className={styles.deleteBtn} onClick={handleDeleteUser} disabled={saving}>
-                  🗑️ Supprimer
-                </button>
-              </div>
-            </>
-          ) : (
-            <div className={styles.empty}>
-              <div className={styles.emptyIcon}>👆</div>
-              <p>Sélectionne un joueur</p>
             </div>
-          )}
-        </div>
-      </div>
+            {newDuration === "custom" && (
+              <input className={styles.input} type="datetime-local" value={newCustomDate} onChange={e => setNewCustomDate(e.target.value)} />
+            )}
+            <button className={styles.saveBtn} onClick={handlePostAnnouncement} disabled={postingAnn || !newMessage.trim()}>
+              {postingAnn ? "Publication..." : "📢 Publier l'annonce"}
+            </button>
+          </div>
 
+          <div className={styles.annList}>
+            <div className={styles.detailSectionTitle}>Annonces actives & passées</div>
+            {announcements.length === 0 ? <div className={styles.empty2}>Aucune annonce</div> : announcements.map(a => (
+              <div key={a.id} className={`${styles.annItem} ${isExpired(a.expires_at) ? styles.annExpired : ""}`}>
+                <div className={styles.annDot} style={{ background: a.color === "red" ? "#e07070" : a.color === "orange" ? "#e09070" : a.color === "blue" ? "#7090e0" : a.color === "green" ? "#70b070" : "#e8c97a" }} />
+                <div className={styles.annContent}>
+                  <div className={styles.annMessage}>{a.message}</div>
+                  <div className={styles.annMeta}>
+                    Expire : {formatDate(a.expires_at)} {isExpired(a.expires_at) && "· ⏰ Expirée"}
+                  </div>
+                </div>
+                <button className={styles.annDelete} onClick={() => handleDeleteAnnouncement(a.id)}>✕</button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* ── ACTIONS GLOBALES ── */}
+      {activeTab === "actions" && (
+        <div className={styles.actionsGrid}>
+          {globalAction && <div className={styles.globalMsg}>{globalAction}</div>}
+
+          <div className={styles.actionCard}>
+            <div className={styles.actionIcon}>🔄</div>
+            <div className={styles.actionTitle}>Reset tous les XP</div>
+            <div className={styles.actionDesc}>Remet l'XP de tous les joueurs à 0. Irréversible.</div>
+            <button className={styles.actionBtnDanger} onClick={() => setShowResetConfirm(true)}>Exécuter</button>
+          </div>
+
+          <div className={styles.actionCard}>
+            <div className={styles.actionIcon}>✨</div>
+            <div className={styles.actionTitle}>Premium à tous</div>
+            <div className={styles.actionDesc}>Donne le statut Premium à tous les joueurs actuels.</div>
+            <button className={styles.actionBtn} onClick={() => setShowPremiumAll(true)}>Exécuter</button>
+          </div>
+
+          <div className={styles.actionCard}>
+            <div className={styles.actionIcon}>📥</div>
+            <div className={styles.actionTitle}>Exporter les joueurs</div>
+            <div className={styles.actionDesc}>Télécharge un fichier CSV avec tous les comptes.</div>
+            <button className={styles.actionBtn} onClick={handleExportCSV}>Télécharger CSV</button>
+          </div>
+
+          <div className={styles.actionCard}>
+            <div className={styles.actionIcon}>🔃</div>
+            <div className={styles.actionTitle}>Actualiser les stats</div>
+            <div className={styles.actionDesc}>Recharge toutes les statistiques du dashboard.</div>
+            <button className={styles.actionBtn} onClick={() => { loadStats(); loadProfiles(); setGlobalAction("✅ Stats actualisées !"); }}>Actualiser</button>
+          </div>
+        </div>
+      )}
+
+      {/* Modals confirmation */}
       {showResetConfirm && (
         <div className={styles.overlay} onClick={() => setShowResetConfirm(false)}>
           <div className={styles.modal} onClick={e => e.stopPropagation()}>
             <div style={{ fontSize: "2rem" }}>⚠️</div>
             <h3>Reset tous les XP ?</h3>
-            <p>Cette action remet l'XP de TOUS les joueurs à 0. Irréversible.</p>
+            <p>XP de TOUS les joueurs remis à 0. Irréversible.</p>
             <div className={styles.modalBtns}>
               <button className={styles.cancelBtn} onClick={() => setShowResetConfirm(false)}>Annuler</button>
-              <button className={styles.confirmBtn} onClick={handleResetAllXp} disabled={saving}>
-                {saving ? "Reset..." : "Confirmer"}
-              </button>
+              <button className={styles.confirmBtn} onClick={handleResetAllXp} disabled={saving}>{saving ? "..." : "Confirmer"}</button>
+            </div>
+          </div>
+        </div>
+      )}
+      {showPremiumAll && (
+        <div className={styles.overlay} onClick={() => setShowPremiumAll(false)}>
+          <div className={styles.modal} onClick={e => e.stopPropagation()}>
+            <div style={{ fontSize: "2rem" }}>✨</div>
+            <h3>Premium à tout le monde ?</h3>
+            <p>Tous les joueurs actuels passeront Premium gratuitement.</p>
+            <div className={styles.modalBtns}>
+              <button className={styles.cancelBtn} onClick={() => setShowPremiumAll(false)}>Annuler</button>
+              <button className={styles.confirmBtn} onClick={handlePremiumAll} disabled={saving}>{saving ? "..." : "Confirmer"}</button>
             </div>
           </div>
         </div>
