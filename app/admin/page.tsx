@@ -230,18 +230,25 @@ export default function AdminPage() {
   }
 
   async function handleBan() {
-    if (!selected) return;
-    if (!confirm(`Supprimer ${selected.username || selected.id} ?`)) return;
-    setSaving(true);
-    await supabase.from("words_seen").delete().eq("user_id", selected.id);
-    await supabase.from("stories_read").delete().eq("user_id", selected.id);
-    await supabase.from("game_completions").delete().eq("user_id", selected.id);
-    await supabase.from("profiles").delete().eq("id", selected.id);
+  if (!selected) return;
+  if (!confirm(`Supprimer définitivement ${selected.username || selected.id} ?`)) return;
+  setSaving(true);
+  const { data: { session } } = await supabase.auth.getSession();
+  const res = await fetch("/api/admin-delete-user", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ userId: selected.id, requesterId: session?.user?.id }),
+  });
+  const data = await res.json();
+  if (data.success) {
     setProfiles(prev => prev.filter(p => p.id !== selected.id));
     setSelected(null);
     setMsg("");
-    setSaving(false);
+  } else {
+    setMsg("❌ " + data.error);
   }
+  setSaving(false);
+}
 
   async function handleExportCSV() {
     const rows = ["ID,Pseudo,XP,Premium,Inscription,Dernière activité"];
