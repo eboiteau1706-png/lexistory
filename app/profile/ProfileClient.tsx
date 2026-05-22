@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
 import { getLevel, getXpProgress, LEVELS } from "@/lib/xp";
+import { lookup } from "@/lib/dictionary";
 import type { User } from "@supabase/supabase-js";
 import styles from "./profile.module.css";
 
@@ -36,6 +37,10 @@ export default function ProfileClient({ user }: { user: User }) {
   const [daysLeft, setDaysLeft]                 = useState<number | null>(null);
   const [cancelAtPeriodEnd, setCancelAtPeriodEnd] = useState(false);
 
+  // Favoris
+  const [favorites, setFavorites]               = useState<string[]>([]);
+  const [favPopup, setFavPopup]                 = useState<string | null>(null);
+
   // Email
   const [currentEmail, setCurrentEmail]   = useState(user.email ?? "");
   const [editingEmail, setEditingEmail]   = useState(false);
@@ -46,7 +51,6 @@ export default function ProfileClient({ user }: { user: User }) {
   const [emailUpdated, setEmailUpdated]   = useState(false);
 
   useEffect(() => {
-    // Vérifie si on revient d'un changement d'email confirmé
     const params = new URLSearchParams(window.location.search);
     if (params.get("emailUpdated")) {
       setEmailUpdated(true);
@@ -54,12 +58,11 @@ export default function ProfileClient({ user }: { user: User }) {
       window.location.reload();
     }
 
-    // Rafraîchit la session pour avoir le bon email
     supabase.auth.refreshSession().then(() => {
-  supabase.auth.getSession().then(({ data }) => {
-    if (data.session?.user?.email) setCurrentEmail(data.session.user.email);
-  });
-});
+      supabase.auth.getSession().then(({ data }) => {
+        if (data.session?.user?.email) setCurrentEmail(data.session.user.email);
+      });
+    });
 
     supabase.from("profiles").select("username, is_premium, xp, stripe_customer_id").eq("id", user.id).single()
       .then(({ data }) => {
@@ -121,7 +124,19 @@ export default function ProfileClient({ user }: { user: User }) {
       const { count: above } = await supabase.from("profiles").select("id", { count: "exact" }).gt("xp", profile?.xp ?? 0);
       setMyRank((above ?? 0) + 1);
     });
+
+    // Charge les favoris
+    supabase.from("word_favorites").select("word").eq("user_id", user.id).order("created_at", { ascending: false })
+      .then(({ data }) => {
+        if (data) setFavorites(data.map((d: any) => d.word));
+      });
   }, []);
+
+  async function removeFav(word: string) {
+    await supabase.from("word_favorites").delete().eq("user_id", user.id).eq("word", word);
+    setFavorites(prev => prev.filter(w => w !== word));
+    if (favPopup === word) setFavPopup(null);
+  }
 
   async function handleSaveUsername() {
     if (!newUsername.trim()) return;
@@ -196,6 +211,9 @@ export default function ProfileClient({ user }: { user: User }) {
   const isLifetime = isPremium && !stripeCustomerId;
   const isCancelled = cancelAtPeriodEnd || cancelDone;
 
+  // Définition du mot favori affiché en popup
+  const favWordDef = favPopup ? lookup(favPopup) : null;
+
   return (
     <div className={styles.page}>
       <div className={styles.card}>
@@ -229,45 +247,45 @@ export default function ProfileClient({ user }: { user: User }) {
         )}
 
         {/* Email */}
-<div className={styles.emailSection}>
-  <div className={styles.emailRow}>
-    <span className={styles.emailLabel}>📧 {currentEmail}</span>
-    {!editingEmail && user.app_metadata?.provider !== "google" && (
-      <button className={styles.editBtn} onClick={() => { setEditingEmail(true); setEmailSent(false); setEmailError(""); setEmailUpdated(false); }}>
-        Changer
-      </button>
-    )}
-  </div>
-  {user.app_metadata?.provider === "google" && (
-    <p style={{ fontSize: "0.78rem", color: "var(--text-dim)", fontStyle: "italic", marginTop: "4px" }}>
-      🔗 Connecté via Google — email non modifiable
-    </p>
-  )}
-  {emailUpdated && (
-    <p style={{ fontSize: "0.8rem", color: "var(--green)", margin: "4px 0 0" }}>
-      ✅ Adresse email mise à jour avec succès !
-    </p>
-  )}
-  {emailSent && !emailUpdated && (
-    <p style={{ fontSize: "0.8rem", color: "var(--accent)", margin: "4px 0 0" }}>
-      📬 Un lien de confirmation a été envoyé à ta nouvelle adresse.
-    </p>
-  )}
-  {editingEmail && (
-    <div className={styles.editWrap} style={{ marginTop: 8 }}>
-      <input className={styles.input} type="email" placeholder="nouvelle@adresse.com"
-        value={newEmail} onChange={e => setNewEmail(e.target.value)}
-        onKeyDown={e => e.key === "Enter" && handleSaveEmail()} autoFocus />
-      {emailError && <p className={styles.error}>{emailError}</p>}
-      <div className={styles.editBtns}>
-        <button className={styles.btnCancel} onClick={() => { setEditingEmail(false); setEmailError(""); setNewEmail(""); }}>Annuler</button>
-        <button className={styles.btnSave} onClick={handleSaveEmail} disabled={emailSaving || !newEmail}>
-          {emailSaving ? "Envoi..." : "Envoyer le lien"}
-        </button>
-      </div>
-    </div>
-  )}
-</div>
+        <div className={styles.emailSection}>
+          <div className={styles.emailRow}>
+            <span className={styles.emailLabel}>📧 {currentEmail}</span>
+            {!editingEmail && user.app_metadata?.provider !== "google" && (
+              <button className={styles.editBtn} onClick={() => { setEditingEmail(true); setEmailSent(false); setEmailError(""); setEmailUpdated(false); }}>
+                Changer
+              </button>
+            )}
+          </div>
+          {user.app_metadata?.provider === "google" && (
+            <p style={{ fontSize: "0.78rem", color: "var(--text-dim)", fontStyle: "italic", marginTop: "4px" }}>
+              🔗 Connecté via Google — email non modifiable
+            </p>
+          )}
+          {emailUpdated && (
+            <p style={{ fontSize: "0.8rem", color: "var(--green)", margin: "4px 0 0" }}>
+              ✅ Adresse email mise à jour avec succès !
+            </p>
+          )}
+          {emailSent && !emailUpdated && (
+            <p style={{ fontSize: "0.8rem", color: "var(--accent)", margin: "4px 0 0" }}>
+              📬 Un lien de confirmation a été envoyé à ta nouvelle adresse.
+            </p>
+          )}
+          {editingEmail && (
+            <div className={styles.editWrap} style={{ marginTop: 8 }}>
+              <input className={styles.input} type="email" placeholder="nouvelle@adresse.com"
+                value={newEmail} onChange={e => setNewEmail(e.target.value)}
+                onKeyDown={e => e.key === "Enter" && handleSaveEmail()} autoFocus />
+              {emailError && <p className={styles.error}>{emailError}</p>}
+              <div className={styles.editBtns}>
+                <button className={styles.btnCancel} onClick={() => { setEditingEmail(false); setEmailError(""); setNewEmail(""); }}>Annuler</button>
+                <button className={styles.btnSave} onClick={handleSaveEmail} disabled={emailSaving || !newEmail}>
+                  {emailSaving ? "Envoi..." : "Envoyer le lien"}
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
 
         <div className={styles.since}>
           Membre depuis le {new Date(user.created_at).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" })}
@@ -326,6 +344,22 @@ export default function ProfileClient({ user }: { user: User }) {
           )}
         </div>
 
+        {/* ── MOTS FAVORIS ── */}
+        <div className={styles.favSection}>
+          <div className={styles.favTitle}>⭐ Mots favoris ({favorites.length})</div>
+          {favorites.length === 0 ? (
+            <p className={styles.favEmpty}>Clique sur ☆ dans une définition pour sauvegarder un mot ici.</p>
+          ) : (
+            <div className={styles.favChips}>
+              {favorites.map(w => (
+                <button key={w} className={styles.favChip} onClick={() => setFavPopup(favPopup === w ? null : w)}>
+                  ⭐ {w}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+
         {isPremium && stripeCustomerId ? (
           <div className={styles.subscriptionBox}>
             <div className={styles.subscriptionInfo}>
@@ -373,6 +407,41 @@ export default function ProfileClient({ user }: { user: User }) {
           <button className={styles.deleteBtn} onClick={() => setShowDeleteConfirm(true)}>Supprimer mon compte</button>
         </div>
       </div>
+
+      {/* ── POPUP MOT FAVORI ── */}
+      {favPopup && (
+        <div style={{ position: "fixed", inset: 0, zIndex: 400, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(0,0,0,0.6)", backdropFilter: "blur(4px)", padding: "24px" }}
+          onClick={() => setFavPopup(null)}>
+          <div onClick={e => e.stopPropagation()} style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: "16px", padding: "24px", maxWidth: "380px", width: "100%", display: "flex", flexDirection: "column", gap: "12px" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <span style={{ fontFamily: "var(--font-playfair)", fontSize: "1.3rem", fontWeight: 700, color: "var(--accent)" }}>{favPopup}</span>
+              <button onClick={() => setFavPopup(null)} style={{ background: "none", border: "none", color: "var(--text-dim)", cursor: "pointer", fontSize: "1rem" }}>✕</button>
+            </div>
+            {favWordDef?.etym && (
+              <div style={{ fontSize: "0.75rem", color: "var(--text-dim)", fontStyle: "italic" }}>{favWordDef.etym}</div>
+            )}
+            {favWordDef ? (
+              <>
+                <div>
+                  <div style={{ fontSize: "0.7rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.8px", color: "var(--text-dim)", marginBottom: "4px" }}>Définition</div>
+                  <div style={{ fontSize: "0.9rem", color: "var(--text-muted)", lineHeight: 1.6 }}>{favWordDef.defOrig}</div>
+                </div>
+                {favWordDef.defSimple && (
+                  <div>
+                    <div style={{ fontSize: "0.7rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.8px", color: "var(--text-dim)", marginBottom: "4px" }}>En clair 💡</div>
+                    <div style={{ fontSize: "0.88rem", color: "var(--text-muted)", lineHeight: 1.6 }}>{favWordDef.defSimple}</div>
+                  </div>
+                )}
+              </>
+            ) : (
+              <div style={{ fontSize: "0.88rem", color: "var(--text-dim)" }}>Définition non disponible dans le dictionnaire local.</div>
+            )}
+            <button onClick={() => removeFav(favPopup)} style={{ marginTop: "4px", padding: "8px", borderRadius: "9px", background: "rgba(232,80,80,0.1)", border: "1px solid rgba(232,80,80,0.2)", color: "#e88080", cursor: "pointer", fontFamily: "inherit", fontSize: "0.82rem" }}>
+              🗑️ Retirer des favoris
+            </button>
+          </div>
+        </div>
+      )}
 
       {showCancelConfirm && (
         <div onClick={() => setShowCancelConfirm(false)} style={{ position: "fixed", inset: 0, zIndex: 300, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(0,0,0,0.6)", backdropFilter: "blur(4px)", padding: "24px" }}>

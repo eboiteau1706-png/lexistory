@@ -174,10 +174,59 @@
 }
 
 .body {
-  font-size: 1.05rem; /* → 1.12rem */
-  line-height: 1.95;  /* → 2.05 */
+  font-size: 1.12rem; /* → 1.12rem */
+  line-height: 2.05;  /* → 2.05 */
 }
 
 @media (max-width: 680px) {
-  .body { font-size: 1rem; /* → 1.06rem */ }
+  .body { font-size: 1.06rem; /* → 1.06rem */ }
+}
+
+/* ── À AJOUTER dans profile.module.css ── */
+
+.favSection {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 16px;
+  margin-top: 4px;
+}
+
+.favTitle {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: var(--text-dim);
+  margin-bottom: 12px;
+}
+
+.favEmpty {
+  font-size: 0.82rem;
+  color: var(--text-dim);
+  font-style: italic;
+  line-height: 1.5;
+}
+
+.favChips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.favChip {
+  padding: 5px 12px;
+  border-radius: 50px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  font-family: inherit;
+  font-size: 0.82rem;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.favChip:hover {
+  border-color: var(--accent);
+  color: var(--accent);
 }

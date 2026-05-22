@@ -152,3 +152,81 @@
   margin-top: -8px;
   font-style: italic;
 }
+
+/* ── À AJOUTER dans profile.module.css ── */
+
+.favSection {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 16px;
+  margin-top: 4px;
+}
+
+.favTitle {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: var(--text-dim);
+  margin-bottom: 12px;
+}
+
+.favEmpty {
+  font-size: 0.82rem;
+  color: var(--text-dim);
+  font-style: italic;
+  line-height: 1.5;
+}
+
+.favChips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.favChip {
+  padding: 5px 12px;
+  border-radius: 50px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  font-family: inherit;
+  font-size: 0.82rem;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.favChip:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+/* ── À AJOUTER dans WordPopup.module.css ── */
+
+.wordRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.favBtn {
+  font-size: 1.4rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  line-height: 1;
+  transition: transform 0.15s;
+  flex-shrink: 0;
+}
+
+.favBtn:hover {
+  transform: scale(1.2);
+}
+
+.favBtn:disabled {
+  opacity: 0.5;
+}
+
