@@ -42,6 +42,9 @@ export default function Nav() {
     setXp(profile?.xp ?? 0);
     if (userId === "0450c58e-35b2-47e6-9600-13db5626e96d") setIsAdmin(true);
 
+    // Mise à jour last_active_at à chaque visite
+    await supabase.from("profiles").update({ last_active_at: new Date().toISOString() }).eq("id", userId);
+
     const { data: reads } = await supabase
       .from("stories_read").select("read_at")
       .eq("user_id", userId).order("read_at", { ascending: false });
@@ -192,7 +195,6 @@ export default function Nav() {
         <div className={styles.mobileMenu}>
           {ready && user ? (
             <>
-              {/* Header avec infos utilisateur */}
               <div className={styles.mobileUserInfo}>
                 <div className={styles.mobileUserLeft}>
                   <div className={styles.mobileUserName}>{level.emoji} {level.name}</div>
@@ -204,7 +206,6 @@ export default function Nav() {
                 <div className={styles.mobileStreak}>🔥 {streak}j</div>
               </div>
 
-              {/* Liens de navigation */}
               <div className={styles.mobileNavLinks}>
                 <button className={styles.mobileNavLink} onClick={() => nav("/")}>
                   <span className={styles.mobileNavIcon}>📖</span>
@@ -243,7 +244,6 @@ export default function Nav() {
                 )}
               </div>
 
-              {/* Premium */}
               <div className={styles.mobilePremiumSection}>
                 {!isPremium ? (
                   <button className={styles.mobilePremiumBtn} onClick={() => { setMenuOpen(false); handlePremium(); }} disabled={loading}>
