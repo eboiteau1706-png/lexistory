@@ -528,15 +528,24 @@ export default function JeuxPage() {
               </div>
             </>
           ) : (
-            <div className={anagResult ? styles.resultOk : styles.resultKo}>
-              {anagResult ? "✅ Bravo ! +3 XP" : `❌ C'était : ${anagWord.word}`}
-              {!anagResult && (
-                <div className={styles.anagramme} style={{ marginTop: 8 }}>
-                  {anagWord.word.split("").map((l, i) => <span key={i} className={styles.letter}>{l}</span>)}
-                </div>
-              )}
-            </div>
-          )}
+  <>
+    {!anagResult && (
+      <div className={styles.resultOk} style={{ marginBottom: 8 }}>
+        ✅ La réponse était : <strong>{anagWord.word}</strong>
+      </div>
+    )}
+    {anagResult && (
+      <div className={styles.resultOk}>✅ Bravo ! +3 XP</div>
+    )}
+    {!anagResult && (
+      <div className={styles.anagramme} style={{ marginTop: 4 }}>
+        {anagSelected.map(l => (
+          <span key={l.id} className={styles.letter}>{l.char}</span>
+        ))}
+      </div>
+    )}
+  </>
+)}
           {!userId && <div className={styles.loginHint}>Connecte-toi pour gagner des XP !</div>}
         </div>
 
@@ -647,15 +656,24 @@ export default function JeuxPage() {
               </div>
             </>
           ) : (
-            <div className={pAnagResult ? styles.resultOk : styles.resultKo}>
-              {pAnagResult ? "✅ Bravo ! +3 XP" : `❌ C'était : ${pAnagWord.word}`}
-              {!pAnagResult && (
-                <div className={styles.anagramme} style={{ marginTop: 8 }}>
-                  {pAnagWord.word.split("").map((l, i) => <span key={i} className={styles.letter}>{l}</span>)}
-                </div>
-              )}
-            </div>
-          )}
+  <>
+    {!pAnagResult && (
+      <div className={styles.resultOk} style={{ marginBottom: 8 }}>
+        ✅ La réponse était : <strong>{pAnagWord.word}</strong>
+      </div>
+    )}
+    {pAnagResult && (
+      <div className={styles.resultOk}>✅ Bravo ! +3 XP</div>
+    )}
+    {!pAnagResult && (
+      <div className={styles.anagramme} style={{ marginTop: 4 }}>
+        {pAnagSelected.map(l => (
+          <span key={l.id} className={styles.letter}>{l.char}</span>
+        ))}
+      </div>
+    )}
+  </>
+)}
         </div>
 
         <div className={`${styles.card} ${styles.cardWide} ${styles.premiumCard}`}>
