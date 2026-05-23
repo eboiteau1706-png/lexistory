@@ -136,6 +136,7 @@ const PREMIUM_CITATIONS = [
 ];
 
 type Letter = { char: string; id: number };
+type PopupWord = { word: string; def: string; etym: string };
 
 function getParisDateStr() {
   const paris = new Date(new Date().toLocaleString("en-US", { timeZone: "Europe/Paris" }));
@@ -192,6 +193,7 @@ export default function JeuxPage() {
   const [isPremium, setIsPremium]     = useState(false);
   const [xpGained, setXpGained]       = useState<number | null>(null);
   const [initialized, setInitialized] = useState(false);
+  const [defPopupWord, setDefPopupWord] = useState<PopupWord | null>(null);
 
   const [defAnswer, setDefAnswer]       = useState<string | null>(null);
   const [anagLetters, setAnagLetters]   = useState<Letter[]>([]);
@@ -266,16 +268,16 @@ export default function JeuxPage() {
             if (data.cit_answer)   setCitAnswer(data.cit_answer);
             if (data.p_def_answer) setPDefAnswer(data.p_def_answer);
             if (data.p_cit_answer) setPCitAnswer(data.p_cit_answer);
-           if (data.anag_done !== null && data.anag_done !== undefined) {
-  setAnagResult(data.anag_done);
-  setAnagLetters([]);
-  setAnagSelected(anagWord.word.split("").map((char, i) => ({ char, id: i })));
-} else {
-  setAnagLetters(anagramme.split("").map((char, i) => ({ char, id: i })));
-  setAnagSelected([]);
-}
-            if (data.p_anag_done) {
-              setPAnagResult(true);
+            if (data.anag_done !== null && data.anag_done !== undefined) {
+              setAnagResult(data.anag_done);
+              setAnagLetters([]);
+              setAnagSelected(anagWord.word.split("").map((char, i) => ({ char, id: i })));
+            } else {
+              setAnagLetters(anagramme.split("").map((char, i) => ({ char, id: i })));
+              setAnagSelected([]);
+            }
+            if (data.p_anag_done !== null && data.p_anag_done !== undefined) {
+              setPAnagResult(data.p_anag_done);
               setPAnagLetters([]);
               setPAnagSelected(pAnagWord.word.split("").map((char, i) => ({ char, id: i })));
             } else {
@@ -429,6 +431,12 @@ export default function JeuxPage() {
     if (choice === pCitation.answer) addXpNoBoost(3);
   }
 
+  function handleChoiceClick(choice: string, wordList: typeof GAME_WORDS, answered: string | null, correctWord: string, handler: (c: string) => void) {
+    if (!answered) { handler(choice); return; }
+    const wordData = wordList.find(w => w.word === choice);
+    if (wordData) setDefPopupWord({ word: wordData.word, def: wordData.def, etym: wordData.etym });
+  }
+
   const citParts  = citation.text.split("***");
   const pCitParts = pCitation.text.split("***");
 
@@ -467,15 +475,20 @@ export default function JeuxPage() {
             {defChoices.map(choice => (
               <button key={choice}
                 className={`${styles.choiceBtn} ${defAnswer ? choice === defWord.word ? styles.correct : choice === defAnswer ? styles.wrong : styles.disabled : ""}`}
-                onClick={() => handleDefAnswer(choice)} disabled={!!defAnswer}>
+                onClick={() => handleChoiceClick(choice, GAME_WORDS, defAnswer, defWord.word, handleDefAnswer)}>
                 {choice}
               </button>
             ))}
           </div>
           {defAnswer && (
-            <div className={defAnswer === defWord.word ? styles.resultOk : styles.resultKo}>
-              {defAnswer === defWord.word ? "✅ Bravo ! +3 XP" : `❌ C'était : ${defWord.word}`}
-            </div>
+            <>
+              <div className={defAnswer === defWord.word ? styles.resultOk : styles.resultKo}>
+                {defAnswer === defWord.word ? "✅ Bravo ! +3 XP" : `❌ C'était : ${defWord.word}`}
+              </div>
+              <div style={{ fontSize: "0.72rem", color: "var(--text-dim)", marginTop: "6px", fontStyle: "italic" }}>
+                Clique sur un mot pour voir sa définition
+              </div>
+            </>
           )}
           {!userId && <div className={styles.loginHint}>Connecte-toi pour gagner des XP !</div>}
         </div>
@@ -571,15 +584,24 @@ export default function JeuxPage() {
             {pDefChoices.map(choice => (
               <button key={choice}
                 className={`${styles.choiceBtn} ${pDefAnswer ? choice === pDefWord.word ? styles.correct : choice === pDefAnswer ? styles.wrong : styles.disabled : ""}`}
-                onClick={() => handlePDefAnswer(choice)} disabled={!!pDefAnswer || !isPremium}>
+                onClick={() => {
+                  if (!pDefAnswer) { handlePDefAnswer(choice); return; }
+                  const w = PREMIUM_WORDS.find(w => w.word === choice);
+                  if (w) setDefPopupWord({ word: w.word, def: w.def, etym: w.etym });
+                }}>
                 {choice}
               </button>
             ))}
           </div>
           {pDefAnswer && (
-            <div className={pDefAnswer === pDefWord.word ? styles.resultOk : styles.resultKo}>
-              {pDefAnswer === pDefWord.word ? "✅ Bravo ! +3 XP" : `❌ C'était : ${pDefWord.word}`}
-            </div>
+            <>
+              <div className={pDefAnswer === pDefWord.word ? styles.resultOk : styles.resultKo}>
+                {pDefAnswer === pDefWord.word ? "✅ Bravo ! +3 XP" : `❌ C'était : ${pDefWord.word}`}
+              </div>
+              <div style={{ fontSize: "0.72rem", color: "var(--text-dim)", marginTop: "6px", fontStyle: "italic" }}>
+                Clique sur un mot pour voir sa définition
+              </div>
+            </>
           )}
         </div>
 
@@ -663,6 +685,21 @@ export default function JeuxPage() {
         <div className={styles.xpPopup}>+{xpGained} XP ✨</div>
       )}
       <a href="/" className={styles.back}>← Retour aux histoires</a>
+
+      {/* ── POPUP DÉFINITION CHOIX ── */}
+      {defPopupWord && (
+        <div style={{ position: "fixed", inset: 0, zIndex: 300, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(0,0,0,0.6)", backdropFilter: "blur(4px)", padding: "24px" }}
+          onClick={() => setDefPopupWord(null)}>
+          <div onClick={e => e.stopPropagation()} style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: "16px", padding: "24px", maxWidth: "380px", width: "100%", display: "flex", flexDirection: "column", gap: "12px" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <span style={{ fontFamily: "var(--font-playfair)", fontSize: "1.3rem", fontWeight: 700, color: "var(--accent)" }}>{defPopupWord.word}</span>
+              <button onClick={() => setDefPopupWord(null)} style={{ background: "none", border: "none", color: "var(--text-dim)", cursor: "pointer", fontSize: "1rem" }}>✕</button>
+            </div>
+            <div style={{ fontSize: "0.75rem", color: "var(--text-dim)", fontStyle: "italic" }}>{defPopupWord.etym}</div>
+            <div style={{ fontSize: "0.9rem", color: "var(--text-muted)", lineHeight: 1.6, padding: "10px 14px", background: "var(--surface2)", borderRadius: "10px", borderLeft: "3px solid var(--border)" }}>{defPopupWord.def}</div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
