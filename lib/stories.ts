@@ -29,7 +29,7 @@ export const STORIES: Story[] = [
   },
   {
     slug: "flamant-rose",
-    date: "2026-05-18",
+    date: "2026-05-17",
     title: "Pourquoi les flamants roses sont-ils roses ?",
     category: "Histoire · Science",
     level: "Lecteur",
@@ -44,7 +44,7 @@ export const STORIES: Story[] = [
   },
   {
     slug: "biais-cognitifs",
-    date: "2026-05-19",
+    date: "2026-05-17",
     title: "Les biais cognitifs, ces illusions qui gouvernent nos décisions",
     category: "Psychologie",
     level: "Érudit",
@@ -59,7 +59,7 @@ export const STORIES: Story[] = [
   },
   {
     slug: "pourquoi-chats-ronronnent",
-    date: "2026-06-01",
+    date: "2026-05-18",
     title: "Pourquoi les chats ronronnent-ils ?",
     category: "Nature",
     level: "Curieux",
@@ -74,7 +74,7 @@ export const STORIES: Story[] = [
   },
   {
     slug: "invention-chocolat",
-    date: "2026-06-01",
+    date: "2026-05-18",
     title: "L'histoire surprenante du chocolat",
     category: "Histoire",
     level: "Lecteur",
@@ -89,7 +89,7 @@ export const STORIES: Story[] = [
   },
   {
     slug: "memoire-emotionnelle",
-    date: "2026-06-01",
+    date: "2026-05-18",
     title: "Pourquoi certains souvenirs restent gravés pour toujours",
     category: "Neurosciences",
     level: "Érudit",
@@ -104,7 +104,7 @@ export const STORIES: Story[] = [
   },
   {
     slug: "pourquoi-arc-en-ciel",
-    date: "2026-06-02",
+    date: "2026-05-19",
     title: "Comment se forme un arc-en-ciel ?",
     category: "Science",
     level: "Curieux",
@@ -119,7 +119,7 @@ export const STORIES: Story[] = [
   },
   {
     slug: "sommeil-cerveau",
-    date: "2026-06-02",
+    date: "2026-05-19",
     title: "Ce que ton cerveau fait quand tu dors",
     category: "Science · Santé",
     level: "Lecteur",
@@ -134,7 +134,7 @@ export const STORIES: Story[] = [
   },
   {
     slug: "stoicisme-moderne",
-    date: "2026-06-02",
+    date: "2026-05-19",
     title: "Le stoïcisme, une sagesse antique pour le monde contemporain",
     category: "Philosophie",
     level: "Érudit",
@@ -149,7 +149,7 @@ export const STORIES: Story[] = [
   },
   {
     slug: "pourquoi-baillons",
-    date: "2026-06-03",
+    date: "2026-05-20",
     title: "Pourquoi est-ce qu'on bâille ?",
     category: "Corps humain",
     level: "Curieux",
@@ -164,7 +164,7 @@ export const STORIES: Story[] = [
   },
   {
     slug: "tour-eiffel-histoire",
-    date: "2026-06-03",
+    date: "2026-05-20",
     title: "La Tour Eiffel, de la honte au symbole",
     category: "Histoire",
     level: "Lecteur",
@@ -179,7 +179,7 @@ export const STORIES: Story[] = [
   },
   {
     slug: "langage-metaphores",
-    date: "2026-06-03",
+    date: "2026-05-20",
     title: "Pourquoi notre pensée est fondamentalement métaphorique",
     category: "Linguistique · Philosophie",
     level: "Érudit",
@@ -194,7 +194,7 @@ export const STORIES: Story[] = [
   },
   {
     slug: "pourquoi-feuilles-changent",
-    date: "2026-06-04",
+    date: "2026-05-21",
     title: "Pourquoi les feuilles changent de couleur en automne ?",
     category: "Nature",
     level: "Curieux",
@@ -209,7 +209,7 @@ export const STORIES: Story[] = [
   },
   {
     slug: "adn-decouverte",
-    date: "2026-06-04",
+    date: "2026-05-21",
     title: "La découverte de l'ADN, une course contre la montre",
     category: "Science · Histoire",
     level: "Lecteur",
@@ -224,7 +224,7 @@ export const STORIES: Story[] = [
   },
   {
     slug: "temps-perception",
-    date: "2026-06-04",
+    date: "2026-05-21",
     title: "La subjectivité du temps : pourquoi les heures n'ont pas toutes la même durée",
     category: "Neurosciences · Philosophie",
     level: "Érudit",
@@ -239,7 +239,7 @@ export const STORIES: Story[] = [
   },
   {
     slug: "pourquoi-peau-rides",
-    date: "2026-06-05",
+    date: "2026-05-22",
     title: "Pourquoi la peau se ride dans l'eau ?",
     category: "Corps humain",
     level: "Curieux",
@@ -254,7 +254,7 @@ export const STORIES: Story[] = [
   },
   {
     slug: "gravite-newton",
-    date: "2026-06-05",
+    date: "2026-05-22",
     title: "Newton et la pomme : mythe ou réalité ?",
     category: "Science · Histoire",
     level: "Lecteur",
@@ -269,7 +269,7 @@ export const STORIES: Story[] = [
   },
   {
     slug: "identite-numerique",
-    date: "2026-06-05",
+    date: "2026-05-22",
     title: "L'identité à l'ère numérique : sommes-nous nos données ?",
     category: "Philosophie · Technologie",
     level: "Érudit",
@@ -284,7 +284,7 @@ export const STORIES: Story[] = [
   },
   {
     slug: "pourquoi-larmes",
-    date: "2026-06-06",
+    date: "2026-05-23",
     title: "Pourquoi pleure-t-on ?",
     category: "Corps humain",
     level: "Curieux",
@@ -299,7 +299,7 @@ export const STORIES: Story[] = [
   },
   {
     slug: "cafe-histoire",
-    date: "2026-06-06",
+    date: "2026-05-23",
     title: "Le café, le breuvage qui a changé l'histoire",
     category: "Histoire · Culture",
     level: "Lecteur",
@@ -314,7 +314,7 @@ export const STORIES: Story[] = [
   },
   {
     slug: "conscience-philosophie",
-    date: "2026-06-06",
+    date: "2026-05-23",
     title: "Le problème difficile de la conscience",
     category: "Philosophie · Neurosciences",
     level: "Érudit",
@@ -329,7 +329,7 @@ export const STORIES: Story[] = [
   },
   {
     slug: "pourquoi-sommeil-reves",
-    date: "2026-06-07",
+    date: "2026-05-24",
     title: "Pourquoi fait-on des rêves ?",
     category: "Corps humain",
     level: "Curieux",
@@ -344,7 +344,7 @@ export const STORIES: Story[] = [
   },
   {
     slug: "renaissance-art",
-    date: "2026-06-07",
+    date: "2026-05-24",
     title: "La Renaissance, quand l'homme se découvrit au centre du monde",
     category: "Histoire · Art",
     level: "Lecteur",
@@ -359,7 +359,7 @@ export const STORIES: Story[] = [
   },
   {
     slug: "libre-arbitre",
-    date: "2026-06-07",
+    date: "2026-05-24",
     title: "Le libre arbitre existe-t-il vraiment ?",
     category: "Philosophie · Neurosciences",
     level: "Érudit",
@@ -374,7 +374,7 @@ export const STORIES: Story[] = [
   },
   {
     slug: "pourquoi-musique-frissons",
-    date: "2026-06-08",
+    date: "2026-05-25",
     title: "Pourquoi la musique nous donne des frissons ?",
     category: "Science · Musique",
     level: "Curieux",
@@ -389,7 +389,7 @@ export const STORIES: Story[] = [
   },
   {
     slug: "ocean-profond",
-    date: "2026-06-08",
+    date: "2026-05-25",
     title: "Les abysses, le dernier grand mystère de la Terre",
     category: "Nature · Science",
     level: "Lecteur",
@@ -404,7 +404,7 @@ export const STORIES: Story[] = [
   },
   {
     slug: "bonheur-philosophie",
-    date: "2026-06-08",
+    date: "2026-05-25",
     title: "Qu'est-ce que le bonheur ? Les grandes réponses philosophiques",
     category: "Philosophie",
     level: "Érudit",
@@ -419,7 +419,7 @@ export const STORIES: Story[] = [
   },
   {
     slug: "pourquoi-ocean-sale",
-    date: "2026-06-09",
+    date: "2026-05-26",
     title: "Pourquoi la mer est-elle salée ?",
     category: "Nature · Science",
     level: "Curieux",
@@ -434,7 +434,7 @@ export const STORIES: Story[] = [
   },
   {
     slug: "intelligence-artificielle-histoire",
-    date: "2026-06-09",
+    date: "2026-05-26",
     title: "L'intelligence artificielle, de la fiction à la réalité",
     category: "Technologie · Histoire",
     level: "Lecteur",
@@ -449,7 +449,7 @@ export const STORIES: Story[] = [
   },
   {
     slug: "langage-pensee",
-    date: "2026-06-09",
+    date: "2026-05-26",
     title: "Le langage façonne-t-il notre façon de penser ?",
     category: "Linguistique · Philosophie",
     level: "Érudit",
@@ -464,7 +464,7 @@ export const STORIES: Story[] = [
   },
   {
     slug: "pourquoi-miroir-inverse",
-    date: "2026-06-10",
+    date: "2026-05-27",
     title: "Pourquoi le miroir inverse gauche et droite, mais pas haut et bas ?",
     category: "Science",
     level: "Curieux",
@@ -479,7 +479,7 @@ export const STORIES: Story[] = [
   },
   {
     slug: "microbes-amis",
-    date: "2026-06-10",
+    date: "2026-05-27",
     title: "Les microbes, nos meilleurs ennemis",
     category: "Science · Santé",
     level: "Lecteur",
@@ -494,7 +494,7 @@ export const STORIES: Story[] = [
   },
   {
     slug: "art-definition",
-    date: "2026-06-10",
+    date: "2026-05-27",
     title: "Qu'est-ce que l'art ? Une question sans réponse définitive",
     category: "Philosophie · Art",
     level: "Érudit",

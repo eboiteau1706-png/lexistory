@@ -5,7 +5,7 @@ import { STORIES } from "@/lib/stories";
 import type { Story } from "@/lib/stories";
 
 interface Props {
-  category?: string;       // si fourni → affiche directement cette catégorie
+  category?: string;
   currentLevel?: Story["level"];
   onClose: () => void;
 }
@@ -38,16 +38,11 @@ const TODAY_SLUGS = {
   "Érudit":  getTodaySlug("Érudit"),
 };
 
-// Toutes les catégories uniques
 const ALL_CATEGORIES = [...new Set(
   STORIES.flatMap(s => s.category.split(" · "))
 )].sort();
 
 function isFuture(story: Story) {
-  const storyDate = new Date(story.date + "T00:00:00");
-  const today = getParisNow();
-  today.setHours(0, 0, 0, 0);
-  // Aussi vérifier si c'est après l'histoire du jour par index
   const levelStories = STORIES.filter(s => s.level === story.level);
   const todayIdx = getDayIndex(levelStories);
   const storyIdx = levelStories.findIndex(s => s.slug === story.slug);
@@ -61,8 +56,13 @@ function isToday(story: Story) {
 export default function CategoryModal({ category: initialCategory, currentLevel, onClose }: Props) {
   const supabase = createClient();
   const [isPremium, setIsPremium] = useState(false);
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(initialCategory ?? null);
   const [expandedCategory, setExpandedCategory] = useState<string | null>(initialCategory ?? null);
+
+  useEffect(() => {
+    // Bloque le scroll de la page en arrière-plan
+    document.body.style.overflow = "hidden";
+    return () => { document.body.style.overflow = ""; };
+  }, []);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -82,12 +82,12 @@ export default function CategoryModal({ category: initialCategory, currentLevel,
   function getStoriesForCategory(cat: string) {
     return STORIES
       .filter(s => s.category === cat || s.category.split(" · ").includes(cat))
-      .filter(s => !isFuture(s)) // CACHE les histoires futures
+      .filter(s => !isFuture(s))
       .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
   }
 
   function handleStoryClick(story: Story) {
-    if (!isPremium && !isToday(story)) return; // non-premium : bloqué sauf aujourd'hui
+    if (!isPremium && !isToday(story)) return;
     const levelStories = STORIES.filter(s => s.level === story.level);
     const dayIdx = levelStories.findIndex(s => s.slug === story.slug);
     window.location.href = `/?level=${story.level}&day=${dayIdx}`;
@@ -98,7 +98,7 @@ export default function CategoryModal({ category: initialCategory, currentLevel,
     return new Date(dateStr).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" });
   }
 
-  const showCategoryList = !initialCategory; // mode "toutes les catégories"
+  const showCategoryList = !initialCategory;
 
   return (
     <div
@@ -107,9 +107,21 @@ export default function CategoryModal({ category: initialCategory, currentLevel,
     >
       <div
         onClick={e => e.stopPropagation()}
-        style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: "20px", padding: "28px 24px", maxWidth: "520px", width: "100%", maxHeight: "85vh", display: "flex", flexDirection: "column", gap: "16px" }}
+        style={{
+          background: "var(--surface)",
+          border: "1px solid var(--border)",
+          borderRadius: "20px",
+          padding: "28px 24px",
+          maxWidth: "520px",
+          width: "100%",
+          maxHeight: "85vh",
+          display: "flex",
+          flexDirection: "column",
+          gap: "16px",
+          overflow: "hidden", // ← important
+        }}
       >
-        {/* Header */}
+        {/* Header — fixe */}
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexShrink: 0 }}>
           <div>
             <div style={{ fontSize: "0.68rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "1px", color: "var(--text-dim)", marginBottom: "4px" }}>
@@ -122,18 +134,16 @@ export default function CategoryModal({ category: initialCategory, currentLevel,
           <button onClick={onClose} style={{ background: "var(--surface2)", border: "1px solid var(--border)", borderRadius: "50%", width: "32px", height: "32px", cursor: "pointer", color: "var(--text-muted)", fontSize: "1rem", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>✕</button>
         </div>
 
-        {/* Contenu scrollable */}
-        <div style={{ overflowY: "auto", display: "flex", flexDirection: "column", gap: "8px", paddingRight: "2px" }}>
+        {/* Contenu scrollable — flex: 1 + minHeight: 0 = scroll correct */}
+        <div style={{ overflowY: "auto", flex: 1, minHeight: 0, display: "flex", flexDirection: "column", gap: "8px", paddingRight: "4px" }}>
           {showCategoryList ? (
-            // MODE LISTE CATÉGORIES
             ALL_CATEGORIES.map(cat => {
               const catStories = getStoriesForCategory(cat);
               if (catStories.length === 0) return null;
               const isOpen = expandedCategory === cat;
 
               return (
-                <div key={cat} style={{ borderRadius: "12px", border: "1px solid var(--border)", overflow: "hidden" }}>
-                  {/* Header catégorie */}
+                <div key={cat} style={{ borderRadius: "12px", border: "1px solid var(--border)", overflow: "hidden", flexShrink: 0 }}>
                   <button
                     onClick={() => setExpandedCategory(isOpen ? null : cat)}
                     style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 14px", background: isOpen ? "rgba(232,201,122,0.07)" : "var(--surface2)", border: "none", cursor: "pointer", color: "var(--text)", fontFamily: "inherit" }}
@@ -144,33 +154,23 @@ export default function CategoryModal({ category: initialCategory, currentLevel,
                         {catStories.length} histoire{catStories.length > 1 ? "s" : ""}
                       </span>
                     </div>
-                    <span style={{ color: "var(--text-dim)", fontSize: "0.85rem", transition: "transform 0.2s", display: "inline-block", transform: isOpen ? "rotate(90deg)" : "none" }}>→</span>
+                    <span style={{ color: "var(--text-dim)", fontSize: "0.85rem", display: "inline-block", transform: isOpen ? "rotate(90deg)" : "none", transition: "transform 0.2s" }}>→</span>
                   </button>
 
-                  {/* Histoires de la catégorie */}
                   {isOpen && (
                     <div style={{ display: "flex", flexDirection: "column", gap: "1px", background: "var(--border)" }}>
                       {catStories.map(story => {
                         const today = isToday(story);
                         const locked = !today && !isPremium;
-
                         return (
                           <div
                             key={story.slug}
                             onClick={() => handleStoryClick(story)}
-                            style={{
-                              display: "flex", alignItems: "center", gap: "10px",
-                              padding: "10px 14px",
-                              background: today ? "rgba(232,201,122,0.06)" : "var(--surface)",
-                              cursor: locked ? "default" : "pointer",
-                              opacity: locked ? 0.55 : 1,
-                            }}
+                            style={{ display: "flex", alignItems: "center", gap: "10px", padding: "10px 14px", background: today ? "rgba(232,201,122,0.06)" : "var(--surface)", cursor: locked ? "default" : "pointer", opacity: locked ? 0.55 : 1 }}
                           >
                             <div style={{ flex: 1, minWidth: 0 }}>
                               <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "3px", flexWrap: "wrap" }}>
-                                <span style={{ fontSize: "0.68rem", color: "var(--text-dim)" }}>
-                                  {LEVEL_EMOJI[story.level]} {story.level}
-                                </span>
+                                <span style={{ fontSize: "0.68rem", color: "var(--text-dim)" }}>{LEVEL_EMOJI[story.level]} {story.level}</span>
                                 {today && <span style={{ fontSize: "0.65rem", fontWeight: 700, color: "var(--accent)", padding: "1px 6px", borderRadius: "50px", background: "rgba(232,201,122,0.15)", border: "1px solid rgba(232,201,122,0.3)" }}>Aujourd'hui</span>}
                                 {locked && <span style={{ fontSize: "0.65rem", color: "var(--text-dim)" }}>🔒</span>}
                               </div>
@@ -189,23 +189,14 @@ export default function CategoryModal({ category: initialCategory, currentLevel,
               );
             })
           ) : (
-            // MODE CATÉGORIE UNIQUE (depuis le tag)
             getStoriesForCategory(initialCategory!).map(story => {
               const today = isToday(story);
               const locked = !today && !isPremium;
-
               return (
                 <div
                   key={story.slug}
                   onClick={() => handleStoryClick(story)}
-                  style={{
-                    display: "flex", alignItems: "center", gap: "12px",
-                    padding: "12px 14px", borderRadius: "12px",
-                    background: today ? "rgba(232,201,122,0.07)" : "var(--surface2)",
-                    border: `1px solid ${today ? "rgba(232,201,122,0.3)" : "var(--border)"}`,
-                    cursor: locked ? "default" : "pointer",
-                    opacity: locked ? 0.55 : 1,
-                  }}
+                  style={{ display: "flex", alignItems: "center", gap: "12px", padding: "12px 14px", borderRadius: "12px", background: today ? "rgba(232,201,122,0.07)" : "var(--surface2)", border: `1px solid ${today ? "rgba(232,201,122,0.3)" : "var(--border)"}`, cursor: locked ? "default" : "pointer", opacity: locked ? 0.55 : 1, flexShrink: 0 }}
                 >
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "4px", flexWrap: "wrap" }}>
@@ -227,6 +218,7 @@ export default function CategoryModal({ category: initialCategory, currentLevel,
           )}
         </div>
 
+        {/* Footer Premium — fixe */}
         {!isPremium && (
           <div style={{ padding: "12px 14px", borderRadius: "12px", background: "linear-gradient(135deg, #1e1a0e, #2a2210)", border: "1px solid rgba(232,201,122,0.25)", fontSize: "0.82rem", color: "var(--text-muted)", textAlign: "center", lineHeight: 1.5, flexShrink: 0 }}>
             🔒 Les histoires passées sont réservées aux membres{" "}
