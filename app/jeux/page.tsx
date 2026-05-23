@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase";
 import styles from "./jeux.module.css";
+import { lookup } from "@/lib/dictionary";
 
 const GAME_WORDS = [
   { word: "amygdale", def: "Petite partie du cerveau en forme d'amande qui gère nos émotions, surtout la peur.", etym: "Du grec amygdalê, amande" },
@@ -432,10 +433,15 @@ export default function JeuxPage() {
   }
 
   function handleChoiceClick(choice: string, wordList: typeof GAME_WORDS, answered: string | null, correctWord: string, handler: (c: string) => void) {
-    if (!answered) { handler(choice); return; }
+  if (!answered) { handler(choice); return; }
+  const localDef = lookup(choice);
+  if (localDef) {
+    setDefPopupWord({ word: choice, def: localDef.defSimple || localDef.defOrig, etym: localDef.etym });
+  } else {
     const wordData = wordList.find(w => w.word === choice);
     if (wordData) setDefPopupWord({ word: wordData.word, def: wordData.def, etym: wordData.etym });
   }
+}
 
   const citParts  = citation.text.split("***");
   const pCitParts = pCitation.text.split("***");
@@ -585,10 +591,15 @@ export default function JeuxPage() {
               <button key={choice}
                 className={`${styles.choiceBtn} ${pDefAnswer ? choice === pDefWord.word ? styles.correct : choice === pDefAnswer ? styles.wrong : styles.disabled : ""}`}
                 onClick={() => {
-                  if (!pDefAnswer) { handlePDefAnswer(choice); return; }
-                  const w = PREMIUM_WORDS.find(w => w.word === choice);
-                  if (w) setDefPopupWord({ word: w.word, def: w.def, etym: w.etym });
-                }}>
+  if (!pDefAnswer) { handlePDefAnswer(choice); return; }
+  const localDef = lookup(choice);
+  if (localDef) {
+    setDefPopupWord({ word: choice, def: localDef.defSimple || localDef.defOrig, etym: localDef.etym });
+  } else {
+    const w = PREMIUM_WORDS.find(w => w.word === choice);
+    if (w) setDefPopupWord({ word: w.word, def: w.def, etym: w.etym });
+  }
+}}>
                 {choice}
               </button>
             ))}
