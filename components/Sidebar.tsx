@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { STORIES } from "@/lib/stories";
 import { getLevel, getXpProgress } from "@/lib/xp";
 import type { Story } from "@/lib/stories";
+import CategoryModal from "./CategoryModal";
 import styles from "./Sidebar.module.css";
 
 export default function Sidebar() {
@@ -19,6 +20,7 @@ export default function Sidebar() {
   const [xp, setXp]                     = useState(0);
   const [showHistory, setShowHistory]   = useState(false);
   const [showPremiumPopup, setShowPremiumPopup] = useState(false);
+  const [showCategories, setShowCategories]     = useState(false);
   const supabase = createClient();
   const router   = useRouter();
   const searchParams = useSearchParams();
@@ -56,7 +58,6 @@ export default function Sidebar() {
 
   useEffect(() => {
     let interval: NodeJS.Timeout;
-
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null);
       setReady(true);
@@ -69,22 +70,11 @@ export default function Sidebar() {
 
     const { data: listener } = supabase.auth.onAuthStateChange((_e, session) => {
       setUser(session?.user ?? null);
-      if (session?.user) {
-        setUserId(session.user.id);
-        loadStats(session.user.id);
-      }
+      if (session?.user) { setUserId(session.user.id); loadStats(session.user.id); }
     });
 
-    const onWordSeen = () => {
-      supabase.auth.getSession().then(({ data: { session } }) => {
-        if (session?.user) loadStats(session.user.id);
-      });
-    };
-    const onStoryRead = () => {
-      supabase.auth.getSession().then(({ data: { session } }) => {
-        if (session?.user) loadStats(session.user.id);
-      });
-    };
+    const onWordSeen = () => { supabase.auth.getSession().then(({ data: { session } }) => { if (session?.user) loadStats(session.user.id); }); };
+    const onStoryRead = () => { supabase.auth.getSession().then(({ data: { session } }) => { if (session?.user) loadStats(session.user.id); }); };
     window.addEventListener("lexistory:word-seen", onWordSeen);
     window.addEventListener("lexistory:story-read", onStoryRead);
 
@@ -105,10 +95,6 @@ export default function Sidebar() {
       if (data.url) window.location.href = data.url;
     } catch { alert("Erreur, réessaie."); }
     finally { setLoading(false); }
-  }
-
-  function handleLockedStoryClick() {
-    setShowPremiumPopup(true);
   }
 
   const lvl  = getLevel(xp);
@@ -158,16 +144,13 @@ export default function Sidebar() {
           </div>
         )}
 
-        {/* Histoires passées — visible pour tous, cliquable seulement Premium */}
+        {/* Histoires passées */}
         <div className={styles.card}>
           <div className={styles.cardTitleRow}>
-  <p className={styles.cardTitle} style={{margin:0}}>📅 Histoires passées</p>
-  {!isPremium && <span className={styles.premiumTag}>Premium</span>}
-</div>
-          <button
-            className={styles.historyBtn}
-            onClick={() => setShowHistory(!showHistory)}
-          >
+            <p className={styles.cardTitle} style={{ margin: 0 }}>📅 Histoires passées</p>
+            {!isPremium && <span className={styles.premiumTag}>Premium</span>}
+          </div>
+          <button className={styles.historyBtn} onClick={() => setShowHistory(!showHistory)}>
             {showHistory ? "↑ Fermer" : "Voir les histoires →"}
           </button>
 
@@ -181,18 +164,13 @@ export default function Sidebar() {
                     key={s.slug}
                     className={`${styles.historyItem} ${isToday ? styles.historyItemActive : ""} ${!isPremium && !isToday ? styles.historyItemLocked : ""}`}
                     onClick={() => {
-                      if (!isPremium && !isToday) {
-                        handleLockedStoryClick();
-                        return;
-                      }
+                      if (!isPremium && !isToday) { setShowPremiumPopup(true); return; }
                       router.push(`/?level=${level}&day=${realIndex}`);
                     }}
                   >
                     <span className={styles.historyDot} />
                     <div className={styles.historyContent}>
-                      <span className={styles.historyDay}>
-                        {isToday ? "Aujourd'hui" : `Jour ${realIndex + 1}`}
-                      </span>
+                      <span className={styles.historyDay}>{isToday ? "Aujourd'hui" : `Jour ${realIndex + 1}`}</span>
                       <span className={styles.historyTitle}>{s.title}</span>
                     </div>
                     {!isPremium && !isToday && <span className={styles.lockIcon}>🔒</span>}
@@ -201,6 +179,15 @@ export default function Sidebar() {
               })}
             </div>
           )}
+
+          {/* Bouton catégories */}
+          <button
+            className={styles.historyBtn}
+            onClick={() => setShowCategories(true)}
+            style={{ marginTop: "8px", borderColor: "rgba(232,201,122,0.3)", color: "var(--accent)" }}
+          >
+            📚 Explorer par catégorie →
+          </button>
         </div>
 
         {!isPremium && (
@@ -215,66 +202,26 @@ export default function Sidebar() {
         )}
       </aside>
 
-      {/* Popup Premium si clic sur histoire verrouillée */}
+      {/* Popup Premium */}
       {showPremiumPopup && (
-        <div
-          onClick={() => setShowPremiumPopup(false)}
-          style={{
-            position: "fixed", inset: 0, zIndex: 300,
-            display: "flex", alignItems: "center", justifyContent: "center",
-            background: "rgba(0,0,0,0.6)", backdropFilter: "blur(4px)",
-            padding: "24px",
-          }}
-        >
-          <div
-            onClick={e => e.stopPropagation()}
-            style={{
-              background: "var(--surface)",
-              border: "1px solid rgba(232,201,122,0.3)",
-              borderRadius: "16px",
-              padding: "28px",
-              maxWidth: "340px",
-              width: "100%",
-              display: "flex",
-              flexDirection: "column",
-              gap: "12px",
-              alignItems: "center",
-              textAlign: "center",
-            }}
-          >
+        <div onClick={() => setShowPremiumPopup(false)} style={{ position: "fixed", inset: 0, zIndex: 300, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(0,0,0,0.6)", backdropFilter: "blur(4px)", padding: "24px" }}>
+          <div onClick={e => e.stopPropagation()} style={{ background: "var(--surface)", border: "1px solid rgba(232,201,122,0.3)", borderRadius: "16px", padding: "28px", maxWidth: "340px", width: "100%", display: "flex", flexDirection: "column", gap: "12px", alignItems: "center", textAlign: "center" }}>
             <div style={{ fontSize: "2rem" }}>✨</div>
-            <p style={{ fontFamily: "var(--font-playfair)", fontSize: "1.1rem", fontWeight: 700, color: "var(--text)" }}>
-              Fonctionnalité Premium
-            </p>
-            <p style={{ fontSize: "0.88rem", color: "var(--text-muted)", lineHeight: 1.6 }}>
-              Accède à toutes les histoires passées avec LexiStory Premium.
-            </p>
-            <div style={{ fontSize: "1.1rem", fontWeight: 700, color: "var(--accent)" }}>
-              1,99€ / mois — sans engagement
-            </div>
-            <button
-              style={{
-                width: "100%", padding: "12px", borderRadius: "10px",
-                background: "var(--accent)", border: "none",
-                color: "var(--bg)", fontFamily: "inherit",
-                fontSize: "0.95rem", fontWeight: 700, cursor: "pointer",
-              }}
-              onClick={() => { setShowPremiumPopup(false); handlePremium(); }}
-              disabled={loading}
-            >
+            <p style={{ fontFamily: "var(--font-playfair)", fontSize: "1.1rem", fontWeight: 700, color: "var(--text)" }}>Fonctionnalité Premium</p>
+            <p style={{ fontSize: "0.88rem", color: "var(--text-muted)", lineHeight: 1.6 }}>Accède à toutes les histoires passées avec LexiStory Premium.</p>
+            <div style={{ fontSize: "1.1rem", fontWeight: 700, color: "var(--accent)" }}>1,99€ / mois — sans engagement</div>
+            <button style={{ width: "100%", padding: "12px", borderRadius: "10px", background: "var(--accent)", border: "none", color: "var(--bg)", fontFamily: "inherit", fontSize: "0.95rem", fontWeight: 700, cursor: "pointer" }}
+              onClick={() => { setShowPremiumPopup(false); handlePremium(); }} disabled={loading}>
               {loading ? "Chargement..." : "Passer Premium →"}
             </button>
-            <button
-              style={{
-                background: "none", border: "none", color: "var(--text-dim)",
-                fontFamily: "inherit", fontSize: "0.82rem", cursor: "pointer",
-              }}
-              onClick={() => setShowPremiumPopup(false)}
-            >
-              Plus tard
-            </button>
+            <button style={{ background: "none", border: "none", color: "var(--text-dim)", fontFamily: "inherit", fontSize: "0.82rem", cursor: "pointer" }} onClick={() => setShowPremiumPopup(false)}>Plus tard</button>
           </div>
         </div>
+      )}
+
+      {/* Modal catégories */}
+      {showCategories && (
+        <CategoryModal onClose={() => setShowCategories(false)} />
       )}
     </>
   );
