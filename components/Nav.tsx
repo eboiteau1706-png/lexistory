@@ -163,7 +163,10 @@ export default function Nav() {
   return (
     <>
       <nav className={styles.nav}>
-        <a href="/" className={styles.logo}>Lexi<span>Story</span></a>
+        <a href="/" className={styles.logo}>
+  <img src="/favicon.png" alt="LexiStory" className={styles.logoImg} />
+  Lexi<span>Story</span>
+</a>
         <div className={styles.desktopRight}>
           {ready && user && (
             <div className={styles.userStats}>
