@@ -31,8 +31,7 @@
   height: 34px;
   border-radius: 6px;
   object-fit: contain;
-  background: transparent;
-  mix-blend-mode: lighten;
+  mix-blend-mode: screen;
 }
 
 .logo span { color: var(--text); font-weight: 400; font-style: italic; }
