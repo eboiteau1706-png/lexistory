@@ -20,15 +20,15 @@ interface Friendship {
 
 export default function AmisPage() {
   const supabase = createClient();
-  const [myId, setMyId]                 = useState<string | null>(null);
-  const [search, setSearch]             = useState("");
-  const [searchResult, setSearchResult] = useState<Profile | null>(null);
-  const [searching, setSearching]       = useState(false);
-  const [searchError, setSearchError]   = useState("");
-  const [friends, setFriends]           = useState<Profile[]>([]);
-  const [pending, setPending]           = useState<{ friendship: Friendship; profile: Profile }[]>([]);
-  const [sent, setSent]                 = useState<{ friendship: Friendship; profile: Profile }[]>([]);
-  const [loading, setLoading]           = useState(true);
+  const [myId, setMyId]                   = useState<string | null>(null);
+  const [search, setSearch]               = useState("");
+  const [searchResults, setSearchResults] = useState<Profile[]>([]);
+  const [searching, setSearching]         = useState(false);
+  const [searchError, setSearchError]     = useState("");
+  const [friends, setFriends]             = useState<Profile[]>([]);
+  const [pending, setPending]             = useState<{ friendship: Friendship; profile: Profile }[]>([]);
+  const [sent, setSent]                   = useState<{ friendship: Friendship; profile: Profile }[]>([]);
+  const [loading, setLoading]             = useState(true);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -90,45 +90,59 @@ export default function AmisPage() {
     if (!search.trim() || !myId) return;
     setSearching(true);
     setSearchError("");
-    setSearchResult(null);
+    setSearchResults([]);
 
+    // Recherche insensible à la casse + correspondance partielle
     const { data } = await supabase
       .from("profiles")
       .select("id, username, xp, is_premium")
-      .eq("username", search.trim())
-      .single();
+      .ilike("username", `%${search.trim()}%`)
+      .neq("id", myId)
+      .not("username", "is", null)
+      .limit(8);
 
     setSearching(false);
-    if (!data) { setSearchError("Aucun joueur trouvé avec ce pseudo."); return; }
-    if (data.id === myId) { setSearchError("C'est toi ! 😄"); return; }
 
-    const { data: existing } = await supabase
-      .from("friendships")
-      .select("id, status")
-      .or(`and(user_id.eq.${myId},friend_id.eq.${data.id}),and(user_id.eq.${data.id},friend_id.eq.${myId})`)
-      .single();
-
-    if (existing) {
-      if (existing.status === "accepted") { setSearchError("Vous êtes déjà amis !"); return; }
-      if (existing.status === "pending")  { setSearchError("Une demande est déjà en cours."); return; }
+    if (!data || data.length === 0) {
+      setSearchError("Aucun joueur trouvé avec ce pseudo.");
+      return;
     }
 
-    setSearchResult(data as Profile);
+    // Charge les friendships existantes pour filtrer
+    const { data: existingF } = await supabase
+      .from("friendships")
+      .select("id, status, user_id, friend_id")
+      .or(`user_id.eq.${myId},friend_id.eq.${myId}`);
+
+    const results = (data as Profile[]).filter(p => {
+      const existing = existingF?.find(f =>
+        (f.user_id === myId && f.friend_id === p.id) ||
+        (f.user_id === p.id && f.friend_id === myId)
+      );
+      return !existing; // cache les gens déjà amis ou en attente
+    });
+
+    if (results.length === 0) {
+      setSearchError("Tous les joueurs trouvés sont déjà dans tes amis ou en attente.");
+      return;
+    }
+
+    setSearchResults(results);
   }
 
   async function sendRequest(friendId: string) {
     if (!myId) return;
     await supabase.from("friendships").insert({ user_id: myId, friend_id: friendId, status: "pending" });
-    setSearchResult(null);
+    setSearchResults(prev => prev.filter(p => p.id !== friendId));
     setSearch("");
     loadFriendships(myId);
   }
 
   async function acceptRequest(friendshipId: string) {
-  await supabase.from("friendships").update({ status: "accepted" }).eq("id", friendshipId);
-  window.dispatchEvent(new CustomEvent("lexistory:friend-accepted")); // ← ajoute ça
-  if (myId) loadFriendships(myId);
-}
+    await supabase.from("friendships").update({ status: "accepted" }).eq("id", friendshipId);
+    window.dispatchEvent(new CustomEvent("lexistory:friend-accepted"));
+    if (myId) loadFriendships(myId);
+  }
 
   async function rejectRequest(friendshipId: string) {
     await supabase.from("friendships").delete().eq("id", friendshipId);
@@ -153,9 +167,9 @@ export default function AmisPage() {
           <div className={styles.searchRow}>
             <input
               className={styles.input}
-              placeholder="Pseudo exact..."
+              placeholder="Recherche un pseudo..."
               value={search}
-              onChange={e => setSearch(e.target.value)}
+              onChange={e => { setSearch(e.target.value); setSearchResults([]); setSearchError(""); }}
               onKeyDown={e => e.key === "Enter" && handleSearch()}
             />
             <button className={styles.btnSearch} onClick={handleSearch} disabled={searching}>
@@ -163,15 +177,19 @@ export default function AmisPage() {
             </button>
           </div>
           {searchError && <p className={styles.error}>{searchError}</p>}
-          {searchResult && (
-            <div className={styles.searchResult}>
-              <div className={styles.playerInfo}>
-                <span className={styles.playerName}>{searchResult.username}</span>
-                <span className={styles.playerLevel}>{getLevel(searchResult.xp).emoji} {getLevel(searchResult.xp).name}</span>
-              </div>
-              <button className={styles.btnAdd} onClick={() => sendRequest(searchResult.id)}>
-                Ajouter →
-              </button>
+          {searchResults.length > 0 && (
+            <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginTop: "8px" }}>
+              {searchResults.map(result => (
+                <div key={result.id} className={styles.searchResult}>
+                  <div className={styles.playerInfo}>
+                    <span className={styles.playerName}>{result.username}</span>
+                    <span className={styles.playerLevel}>{getLevel(result.xp).emoji} {getLevel(result.xp).name}</span>
+                  </div>
+                  <button className={styles.btnAdd} onClick={() => sendRequest(result.id)}>
+                    Ajouter →
+                  </button>
+                </div>
+              ))}
             </div>
           )}
         </div>
@@ -226,9 +244,9 @@ export default function AmisPage() {
                   <div className={styles.rank}>#{i + 1}</div>
                   <div className={styles.playerInfo}>
                     <a href={`/joueur/${f.username}`} className={styles.playerName} style={{ textDecoration: "none", color: "inherit" }}>
-  {f.username}
-  {f.is_premium && <span className={styles.premiumTag}>✨</span>}
-</a>
+                      {f.username}
+                      {f.is_premium && <span className={styles.premiumTag}>✨</span>}
+                    </a>
                     <div className={styles.playerLevel}>{level.emoji} {level.name} · {f.xp} XP</div>
                   </div>
                   <button className={styles.btnRemove} onClick={() => removeFriend(f.id)}>Retirer</button>
