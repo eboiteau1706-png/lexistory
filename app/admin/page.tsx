@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
 import styles from "./admin.module.css";
@@ -41,8 +41,6 @@ export default function AdminPage() {
 
   const [authorized, setAuthorized] = useState(false);
   const [activeTab, setActiveTab] = useState<Tab>("dashboard");
-
-  // Players
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [search, setSearch] = useState("");
   const [selected, setSelected] = useState<Profile | null>(null);
@@ -56,22 +54,17 @@ export default function AdminPage() {
   const [playerWords, setPlayerWords] = useState<any[]>([]);
   const [playerGames, setPlayerGames] = useState<any[]>([]);
   const [loadingDetail, setLoadingDetail] = useState(false);
-
-  // Stats
   const [stats, setStats] = useState<Stats | null>(null);
   const [topStories, setTopStories] = useState<any[]>([]);
   const [topWords, setTopWords] = useState<any[]>([]);
+  const [topWordsToday, setTopWordsToday] = useState<any[]>([]);
   const [gamesStats, setGamesStats] = useState<{ played: number; total: number } | null>(null);
-
-  // Announcements
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
   const [newMessage, setNewMessage] = useState("");
   const [newColor, setNewColor] = useState("red");
   const [newDuration, setNewDuration] = useState("1h");
   const [newCustomDate, setNewCustomDate] = useState("");
   const [postingAnn, setPostingAnn] = useState(false);
-
-  // Actions globales
   const [showResetConfirm, setShowResetConfirm] = useState(false);
   const [showPremiumAll, setShowPremiumAll] = useState(false);
   const [globalAction, setGlobalAction] = useState("");
@@ -85,6 +78,16 @@ export default function AdminPage() {
       loadAnnouncements();
     });
   }, []);
+
+  async function adminFetch(userId: string, updates: Record<string, any>) {
+    const { data: { session } } = await supabase.auth.getSession();
+    const res = await fetch("/api/admin-update-user", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ userId, requesterId: session?.user?.id, updates }),
+    });
+    return res.json();
+  }
 
   async function loadProfiles() {
     const { data } = await supabase
@@ -114,43 +117,40 @@ export default function AdminPage() {
     });
 
     // Top histoires
-    const { data: storiesData } = await supabase
-      .from("stories_read")
-      .select("story_slug")
-      .limit(500);
+    const { data: storiesData } = await supabase.from("stories_read").select("story_slug").limit(500);
     if (storiesData) {
       const counts: Record<string, number> = {};
       storiesData.forEach((s: any) => { counts[s.story_slug] = (counts[s.story_slug] || 0) + 1; });
-      const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 5);
-      setTopStories(sorted);
+      setTopStories(Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 5));
     }
 
-    // Top mots
-    const { data: wordsData } = await supabase
-      .from("words_seen")
-      .select("word")
-      .limit(1000);
+    // Top mots tous temps
+    const { data: wordsData } = await supabase.from("words_seen").select("word").limit(1000);
     if (wordsData) {
       const counts: Record<string, number> = {};
       wordsData.forEach((w: any) => { counts[w.word] = (counts[w.word] || 0) + 1; });
-      const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 10);
-      setTopWords(sorted);
+      setTopWords(Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 10));
+    }
+
+    // Top mots du jour
+    const { data: wordsTodayData } = await supabase
+      .from("words_seen")
+      .select("word")
+      .gte("seen_at", today)
+      .limit(500);
+    if (wordsTodayData) {
+      const counts: Record<string, number> = {};
+      wordsTodayData.forEach((w: any) => { counts[w.word] = (counts[w.word] || 0) + 1; });
+      setTopWordsToday(Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 10));
     }
 
     // Jeux aujourd'hui
-    const { count: gamesPlayed } = await supabase
-      .from("game_completions")
-      .select("id", { count: "exact" })
-      .eq("game_date", today);
+    const { count: gamesPlayed } = await supabase.from("game_completions").select("id", { count: "exact" }).eq("game_date", today);
     setGamesStats({ played: gamesPlayed ?? 0, total: total ?? 0 });
   }
 
   async function loadAnnouncements() {
-    const { data } = await supabase
-      .from("announcements")
-      .select("*")
-      .order("created_at", { ascending: false })
-      .limit(10);
+    const { data } = await supabase.from("announcements").select("*").order("created_at", { ascending: false }).limit(10);
     if (data) setAnnouncements(data);
   }
 
@@ -162,7 +162,6 @@ export default function AdminPage() {
     setXpDelta("");
     setMsg("");
     setLoadingDetail(true);
-
     const [stories, words, games] = await Promise.all([
       supabase.from("stories_read").select("story_slug, story_level, read_at").eq("user_id", p.id).order("read_at", { ascending: false }).limit(10),
       supabase.from("words_seen").select("word, seen_at").eq("user_id", p.id).order("seen_at", { ascending: false }).limit(10),
@@ -177,13 +176,13 @@ export default function AdminPage() {
   async function handleSave() {
     if (!selected) return;
     setSaving(true); setMsg("");
-    const updates: any = {
+    const updates = {
       xp: parseInt(editXp) || 0,
       username: editUsername.trim() || null,
       is_premium: editPremium,
     };
-    const { error } = await supabase.from("profiles").update(updates).eq("id", selected.id);
-    if (error) setMsg("❌ " + error.message);
+    const data = await adminFetch(selected.id, updates);
+    if (data.error) setMsg("❌ " + data.error);
     else {
       setMsg("✅ Sauvegardé !");
       setProfiles(prev => prev.map(p => p.id === selected.id ? { ...p, ...updates } : p));
@@ -198,8 +197,8 @@ export default function AdminPage() {
     if (isNaN(delta)) return;
     setSaving(true); setMsg("");
     const newXp = Math.max(0, (selected.xp || 0) + delta);
-    const { error } = await supabase.from("profiles").update({ xp: newXp }).eq("id", selected.id);
-    if (error) setMsg("❌ " + error.message);
+    const data = await adminFetch(selected.id, { xp: newXp });
+    if (data.error) setMsg("❌ " + data.error);
     else {
       setMsg(`✅ XP ${delta >= 0 ? "+" : ""}${delta} → ${newXp} XP`);
       setEditXp(String(newXp));
@@ -221,40 +220,36 @@ export default function AdminPage() {
   async function handleGivePremiumLifetime() {
     if (!selected) return;
     setSaving(true);
-    await supabase.from("profiles").update({ is_premium: true, stripe_customer_id: null }).eq("id", selected.id);
-    setEditPremium(true);
-    setProfiles(prev => prev.map(p => p.id === selected.id ? { ...p, is_premium: true, stripe_customer_id: null } : p));
-    setSelected(prev => prev ? { ...prev, is_premium: true, stripe_customer_id: null } : null);
-    setMsg("✅ Premium à vie accordé !");
+    const data = await adminFetch(selected.id, { is_premium: true, stripe_customer_id: null });
+    if (data.error) setMsg("❌ " + data.error);
+    else {
+      setEditPremium(true);
+      setProfiles(prev => prev.map(p => p.id === selected.id ? { ...p, is_premium: true, stripe_customer_id: null } : p));
+      setSelected(prev => prev ? { ...prev, is_premium: true, stripe_customer_id: null } : null);
+      setMsg("✅ Premium à vie accordé !");
+    }
     setSaving(false);
   }
 
   async function handleBan() {
-  if (!selected) return;
-  if (!confirm(`Supprimer définitivement ${selected.username || selected.id} ?`)) return;
-  setSaving(true);
-  const { data: { session } } = await supabase.auth.getSession();
-  const res = await fetch("/api/admin-delete-user", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ userId: selected.id, requesterId: session?.user?.id }),
-  });
-  const data = await res.json();
-  if (data.success) {
-    setProfiles(prev => prev.filter(p => p.id !== selected.id));
-    setSelected(null);
-    setMsg("");
-  } else {
-    setMsg("❌ " + data.error);
+    if (!selected) return;
+    if (!confirm(`Supprimer définitivement ${selected.username || selected.id} ?`)) return;
+    setSaving(true);
+    const { data: { session } } = await supabase.auth.getSession();
+    const res = await fetch("/api/admin-delete-user", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ userId: selected.id, requesterId: session?.user?.id }),
+    });
+    const data = await res.json();
+    if (data.success) { setProfiles(prev => prev.filter(p => p.id !== selected.id)); setSelected(null); setMsg(""); }
+    else setMsg("❌ " + data.error);
+    setSaving(false);
   }
-  setSaving(false);
-}
 
   async function handleExportCSV() {
     const rows = ["ID,Pseudo,XP,Premium,Inscription,Dernière activité"];
-    profiles.forEach(p => {
-      rows.push(`${p.id},${p.username ?? ""},${p.xp},${p.is_premium},${p.created_at ?? ""},${p.last_active_at ?? ""}`);
-    });
+    profiles.forEach(p => { rows.push(`${p.id},${p.username ?? ""},${p.xp},${p.is_premium},${p.created_at ?? ""},${p.last_active_at ?? ""}`); });
     const blob = new Blob([rows.join("\n")], { type: "text/csv" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -291,11 +286,7 @@ export default function AdminPage() {
       const hours = newDuration === "1h" ? 1 : newDuration === "6h" ? 6 : newDuration === "24h" ? 24 : newDuration === "72h" ? 72 : 1;
       expiresAt.setHours(expiresAt.getHours() + hours);
     }
-    await supabase.from("announcements").insert({
-      message: newMessage.trim(),
-      color: newColor,
-      expires_at: expiresAt.toISOString(),
-    });
+    await supabase.from("announcements").insert({ message: newMessage.trim(), color: newColor, expires_at: expiresAt.toISOString() });
     setNewMessage("");
     loadAnnouncements();
     setPostingAnn(false);
@@ -311,13 +302,10 @@ export default function AdminPage() {
     return new Date(d).toLocaleString("fr-FR", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" });
   }
 
-  function isExpired(d: string) {
-    return new Date(d) < new Date();
-  }
+  function isExpired(d: string) { return new Date(d) < new Date(); }
 
   const filtered = profiles.filter(p =>
-    (p.username ?? "").toLowerCase().includes(search.toLowerCase()) ||
-    p.id.includes(search)
+    (p.username ?? "").toLowerCase().includes(search.toLowerCase()) || p.id.includes(search)
   );
 
   if (!authorized) return null;
@@ -333,12 +321,9 @@ export default function AdminPage() {
         </div>
       </div>
 
-      {/* Tabs */}
       <div className={styles.tabs}>
         {([["dashboard", "📊 Dashboard"], ["players", "👥 Joueurs"], ["announcements", "📢 Annonces"], ["actions", "⚙️ Actions"]] as [Tab, string][]).map(([tab, label]) => (
-          <button key={tab} className={`${styles.tab} ${activeTab === tab ? styles.tabActive : ""}`} onClick={() => setActiveTab(tab)}>
-            {label}
-          </button>
+          <button key={tab} className={`${styles.tab} ${activeTab === tab ? styles.tabActive : ""}`} onClick={() => setActiveTab(tab as Tab)}>{label}</button>
         ))}
       </div>
 
@@ -353,34 +338,30 @@ export default function AdminPage() {
             <div className={styles.statCard}><div className={styles.statBig}>{stats.totalStoriesRead}</div><div className={styles.statLbl}>📖 Histoires lues</div></div>
             <div className={styles.statCard}><div className={styles.statBig}>{stats.totalWordsClicked}</div><div className={styles.statLbl}>✨ Mots consultés</div></div>
           </>)}
-          {gamesStats && (
-            <div className={styles.statCard}><div className={styles.statBig}>{gamesStats.played}</div><div className={styles.statLbl}>🎮 Jeux joués aujourd'hui</div></div>
-          )}
-          {stats && (
-            <div className={styles.statCard}>
-              <div className={styles.statBig}>{stats.totalPlayers > 0 ? Math.round((stats.premiumCount / stats.totalPlayers) * 100) : 0}%</div>
-              <div className={styles.statLbl}>💰 Taux Premium</div>
-            </div>
-          )}
+          {gamesStats && <div className={styles.statCard}><div className={styles.statBig}>{gamesStats.played}</div><div className={styles.statLbl}>🎮 Jeux joués aujourd'hui</div></div>}
+          {stats && <div className={styles.statCard}><div className={styles.statBig}>{stats.totalPlayers > 0 ? Math.round((stats.premiumCount / stats.totalPlayers) * 100) : 0}%</div><div className={styles.statLbl}>💰 Taux Premium</div></div>}
 
-          <div className={`${styles.statCardWide}`}>
+          <div className={styles.statCardWide}>
             <div className={styles.statLabel}>📖 Histoires les plus lues</div>
             {topStories.map(([slug, count]) => (
-              <div key={slug} className={styles.topRow}>
-                <span className={styles.topName}>{slug}</span>
-                <span className={styles.topVal}>{count as number} lectures</span>
-              </div>
+              <div key={slug} className={styles.topRow}><span className={styles.topName}>{slug}</span><span className={styles.topVal}>{count as number} lectures</span></div>
             ))}
           </div>
 
-          <div className={`${styles.statCardWide}`}>
-            <div className={styles.statLabel}>✨ Mots les plus consultés</div>
+          <div className={styles.statCardWide}>
+            <div className={styles.statLabel}>✨ Mots les plus consultés (tous temps)</div>
             {topWords.map(([word, count]) => (
-              <div key={word} className={styles.topRow}>
-                <span className={styles.topName}>{word}</span>
-                <span className={styles.topVal}>{count as number}×</span>
-              </div>
+              <div key={word} className={styles.topRow}><span className={styles.topName}>{word}</span><span className={styles.topVal}>{count as number}×</span></div>
             ))}
+          </div>
+
+          <div className={styles.statCardWide}>
+            <div className={styles.statLabel}>🔥 Mots les plus consultés aujourd'hui</div>
+            {topWordsToday.length === 0
+              ? <div style={{ fontSize: "0.82rem", color: "var(--text-dim)", fontStyle: "italic" }}>Aucun mot consulté aujourd'hui</div>
+              : topWordsToday.map(([word, count]) => (
+                <div key={word} className={styles.topRow}><span className={styles.topName}>{word}</span><span className={styles.topVal}>{count as number}×</span></div>
+              ))}
           </div>
         </div>
       )}
@@ -417,11 +398,8 @@ export default function AdminPage() {
                     <span className={styles.detailId}>{selected.id}</span>
                   </div>
                 </div>
-
                 {msg && <div className={styles.msg}>{msg}</div>}
-
                 <div className={styles.detailSections}>
-                  {/* Modifier */}
                   <div className={styles.detailSection}>
                     <div className={styles.detailSectionTitle}>✏️ Modifier</div>
                     <div className={styles.fields}>
@@ -446,7 +424,6 @@ export default function AdminPage() {
                     </div>
                   </div>
 
-                  {/* Actions rapides */}
                   <div className={styles.detailSection}>
                     <div className={styles.detailSectionTitle}>⚡ Actions rapides</div>
                     <div className={styles.quickActions}>
@@ -456,7 +433,6 @@ export default function AdminPage() {
                     </div>
                   </div>
 
-                  {/* Activité */}
                   {loadingDetail ? (
                     <div className={styles.loading}>Chargement activité...</div>
                   ) : (
@@ -464,13 +440,9 @@ export default function AdminPage() {
                       <div className={styles.detailSection}>
                         <div className={styles.detailSectionTitle}>📖 Dernières histoires lues</div>
                         {playerStories.length === 0 ? <div className={styles.empty2}>Aucune histoire lue</div> : playerStories.map((s, i) => (
-                          <div key={i} className={styles.activityRow}>
-                            <span>{s.story_slug}</span>
-                            <span className={styles.activityDate}>{formatDate(s.read_at)}</span>
-                          </div>
+                          <div key={i} className={styles.activityRow}><span>{s.story_slug}</span><span className={styles.activityDate}>{formatDate(s.read_at)}</span></div>
                         ))}
                       </div>
-
                       <div className={styles.detailSection}>
                         <div className={styles.detailSectionTitle}>✨ Derniers mots consultés</div>
                         <div className={styles.wordChips}>
@@ -479,15 +451,12 @@ export default function AdminPage() {
                           ))}
                         </div>
                       </div>
-
                       <div className={styles.detailSection}>
                         <div className={styles.detailSectionTitle}>🎮 Jeux récents</div>
                         {playerGames.length === 0 ? <div className={styles.empty2}>Aucun jeu joué</div> : playerGames.map((g, i) => (
                           <div key={i} className={styles.activityRow}>
                             <span>{g.game_date}</span>
-                            <span className={styles.activityDate}>
-                              {[g.def_answer && "Déf✅", g.anag_done && "Anag✅", g.cit_answer && "Cit✅"].filter(Boolean).join(" · ") || "En cours"}
-                            </span>
+                            <span className={styles.activityDate}>{[g.def_answer && "Déf✅", g.anag_done && "Anag✅", g.cit_answer && "Cit✅"].filter(Boolean).join(" · ") || "En cours"}</span>
                           </div>
                         ))}
                       </div>
@@ -507,13 +476,7 @@ export default function AdminPage() {
         <div className={styles.annSection}>
           <div className={styles.annForm}>
             <div className={styles.detailSectionTitle}>📢 Nouvelle annonce</div>
-            <textarea
-              className={styles.annTextarea}
-              placeholder="Message à afficher à tous les utilisateurs..."
-              value={newMessage}
-              onChange={e => setNewMessage(e.target.value)}
-              rows={3}
-            />
+            <textarea className={styles.annTextarea} placeholder="Message à afficher à tous les utilisateurs..." value={newMessage} onChange={e => setNewMessage(e.target.value)} rows={3} />
             <div className={styles.annOptions}>
               <div>
                 <label className={styles.label}>Couleur</label>
@@ -536,14 +499,9 @@ export default function AdminPage() {
                 </select>
               </div>
             </div>
-            {newDuration === "custom" && (
-              <input className={styles.input} type="datetime-local" value={newCustomDate} onChange={e => setNewCustomDate(e.target.value)} />
-            )}
-            <button className={styles.saveBtn} onClick={handlePostAnnouncement} disabled={postingAnn || !newMessage.trim()}>
-              {postingAnn ? "Publication..." : "📢 Publier l'annonce"}
-            </button>
+            {newDuration === "custom" && <input className={styles.input} type="datetime-local" value={newCustomDate} onChange={e => setNewCustomDate(e.target.value)} />}
+            <button className={styles.saveBtn} onClick={handlePostAnnouncement} disabled={postingAnn || !newMessage.trim()}>{postingAnn ? "Publication..." : "📢 Publier l'annonce"}</button>
           </div>
-
           <div className={styles.annList}>
             <div className={styles.detailSectionTitle}>Annonces actives & passées</div>
             {announcements.length === 0 ? <div className={styles.empty2}>Aucune annonce</div> : announcements.map(a => (
@@ -551,9 +509,7 @@ export default function AdminPage() {
                 <div className={styles.annDot} style={{ background: a.color === "red" ? "#e07070" : a.color === "orange" ? "#e09070" : a.color === "blue" ? "#7090e0" : a.color === "green" ? "#70b070" : "#e8c97a" }} />
                 <div className={styles.annContent}>
                   <div className={styles.annMessage}>{a.message}</div>
-                  <div className={styles.annMeta}>
-                    Expire : {formatDate(a.expires_at)} {isExpired(a.expires_at) && "· ⏰ Expirée"}
-                  </div>
+                  <div className={styles.annMeta}>Expire : {formatDate(a.expires_at)} {isExpired(a.expires_at) && "· ⏰ Expirée"}</div>
                 </div>
                 <button className={styles.annDelete} onClick={() => handleDeleteAnnouncement(a.id)}>✕</button>
               </div>
@@ -566,38 +522,13 @@ export default function AdminPage() {
       {activeTab === "actions" && (
         <div className={styles.actionsGrid}>
           {globalAction && <div className={styles.globalMsg}>{globalAction}</div>}
-
-          <div className={styles.actionCard}>
-            <div className={styles.actionIcon}>🔄</div>
-            <div className={styles.actionTitle}>Reset tous les XP</div>
-            <div className={styles.actionDesc}>Remet l'XP de tous les joueurs à 0. Irréversible.</div>
-            <button className={styles.actionBtnDanger} onClick={() => setShowResetConfirm(true)}>Exécuter</button>
-          </div>
-
-          <div className={styles.actionCard}>
-            <div className={styles.actionIcon}>✨</div>
-            <div className={styles.actionTitle}>Premium à tous</div>
-            <div className={styles.actionDesc}>Donne le statut Premium à tous les joueurs actuels.</div>
-            <button className={styles.actionBtn} onClick={() => setShowPremiumAll(true)}>Exécuter</button>
-          </div>
-
-          <div className={styles.actionCard}>
-            <div className={styles.actionIcon}>📥</div>
-            <div className={styles.actionTitle}>Exporter les joueurs</div>
-            <div className={styles.actionDesc}>Télécharge un fichier CSV avec tous les comptes.</div>
-            <button className={styles.actionBtn} onClick={handleExportCSV}>Télécharger CSV</button>
-          </div>
-
-          <div className={styles.actionCard}>
-            <div className={styles.actionIcon}>🔃</div>
-            <div className={styles.actionTitle}>Actualiser les stats</div>
-            <div className={styles.actionDesc}>Recharge toutes les statistiques du dashboard.</div>
-            <button className={styles.actionBtn} onClick={() => { loadStats(); loadProfiles(); setGlobalAction("✅ Stats actualisées !"); }}>Actualiser</button>
-          </div>
+          <div className={styles.actionCard}><div className={styles.actionIcon}>🔄</div><div className={styles.actionTitle}>Reset tous les XP</div><div className={styles.actionDesc}>Remet l'XP de tous les joueurs à 0. Irréversible.</div><button className={styles.actionBtnDanger} onClick={() => setShowResetConfirm(true)}>Exécuter</button></div>
+          <div className={styles.actionCard}><div className={styles.actionIcon}>✨</div><div className={styles.actionTitle}>Premium à tous</div><div className={styles.actionDesc}>Donne le statut Premium à tous les joueurs actuels.</div><button className={styles.actionBtn} onClick={() => setShowPremiumAll(true)}>Exécuter</button></div>
+          <div className={styles.actionCard}><div className={styles.actionIcon}>📥</div><div className={styles.actionTitle}>Exporter les joueurs</div><div className={styles.actionDesc}>Télécharge un fichier CSV avec tous les comptes.</div><button className={styles.actionBtn} onClick={handleExportCSV}>Télécharger CSV</button></div>
+          <div className={styles.actionCard}><div className={styles.actionIcon}>🔃</div><div className={styles.actionTitle}>Actualiser les stats</div><div className={styles.actionDesc}>Recharge toutes les statistiques du dashboard.</div><button className={styles.actionBtn} onClick={() => { loadStats(); loadProfiles(); setGlobalAction("✅ Stats actualisées !"); }}>Actualiser</button></div>
         </div>
       )}
 
-      {/* Modals confirmation */}
       {showResetConfirm && (
         <div className={styles.overlay} onClick={() => setShowResetConfirm(false)}>
           <div className={styles.modal} onClick={e => e.stopPropagation()}>
