@@ -95,8 +95,8 @@ export default function Rangs() {
               <span className={styles.xpIcon}>✨</span>
               <div>
                 <div className={styles.xpRuleName}>Premium (sans streak)</div>
-                <div className={styles.xpRuleVal}>~33 XP/jour max</div>
-                <div className={styles.xpRuleNote}>12 XP histoires + 12 XP jeux + 9 XP jeux Premium</div>
+                <div className={styles.xpRuleVal}>~36 XP/jour max</div>
+                <div className={styles.xpRuleNote}>12 XP histoires + 15 XP jeux + 9 XP jeux Premium</div>
               </div>
             </div>
           </div>
