@@ -5,7 +5,7 @@ export interface Definition {
   defSimple: string;
 }
 
-const DICT: Record<string, Definition> = {
+export const DICT: Record<string, Definition> = {
 
   "alzheimer": { etym: "Du nom du Dr Alois Alzheimer", defOrig: "Maladie neurodégénérative provoquant une perte progressive de la mémoire.", defSimple: "Une maladie du cerveau qui fait perdre la mémoire petit à petit. Elle touche surtout les personnes âgées." },
   "limbique":        { etym: "Du latin limbus, bordure", defOrig: "Relatif au système cérébral qui gère les émotions et la mémoire.", defSimple: "Une partie du cerveau qui s'occupe de nos émotions et de nos souvenirs." },
