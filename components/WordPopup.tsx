@@ -17,14 +17,30 @@ interface WiktDef {
   etym?: string;
 }
 
+interface Sense {
+  label: string;
+  etym: string;
+  defOrig: string;
+  defSimple: string;
+}
+
+interface CustomDef {
+  word: string;
+  is_group: boolean;
+  senses: Sense[];
+  story_origin: string;
+}
+
 export default function WordPopup({ word, seenCount, onClose }: Props) {
   const supabase = createClient();
   const localDef = lookup(word);
-  const [wiktDef, setWiktDef]       = useState<WiktDef | null>(null);
-  const [loading, setLoading]       = useState(false);
-  const [userId, setUserId]         = useState<string | null>(null);
-  const [isFav, setIsFav]           = useState(false);
-  const [favLoading, setFavLoading] = useState(false);
+  const [wiktDef, setWiktDef]         = useState<WiktDef | null>(null);
+  const [customDef, setCustomDef]     = useState<CustomDef | null>(null);
+  const [loading, setLoading]         = useState(false);
+  const [userId, setUserId]           = useState<string | null>(null);
+  const [isFav, setIsFav]             = useState(false);
+  const [favLoading, setFavLoading]   = useState(false);
+  const [activeSense, setActiveSense] = useState(0);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -37,15 +53,25 @@ export default function WordPopup({ word, seenCount, onClose }: Props) {
     });
   }, [word]);
 
+  // Cherche dans definitions_custom Supabase
   useEffect(() => {
-    if (localDef) return;
+    setCustomDef(null);
+    setActiveSense(0);
+    supabase.from("definitions_custom").select("*")
+      .eq("word", word.toLowerCase().trim()).maybeSingle()
+      .then(({ data }) => { if (data) setCustomDef(data); });
+  }, [word]);
+
+  // Cherche sur Wiktionnaire si pas de déf locale ni custom
+  useEffect(() => {
+    if (localDef || customDef) return;
     setLoading(true);
     setWiktDef(null);
     fetch(`/api/definition?word=${encodeURIComponent(word)}`)
       .then(r => r.json())
       .then(data => { setWiktDef(data); setLoading(false); })
       .catch(() => { setWiktDef({ found: false }); setLoading(false); });
-  }, [word, localDef]);
+  }, [word, localDef, customDef]);
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
@@ -53,9 +79,15 @@ export default function WordPopup({ word, seenCount, onClose }: Props) {
     return () => window.removeEventListener("keydown", handler);
   }, [onClose]);
 
-  const defOrig   = localDef?.defOrig   || wiktDef?.defOrig   || "";
-  const defSimple = localDef?.defSimple || "";
-  const etym      = localDef?.etym      || "";
+  // Priorité : Supabase custom > dico local > Wiktionnaire
+  const hasCustom = !!customDef && customDef.senses?.length > 0;
+  const hasLocal  = !!localDef;
+
+  const defOrig   = hasCustom ? customDef!.senses[activeSense]?.defOrig   : localDef?.defOrig   || wiktDef?.defOrig   || "";
+  const defSimple = hasCustom ? customDef!.senses[activeSense]?.defSimple : localDef?.defSimple || "";
+  const etym      = hasCustom ? customDef!.senses[activeSense]?.etym      : localDef?.etym      || "";
+
+  const multipleSenses = hasCustom && customDef!.senses.length > 1;
 
   async function toggleFav() {
     if (!userId) return;
@@ -82,21 +114,25 @@ export default function WordPopup({ word, seenCount, onClose }: Props) {
         <div className={styles.wordRow}>
           <div className={styles.word}>{word}</div>
           {userId && (
-            <button
-              className={styles.favBtn}
-              onClick={toggleFav}
-              disabled={favLoading}
-              data-active={isFav}
-              title={isFav ? "Retirer des favoris" : "Ajouter aux favoris"}
-            >
-              ⭐
-            </button>
+            <button className={styles.favBtn} onClick={toggleFav} disabled={favLoading} data-active={isFav} title={isFav ? "Retirer des favoris" : "Ajouter aux favoris"}>⭐</button>
           )}
         </div>
 
         {userId && (
           <div className={`${styles.favHint} ${isFav ? styles.favHintActive : ""}`}>
             {isFav ? "⭐ Favori ajouté — retrouve-le dans ton profil" : "Clique sur ⭐ pour mettre en favori"}
+          </div>
+        )}
+
+        {/* Onglets des sens si plusieurs */}
+        {multipleSenses && (
+          <div style={{ display: "flex", gap: "6px", flexWrap: "wrap", marginBottom: "12px" }}>
+            {customDef!.senses.map((s, i) => (
+              <button key={i} onClick={() => setActiveSense(i)}
+                style={{ padding: "4px 12px", borderRadius: "20px", border: `1px solid ${activeSense === i ? "var(--accent)" : "var(--border)"}`, background: activeSense === i ? "rgba(232,201,122,0.15)" : "var(--surface2)", color: activeSense === i ? "var(--accent)" : "var(--text-muted)", cursor: "pointer", fontFamily: "inherit", fontSize: "0.75rem", fontWeight: activeSense === i ? 700 : 400 }}>
+                {s.label || `Sens ${i + 1}`}
+              </button>
+            ))}
           </div>
         )}
 
@@ -119,7 +155,7 @@ export default function WordPopup({ word, seenCount, onClose }: Props) {
                 <div className={styles.defSimple}>{defSimple}</div>
               </div>
             )}
-            {!localDef && wiktDef?.found && (
+            {!hasCustom && !hasLocal && wiktDef?.found && (
               <div className={styles.source}>Source : Wiktionnaire</div>
             )}
           </>
@@ -137,9 +173,7 @@ export default function WordPopup({ word, seenCount, onClose }: Props) {
         )}
 
         <div className={styles.footer}>
-          <span className={styles.count}>
-            Tu as consulté <strong>{seenCount}</strong> mot(s)
-          </span>
+          <span className={styles.count}>Tu as consulté <strong>{seenCount}</strong> mot(s)</span>
           <button className={styles.btnGotIt} onClick={onClose}>Compris ! 👍</button>
         </div>
       </div>

@@ -12,63 +12,76 @@ interface Player {
 }
 
 export default function ClassementPage() {
-  const [players, setPlayers]   = useState<Player[]>([]);
-  const [friends, setFriends]   = useState<Player[]>([]);
-  const [myId, setMyId]         = useState<string | null>(null);
-  const [loading, setLoading]   = useState(true);
-  const [tab, setTab]           = useState<"global" | "amis">("global");
+  const [players, setPlayers]         = useState<Player[]>([]);
+  const [friends, setFriends]         = useState<Player[]>([]);
+  const [myId, setMyId]               = useState<string | null>(null);
+  const [loading, setLoading]         = useState(true);
+  const [tab, setTab]                 = useState<"global" | "amis">("global");
+  const [friendIds, setFriendIds]     = useState<string[]>([]);
+  const [pendingIds, setPendingIds]   = useState<string[]>([]);
+  const [addingId, setAddingId]       = useState<string | null>(null);
+  const [addMsg, setAddMsg]           = useState<Record<string, string>>({});
   const supabase = createClient();
 
   useEffect(() => {
-    // Charge le classement global
-    supabase
-      .from("profiles")
-      .select("id, username, xp, is_premium")
-      .not("username", "is", null)
-      .order("xp", { ascending: false })
-      .limit(50)
-      .then(({ data }) => {
-        setPlayers((data as Player[]) ?? []);
-        setLoading(false);
-      });
+    supabase.from("profiles").select("id, username, xp, is_premium")
+      .not("username", "is", null).order("xp", { ascending: false }).limit(50)
+      .then(({ data }) => { setPlayers((data as Player[]) ?? []); setLoading(false); });
 
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session?.user) {
         setMyId(session.user.id);
         loadFriends(session.user.id);
+        loadFriendStatus(session.user.id);
+      } else {
+        setLoading(false);
       }
     });
   }, []);
 
-  async function loadFriends(uid: string) {
-    // Récupère toutes les friendships acceptées
-    const { data: allF } = await supabase
-      .from("friendships")
-      .select("user_id, friend_id")
-      .or(`user_id.eq.${uid},friend_id.eq.${uid}`)
-      .eq("status", "accepted");
+  async function loadFriendStatus(uid: string) {
+    const { data } = await supabase.from("friendships")
+      .select("user_id, friend_id, status")
+      .or(`user_id.eq.${uid},friend_id.eq.${uid}`);
+    if (!data) return;
+    const accepted: string[] = [];
+    const pending: string[] = [];
+    data.forEach((f: any) => {
+      const otherId = f.user_id === uid ? f.friend_id : f.user_id;
+      if (f.status === "accepted") accepted.push(otherId);
+      else pending.push(otherId);
+    });
+    setFriendIds(accepted);
+    setPendingIds(pending);
+  }
 
+  async function loadFriends(uid: string) {
+    const { data: allF } = await supabase.from("friendships")
+      .select("user_id, friend_id").or(`user_id.eq.${uid},friend_id.eq.${uid}`).eq("status", "accepted");
     if (!allF || allF.length === 0) {
-      // Ajoute quand même soi-même
-      const { data: me } = await supabase
-        .from("profiles").select("id, username, xp, is_premium").eq("id", uid).single();
+      const { data: me } = await supabase.from("profiles").select("id, username, xp, is_premium").eq("id", uid).single();
       if (me) setFriends([me as Player]);
       return;
     }
-
-    // Récupère les IDs des amis
-    const friendIds = allF.map(f => f.user_id === uid ? f.friend_id : f.user_id);
-    friendIds.push(uid); // Ajoute soi-même
-
-    // Charge les profils
-    const { data: profiles } = await supabase
-      .from("profiles")
-      .select("id, username, xp, is_premium")
-      .in("id", friendIds)
-      .not("username", "is", null)
-      .order("xp", { ascending: false });
-
+    const ids = allF.map((f: any) => f.user_id === uid ? f.friend_id : f.user_id);
+    ids.push(uid);
+    const { data: profiles } = await supabase.from("profiles").select("id, username, xp, is_premium")
+      .in("id", ids).not("username", "is", null).order("xp", { ascending: false });
     setFriends((profiles as Player[]) ?? []);
+  }
+
+  async function sendFriendRequest(targetId: string, targetUsername: string) {
+    if (!myId) return;
+    setAddingId(targetId);
+    const { error } = await supabase.from("friendships").insert({ user_id: myId, friend_id: targetId, status: "pending" });
+    if (error) {
+      setAddMsg(prev => ({ ...prev, [targetId]: "❌ Erreur" }));
+    } else {
+      setPendingIds(prev => [...prev, targetId]);
+      setAddMsg(prev => ({ ...prev, [targetId]: "✅ Demande envoyée !" }));
+    }
+    setAddingId(null);
+    setTimeout(() => setAddMsg(prev => { const n = { ...prev }; delete n[targetId]; return n; }), 3000);
   }
 
   const list = tab === "global" ? players : friends;
@@ -80,18 +93,8 @@ export default function ClassementPage() {
         <h1 className={styles.title}>🏆 Classement</h1>
 
         <div className={styles.tabs}>
-          <button
-            className={`${styles.tab} ${tab === "global" ? styles.tabActive : ""}`}
-            onClick={() => setTab("global")}
-          >
-            🌍 Global
-          </button>
-          <button
-            className={`${styles.tab} ${tab === "amis" ? styles.tabActive : ""}`}
-            onClick={() => setTab("amis")}
-          >
-            👥 Amis
-          </button>
+          <button className={`${styles.tab} ${tab === "global" ? styles.tabActive : ""}`} onClick={() => setTab("global")}>🌍 Global</button>
+          <button className={`${styles.tab} ${tab === "amis" ? styles.tabActive : ""}`} onClick={() => setTab("amis")}>👥 Amis</button>
         </div>
 
         {loading ? (
@@ -99,9 +102,7 @@ export default function ClassementPage() {
         ) : (
           <>
             {myId && myRank > 0 && (
-              <div className={styles.myRank}>
-                Tu es classé <strong>#{myRank}</strong> sur {list.length} joueurs
-              </div>
+              <div className={styles.myRank}>Tu es classé <strong>#{myRank}</strong> sur {list.length} joueurs</div>
             )}
 
             <div className={styles.list}>
@@ -109,33 +110,48 @@ export default function ClassementPage() {
                 const level = getLevel(player.xp);
                 const isMe  = player.id === myId;
                 const medal = i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : null;
+                const isFriend  = friendIds.includes(player.id);
+                const isPending = pendingIds.includes(player.id);
 
                 return (
-                  <div
-                    key={player.id}
-                    className={`${styles.row} ${isMe ? styles.rowMe : ""} ${i < 3 ? styles.rowTop : ""}`}
-                  >
+                  <div key={player.id} className={`${styles.row} ${isMe ? styles.rowMe : ""} ${i < 3 ? styles.rowTop : ""}`}>
                     <div className={styles.rank}>
                       {medal || <span className={styles.rankNum}>#{i + 1}</span>}
                     </div>
                     <div className={styles.playerInfo}>
                       <a href={`/joueur/${player.username}`} className={styles.playerName} style={{ textDecoration: "none", color: "inherit" }}>
-  {player.username}
-  {player.is_premium && <span className={styles.premiumTag}>✨</span>}
-  {isMe && <span className={styles.meTag}>toi</span>}
-</a>
+                        {player.username}
+                        {player.is_premium && <span className={styles.premiumTag}>✨</span>}
+                        {isMe && <span className={styles.meTag}>toi</span>}
+                      </a>
                       <div className={styles.playerLevel}>{level.emoji} {level.name}</div>
                     </div>
-                    <div className={styles.xp}>{player.xp} XP</div>
+                    <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                      <div className={styles.xp}>{player.xp} XP</div>
+                      {myId && !isMe && (
+                        addMsg[player.id] ? (
+                          <span style={{ fontSize: "0.72rem", color: addMsg[player.id].startsWith("✅") ? "var(--green)" : "#e07070" }}>{addMsg[player.id]}</span>
+                        ) : isFriend ? (
+                          <span style={{ fontSize: "0.72rem", color: "var(--text-dim)" }}>✓ Ami</span>
+                        ) : isPending ? (
+                          <span style={{ fontSize: "0.72rem", color: "var(--text-dim)", fontStyle: "italic" }}>En attente…</span>
+                        ) : (
+                          <button
+                            onClick={() => sendFriendRequest(player.id, player.username)}
+                            disabled={addingId === player.id}
+                            style={{ padding: "3px 10px", borderRadius: "20px", border: "1px solid var(--accent)", background: "transparent", color: "var(--accent)", cursor: "pointer", fontFamily: "inherit", fontSize: "0.72rem", whiteSpace: "nowrap" }}>
+                            {addingId === player.id ? "..." : "+ Ami"}
+                          </button>
+                        )
+                      )}
+                    </div>
                   </div>
                 );
               })}
 
               {list.length === 0 && (
                 <div className={styles.empty}>
-                  {tab === "amis"
-                    ? "Ajoute des amis pour les voir ici !"
-                    : "Personne n'a encore de pseudo — sois le premier ! 🚀"}
+                  {tab === "amis" ? "Ajoute des amis pour les voir ici !" : "Personne n'a encore de pseudo — sois le premier ! 🚀"}
                 </div>
               )}
             </div>
