@@ -325,6 +325,7 @@ export default function AdminPage() {
   {([["dashboard", "📊 Dashboard"], ["players", "👥 Joueurs"], ["announcements", "📢 Annonces"], ["actions", "⚙️ Actions"]] as [Tab, string][]).map(([tab, label]) => (
     <button key={tab} className={`${styles.tab} ${activeTab === tab ? styles.tabActive : ""}`} onClick={() => setActiveTab(tab as Tab)}>{label}</button>
   ))}
+  <a href="/admin-content" className={styles.tab} style={{ textDecoration: "none", opacity: 0.8 }}>📖 Contenu</a>
 </div>
 
       {/* ── DASHBOARD ── */}
@@ -476,7 +477,6 @@ export default function AdminPage() {
         <div className={styles.annSection}>
           <div className={styles.annForm}>
             <div className={styles.detailSectionTitle}>📢 Nouvelle annonce</div>
-            <a href="/admin-content" className={styles.exportBtn}>📖 Histoires & Jeux</a>
             <textarea className={styles.annTextarea} placeholder="Message à afficher à tous les utilisateurs..." value={newMessage} onChange={e => setNewMessage(e.target.value)} rows={3} />
             <div className={styles.annOptions}>
               <div>
