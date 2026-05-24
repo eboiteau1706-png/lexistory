@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
 import styles from "../admin/admin.module.css";
+import { STORIES } from "@/lib/stories";
 
 const ADMIN_ID = "0450c58e-35b2-47e6-9600-13db5626e96d";
 
@@ -113,26 +114,40 @@ export default function AdminStoriesGames() {
   }
 
   async function openStory(date: string, level: string) {
-    const key = `${date}_${level}`;
-    if (expandedDate === date && expandedLevel === level) {
-      setExpandedDate(null); setExpandedLevel(null); return;
-    }
-    setExpandedDate(date); setExpandedLevel(level); setStoryMsg("");
-    if (!storyForms[key]) {
-      const { data } = await supabase.from("stories_custom").select("*").eq("date", date).eq("level", level).maybeSingle();
-      if (data) {
-        setStoryForms(prev => ({ ...prev, [key]: {
-          title: data.title ?? "",
-          category: data.category ?? "",
-          readTime: data.read_time ?? "3 min de lecture",
-          source: data.source ?? "",
-          paragraphs: Array.isArray(data.paragraphs) ? data.paragraphs : ["", "", "", ""],
-        }}));
-      } else {
-        setStoryForms(prev => ({ ...prev, [key]: emptyStory() }));
-      }
-    }
+  const key = `${date}_${level}`;
+  if (expandedDate === date && expandedLevel === level) {
+    setExpandedDate(null); setExpandedLevel(null); return;
   }
+  setExpandedDate(date); setExpandedLevel(level); setStoryMsg("");
+
+  const { data } = await supabase.from("stories_custom").select("*").eq("date", date).eq("level", level).maybeSingle();
+  if (data) {
+    setStoryForms(prev => ({ ...prev, [key]: {
+      title: data.title ?? "",
+      category: data.category ?? "",
+      readTime: data.read_time ?? "3 min de lecture",
+      source: data.source ?? "",
+      paragraphs: Array.isArray(data.paragraphs) ? data.paragraphs : ["", "", "", ""],
+    }}));
+  } else {
+    // Pré-remplit avec l'histoire du code si elle existe
+    const codeStory = STORIES.find(s => {
+      const ref = new Date("2026-05-17T00:00:00");
+      const paris = new Date(new Date(date + "T12:00:00").toLocaleString("en-US", { timeZone: "Europe/Paris" }));
+      const diffDays = Math.floor((paris.getTime() - ref.getTime()) / 86400000);
+      const levelStories = STORIES.filter(st => st.level === level);
+      const idx = Math.abs(diffDays) % levelStories.length;
+      return s.slug === levelStories[idx]?.slug;
+    });
+    setStoryForms(prev => ({ ...prev, [key]: {
+      title: codeStory?.title ?? "",
+      category: codeStory?.category ?? "",
+      readTime: codeStory?.readTime ?? "3 min de lecture",
+      source: codeStory?.source ?? "",
+      paragraphs: codeStory?.paragraphs ?? ["", "", "", ""],
+    }}));
+  }
+}
 
   async function saveStory(date: string, level: string) {
     const key = `${date}_${level}`;

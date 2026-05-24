@@ -322,10 +322,10 @@ export default function AdminPage() {
       </div>
 
       <div className={styles.tabs}>
-        {([["dashboard", "📊 Dashboard"], ["players", "👥 Joueurs"], ["announcements", "📢 Annonces"], ["actions", "⚙️ Actions"]] as [Tab, string][]).map(([tab, label]) => (
-          <button key={tab} className={`${styles.tab} ${activeTab === tab ? styles.tabActive : ""}`} onClick={() => setActiveTab(tab as Tab)}>{label}</button>
-        ))}
-      </div>
+  {([["dashboard", "📊 Dashboard"], ["players", "👥 Joueurs"], ["announcements", "📢 Annonces"], ["actions", "⚙️ Actions"]] as [Tab, string][]).map(([tab, label]) => (
+    <button key={tab} className={`${styles.tab} ${activeTab === tab ? styles.tabActive : ""}`} onClick={() => setActiveTab(tab as Tab)}>{label}</button>
+  ))}
+</div>
 
       {/* ── DASHBOARD ── */}
       {activeTab === "dashboard" && (
