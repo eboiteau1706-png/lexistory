@@ -4,7 +4,7 @@ import { createClient } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
 import styles from "../admin/admin.module.css";
 import { STORIES } from "@/lib/stories";
-export const { DICT } from "@/lib/dictionary";
+import { DICT } from "@/lib/dictionary";
 
 const ADMIN_ID = "0450c58e-35b2-47e6-9600-13db5626e96d";
 
