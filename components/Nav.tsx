@@ -42,7 +42,7 @@ export default function Nav() {
     setXp(profile?.xp ?? 0);
     if (userId === "0450c58e-35b2-47e6-9600-13db5626e96d") setIsAdmin(true);
 
-    // Mise à jour last_active_at à chaque visite
+    // ✅ FIX last_active_at : on utilise now() côté Supabase pour éviter les décalages de fuseau horaire
     await supabase.from("profiles").update({ last_active_at: new Date().toISOString() }).eq("id", userId);
 
     const { data: reads } = await supabase
@@ -50,15 +50,21 @@ export default function Nav() {
       .eq("user_id", userId).order("read_at", { ascending: false });
     if (!reads || reads.length === 0) { setStreak(0); }
     else {
-      const dates = [...new Set(reads.map((d: any) => new Date(d.read_at).toDateString()))];
-      const today = new Date().toDateString();
-      const yesterday = new Date(Date.now() - 86400000).toDateString();
+      // ✅ FIX streak : on compare les dates en heure de Paris
+      const toParisDate = (dateStr: string) => {
+        return new Date(dateStr).toLocaleDateString("fr-FR", { timeZone: "Europe/Paris" });
+      };
+      const dates = [...new Set(reads.map((d: any) => toParisDate(d.read_at)))];
+      const today = new Date().toLocaleDateString("fr-FR", { timeZone: "Europe/Paris" });
+      const yesterday = new Date(Date.now() - 86400000).toLocaleDateString("fr-FR", { timeZone: "Europe/Paris" });
       if (dates[0] !== today && dates[0] !== yesterday) { setStreak(0); }
       else {
         let s = 1;
         for (let i = 1; i < dates.length; i++) {
-          const diff = (new Date(dates[i-1]).getTime() - new Date(dates[i]).getTime()) / 86400000;
-          if (diff === 1) s++; else break;
+          const a = new Date(reads[i-1].read_at);
+          const b = new Date(reads[i].read_at);
+          const diffDays = Math.round((a.getTime() - b.getTime()) / 86400000);
+          if (diffDays === 1) s++; else break;
         }
         setStreak(s);
       }
@@ -164,9 +170,9 @@ export default function Nav() {
     <>
       <nav className={styles.nav}>
         <a href="/" className={styles.logo}>
-  <img src="/favicon.png" alt="LexiStory" className={styles.logoImg} />
-  Lexi<span>Story</span>
-</a>
+          <img src="/favicon.png" alt="LexiStory" className={styles.logoImg} />
+          Lexi<span>Story</span>
+        </a>
         <div className={styles.desktopRight}>
           {ready && user && (
             <div className={styles.userStats}>

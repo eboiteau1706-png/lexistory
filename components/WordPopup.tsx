@@ -31,6 +31,28 @@ interface CustomDef {
   story_origin: string;
 }
 
+// Normalise un mot : minuscules, sans accents, sans caractères spéciaux
+function normalize(str: string): string {
+  return str.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z]/g, "");
+}
+
+// Génère les variantes d'un mot pour la recherche Supabase (pluriel, féminin, etc.)
+function getVariants(word: string): string[] {
+  const w = word.toLowerCase().trim();
+  const variants = new Set<string>([w]);
+  // Sans s/x/es final
+  if (w.endsWith("es")) variants.add(w.slice(0, -2));
+  if (w.endsWith("s") || w.endsWith("x")) variants.add(w.slice(0, -1));
+  // Sans e final (masculin)
+  if (w.endsWith("e")) variants.add(w.slice(0, -1));
+  // Sans aux → al
+  if (w.endsWith("aux")) variants.add(w.slice(0, -3) + "al");
+  // Formes avec accent normalisé
+  const norm = normalize(w);
+  variants.add(norm);
+  return [...variants];
+}
+
 export default function WordPopup({ word, seenCount, onClose }: Props) {
   const supabase = createClient();
   const localDef = lookup(word);
@@ -53,13 +75,17 @@ export default function WordPopup({ word, seenCount, onClose }: Props) {
     });
   }, [word]);
 
-  // Cherche dans definitions_custom Supabase
+  // Cherche dans definitions_custom Supabase avec variantes
   useEffect(() => {
     setCustomDef(null);
     setActiveSense(0);
+    const variants = getVariants(word);
     supabase.from("definitions_custom").select("*")
-      .eq("word", word.toLowerCase().trim()).maybeSingle()
-      .then(({ data }) => { if (data) setCustomDef(data); });
+      .in("word", variants)
+      .limit(1)
+      .then(({ data }) => {
+        if (data && data.length > 0) setCustomDef(data[0]);
+      });
   }, [word]);
 
   // Cherche sur Wiktionnaire si pas de déf locale ni custom
@@ -83,9 +109,10 @@ export default function WordPopup({ word, seenCount, onClose }: Props) {
   const hasCustom = !!customDef && customDef.senses?.length > 0;
   const hasLocal  = !!localDef;
 
-  const defOrig   = hasCustom ? customDef!.senses[activeSense]?.defOrig   : localDef?.defOrig   || wiktDef?.defOrig   || "";
-  const defSimple = hasCustom ? customDef!.senses[activeSense]?.defSimple : localDef?.defSimple || "";
-  const etym      = hasCustom ? customDef!.senses[activeSense]?.etym      : localDef?.etym      || "";
+  const currentSense = hasCustom ? customDef!.senses[activeSense] : null;
+  const defOrig   = hasCustom ? (currentSense?.defOrig   || "") : (localDef?.defOrig   || wiktDef?.defOrig   || "");
+  const defSimple = hasCustom ? (currentSense?.defSimple || "") : (localDef?.defSimple || "");
+  const etym      = hasCustom ? (currentSense?.etym      || "") : (localDef?.etym      || "");
 
   const multipleSenses = hasCustom && customDef!.senses.length > 1;
 
