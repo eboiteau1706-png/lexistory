@@ -130,22 +130,26 @@ export default function AdminStoriesGames() {
       paragraphs: Array.isArray(data.paragraphs) ? data.paragraphs : ["", "", "", ""],
     }}));
   } else {
-    // Pré-remplit avec l'histoire du code si elle existe
-    const codeStory = STORIES.find(s => {
-      const ref = new Date("2026-05-17T00:00:00");
-      const paris = new Date(new Date(date + "T12:00:00").toLocaleString("en-US", { timeZone: "Europe/Paris" }));
-      const diffDays = Math.floor((paris.getTime() - ref.getTime()) / 86400000);
-      const levelStories = STORIES.filter(st => st.level === level);
-      const idx = Math.abs(diffDays) % levelStories.length;
-      return s.slug === levelStories[idx]?.slug;
-    });
-    setStoryForms(prev => ({ ...prev, [key]: {
-      title: codeStory?.title ?? "",
-      category: codeStory?.category ?? "",
-      readTime: codeStory?.readTime ?? "3 min de lecture",
-      source: codeStory?.source ?? "",
-      paragraphs: codeStory?.paragraphs ?? ["", "", "", ""],
-    }}));
+    // Pré-remplit UNIQUEMENT si l'histoire du code n'a pas encore été vue avant
+    const ref = new Date("2026-05-17T00:00:00");
+    const paris = new Date(new Date(date + "T12:00:00").toLocaleString("en-US", { timeZone: "Europe/Paris" }));
+    const diffDays = Math.floor((paris.getTime() - ref.getTime()) / 86400000);
+    const levelStories = STORIES.filter((st: any) => st.level === level);
+    const idx = Math.abs(diffDays) % levelStories.length;
+
+    // Si l'index dépasse le nombre d'histoires uniques, pas de pré-remplissage
+    if (diffDays >= levelStories.length) {
+      setStoryForms(prev => ({ ...prev, [key]: emptyStory() }));
+    } else {
+      const codeStory = levelStories[idx];
+      setStoryForms(prev => ({ ...prev, [key]: {
+        title: codeStory?.title ?? "",
+        category: codeStory?.category ?? "",
+        readTime: codeStory?.readTime ?? "3 min de lecture",
+        source: codeStory?.source ?? "",
+        paragraphs: codeStory?.paragraphs ?? ["", "", "", ""],
+      }}));
+    }
   }
 }
 
