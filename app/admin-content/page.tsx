@@ -199,10 +199,19 @@ export default function AdminStoriesGames() {
         p_cit_choice1: data.p_cit_choice1 ?? "", p_cit_choice2: data.p_cit_choice2 ?? "", p_cit_choice3: data.p_cit_choice3 ?? "", p_cit_choice4: data.p_cit_choice4 ?? "",
       });
     } else {
-      setGameForm(emptyGame());
-    }
+  // Pré-remplit seulement si dans la période unique des jeux du code
+  const ref = new Date("2026-05-17T00:00:00");
+  const paris = new Date(new Date(date + "T12:00:00").toLocaleString("en-US", { timeZone: "Europe/Paris" }));
+  const diffDays = Math.floor((paris.getTime() - ref.getTime()) / 86400000);
+  const totalGameDays = 30; // GAME_WORDS.length
+  if (diffDays >= totalGameDays) {
+    setGameForm(emptyGame());
+  } else {
+    setGameForm(emptyGame()); // pas de pré-remplissage depuis le code pour les jeux
   }
-
+}
+  }
+    
   async function saveGame(date: string) {
     setGameSaving(true); setGameMsg("");
     const { error } = await supabase.from("games_custom").upsert({
