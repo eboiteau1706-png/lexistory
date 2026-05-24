@@ -323,15 +323,17 @@ export default function AdminContent() {
           {ALL_DATES.map(date => (
             <div key={date} style={{ marginBottom: "6px" }}>
               <button onClick={() => { setExpandedDate(expandedDate === date && !expandedLevel ? null : date); setExpandedLevel(null); }}
-                style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 14px", background: "var(--surface2)", border: "1px solid var(--border)", borderRadius: "10px", cursor: "pointer", color: "var(--text)", fontFamily: "inherit" }}>
-                <span style={{ fontWeight: 600, fontSize: "0.88rem" }}>{formatDateFr(date)}</span>
-                <div style={{ display: "flex", gap: "6px", alignItems: "center" }}>
-                  {LEVELS.map(lvl => existingStories[`${date}_${lvl}`] && (
-                    <span key={lvl} style={{ fontSize: "0.65rem", padding: "2px 6px", borderRadius: "50px", background: "rgba(232,201,122,0.2)", color: "var(--accent)", border: "1px solid rgba(232,201,122,0.3)" }}>{lvl}</span>
-                  ))}
-                  <span style={{ color: "var(--text-dim)", fontSize: "0.85rem" }}>{expandedDate === date ? "↑" : "→"}</span>
-                </div>
-              </button>
+  style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 14px", background: "var(--surface2)", border: "1px solid var(--border)", borderRadius: "10px", cursor: "pointer", color: "var(--text)", fontFamily: "inherit" }}>
+  <span style={{ fontWeight: 600, fontSize: "0.88rem" }}>{formatDateFr(date)}</span>
+  <div style={{ display: "flex", gap: "6px", alignItems: "center" }}>
+    {LEVELS.map(lvl => (
+      <span key={lvl} style={{ fontSize: "0.65rem", padding: "2px 6px", borderRadius: "50px", background: existingStories[`${date}_${lvl}`] ? "rgba(100,200,100,0.2)" : "rgba(150,150,150,0.1)", color: existingStories[`${date}_${lvl}`] ? "#7dc97d" : "var(--text-dim)", border: `1px solid ${existingStories[`${date}_${lvl}`] ? "rgba(100,200,100,0.4)" : "rgba(150,150,150,0.2)"}` }}>
+        {existingStories[`${date}_${lvl}`] ? "✅" : "○"} {lvl}
+      </span>
+    ))}
+    <span style={{ color: "var(--text-dim)", fontSize: "0.85rem" }}>{expandedDate === date ? "↑" : "→"}</span>
+  </div>
+</button>
 
               {expandedDate === date && (
                 <div style={{ padding: "8px 0 0 12px", display: "flex", gap: "8px" }}>
