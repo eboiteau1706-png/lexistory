@@ -476,6 +476,7 @@ export default function AdminPage() {
         <div className={styles.annSection}>
           <div className={styles.annForm}>
             <div className={styles.detailSectionTitle}>📢 Nouvelle annonce</div>
+            <a href="/admin-content" className={styles.exportBtn}>📖 Histoires & Jeux</a>
             <textarea className={styles.annTextarea} placeholder="Message à afficher à tous les utilisateurs..." value={newMessage} onChange={e => setNewMessage(e.target.value)} rows={3} />
             <div className={styles.annOptions}>
               <div>

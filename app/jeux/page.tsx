@@ -190,11 +190,13 @@ function getLocalKeys(date: string) {
 export default function JeuxPage() {
   const supabase = createClient();
 
-  const [userId, setUserId]           = useState<string | null | undefined>(undefined);
-  const [isPremium, setIsPremium]     = useState(false);
-  const [xpGained, setXpGained]       = useState<number | null>(null);
-  const [initialized, setInitialized] = useState(false);
+  const [userId, setUserId]             = useState<string | null | undefined>(undefined);
+  const [isPremium, setIsPremium]       = useState(false);
+  const [xpGained, setXpGained]         = useState<number | null>(null);
+  const [initialized, setInitialized]   = useState(false);
   const [defPopupWord, setDefPopupWord] = useState<PopupWord | null>(null);
+  const [customGame, setCustomGame]     = useState<any>(null);
+  const [customLoaded, setCustomLoaded] = useState(false);
 
   const [defAnswer, setDefAnswer]       = useState<string | null>(null);
   const [anagLetters, setAnagLetters]   = useState<Letter[]>([]);
@@ -220,13 +222,6 @@ export default function JeuxPage() {
   let anagIdx   = shuffledForAnag[dayIdx % GAME_WORDS.length];
   if (defIdx === wordIdx) defIdx = (defIdx + 1) % GAME_WORDS.length;
   if (anagIdx === wordIdx || anagIdx === defIdx) anagIdx = (anagIdx + 2) % GAME_WORDS.length;
-  const wordOfDay    = GAME_WORDS[wordIdx];
-  const defWord      = GAME_WORDS[defIdx];
-  const anagWord     = GAME_WORDS[anagIdx];
-  const citation     = CITATIONS[getDayIndex(CITATIONS)];
-  const anagramme    = getAnagramme(anagWord.word, dayIdx * 31337);
-  const wrongChoices = GAME_WORDS.filter(w => w.word !== defWord.word).slice(0, 3).map(w => w.word);
-  const defChoices   = shuffle([defWord.word, ...wrongChoices], dayIdx * 99991);
 
   const pShuffledForWord = shuffle([...Array(PREMIUM_WORDS.length).keys()], 44444);
   const pShuffledForDef  = shuffle([...Array(PREMIUM_WORDS.length).keys()], 55555);
@@ -236,13 +231,31 @@ export default function JeuxPage() {
   let pAnagIdx   = pShuffledForAnag[pDayIdx % PREMIUM_WORDS.length];
   if (pDefIdx === pWordIdx) pDefIdx = (pDefIdx + 1) % PREMIUM_WORDS.length;
   if (pAnagIdx === pWordIdx || pAnagIdx === pDefIdx) pAnagIdx = (pAnagIdx + 2) % PREMIUM_WORDS.length;
-  const pWordOfDay    = PREMIUM_WORDS[pWordIdx];
-  const pDefWord      = PREMIUM_WORDS[pDefIdx];
-  const pAnagWord     = PREMIUM_WORDS[pAnagIdx];
-  const pCitation     = PREMIUM_CITATIONS[getDayIndex(PREMIUM_CITATIONS)];
-  const pAnagramme    = getAnagramme(pAnagWord.word, pDayIdx * 73331);
+
+  // Custom override depuis Supabase, fallback vers le code
+  const wordOfDay  = customGame?.word_of_day  ? { word: customGame.word_of_day,  def: customGame.word_of_day_def,  etym: customGame.word_of_day_etym  } : GAME_WORDS[wordIdx];
+  const defWord    = customGame?.def_word     ? { word: customGame.def_word,     def: customGame.def_word_def                                         } : GAME_WORDS[defIdx];
+  const anagWord   = customGame?.anag_word    ? { word: customGame.anag_word,    def: customGame.anag_word_def                                        } : GAME_WORDS[anagIdx];
+  const citation   = customGame?.cit_text     ? { text: customGame.cit_text,     answer: customGame.cit_answer,   choices: [customGame.cit_choice1, customGame.cit_choice2, customGame.cit_choice3, customGame.cit_choice4].filter(Boolean) } : CITATIONS[getDayIndex(CITATIONS)];
+  const anagramme  = getAnagramme(anagWord.word, dayIdx * 31337);
+  const wrongChoices = GAME_WORDS.filter(w => w.word !== defWord.word).slice(0, 3).map(w => w.word);
+  const defChoices   = customGame?.def_choice1 ? [customGame.def_choice1, customGame.def_choice2, customGame.def_choice3, customGame.def_choice4].filter(Boolean) : shuffle([defWord.word, ...wrongChoices], dayIdx * 99991);
+
+  const pWordOfDay  = customGame?.p_word_of_day ? { word: customGame.p_word_of_day, def: customGame.p_word_of_day_def, etym: customGame.p_word_of_day_etym } : PREMIUM_WORDS[pWordIdx];
+  const pDefWord    = customGame?.p_def_word    ? { word: customGame.p_def_word,    def: customGame.p_def_word_def                                          } : PREMIUM_WORDS[pDefIdx];
+  const pAnagWord   = customGame?.p_anag_word   ? { word: customGame.p_anag_word,   def: customGame.p_anag_word_def                                         } : PREMIUM_WORDS[pAnagIdx];
+  const pCitation   = customGame?.p_cit_text    ? { text: customGame.p_cit_text,    answer: customGame.p_cit_answer, choices: [customGame.p_cit_choice1, customGame.p_cit_choice2, customGame.p_cit_choice3, customGame.p_cit_choice4].filter(Boolean) } : PREMIUM_CITATIONS[getDayIndex(PREMIUM_CITATIONS)];
+  const pAnagramme   = getAnagramme(pAnagWord.word, pDayIdx * 73331);
   const pWrongChoices = PREMIUM_WORDS.filter(w => w.word !== pDefWord.word).slice(0, 3).map(w => w.word);
-  const pDefChoices   = shuffle([pDefWord.word, ...pWrongChoices], pDayIdx * 11117);
+  const pDefChoices   = customGame?.p_def_choice1 ? [customGame.p_def_choice1, customGame.p_def_choice2, customGame.p_def_choice3, customGame.p_def_choice4].filter(Boolean) : shuffle([pDefWord.word, ...pWrongChoices], pDayIdx * 11117);
+
+  // Charge les jeux custom depuis l'API
+  useEffect(() => {
+    fetch(`/api/custom-game?date=${getParisDateStr()}`)
+      .then(r => r.json())
+      .then(data => { setCustomGame(data.game ?? null); setCustomLoaded(true); })
+      .catch(() => setCustomLoaded(true));
+  }, []);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -256,7 +269,7 @@ export default function JeuxPage() {
   }, []);
 
   useEffect(() => {
-    if (userId === undefined) return;
+    if (userId === undefined || !customLoaded) return;
     if (initialized) return;
     setInitialized(true);
 
@@ -272,22 +285,22 @@ export default function JeuxPage() {
             if (data.anag_done !== null && data.anag_done !== undefined) {
               setAnagResult(data.anag_done);
               setAnagLetters([]);
-              setAnagSelected(anagWord.word.split("").map((char, i) => ({ char, id: i })));
+              setAnagSelected(anagWord.word.split("").map((char: string, i: number) => ({ char, id: i })));
             } else {
-              setAnagLetters(anagramme.split("").map((char, i) => ({ char, id: i })));
+              setAnagLetters(anagramme.split("").map((char: string, i: number) => ({ char, id: i })));
               setAnagSelected([]);
             }
             if (data.p_anag_done !== null && data.p_anag_done !== undefined) {
               setPAnagResult(data.p_anag_done);
               setPAnagLetters([]);
-              setPAnagSelected(pAnagWord.word.split("").map((char, i) => ({ char, id: i })));
+              setPAnagSelected(pAnagWord.word.split("").map((char: string, i: number) => ({ char, id: i })));
             } else {
-              setPAnagLetters(pAnagramme.split("").map((char, i) => ({ char, id: i })));
+              setPAnagLetters(pAnagramme.split("").map((char: string, i: number) => ({ char, id: i })));
               setPAnagSelected([]);
             }
           } else {
-            setAnagLetters(anagramme.split("").map((char, i) => ({ char, id: i })));
-            setPAnagLetters(pAnagramme.split("").map((char, i) => ({ char, id: i })));
+            setAnagLetters(anagramme.split("").map((char: string, i: number) => ({ char, id: i })));
+            setPAnagLetters(pAnagramme.split("").map((char: string, i: number) => ({ char, id: i })));
           }
         });
     } else {
@@ -305,21 +318,21 @@ export default function JeuxPage() {
       if (savedAnag) {
         setAnagResult(savedAnag === "true");
         setAnagLetters([]);
-        setAnagSelected(anagWord.word.split("").map((char, i) => ({ char, id: i })));
+        setAnagSelected(anagWord.word.split("").map((char: string, i: number) => ({ char, id: i })));
       } else {
-        setAnagLetters(anagramme.split("").map((char, i) => ({ char, id: i })));
+        setAnagLetters(anagramme.split("").map((char: string, i: number) => ({ char, id: i })));
         setAnagSelected([]);
       }
       if (savedPAnag) {
         setPAnagResult(savedPAnag === "true");
         setPAnagLetters([]);
-        setPAnagSelected(pAnagWord.word.split("").map((char, i) => ({ char, id: i })));
+        setPAnagSelected(pAnagWord.word.split("").map((char: string, i: number) => ({ char, id: i })));
       } else {
-        setPAnagLetters(pAnagramme.split("").map((char, i) => ({ char, id: i })));
+        setPAnagLetters(pAnagramme.split("").map((char: string, i: number) => ({ char, id: i })));
         setPAnagSelected([]);
       }
     }
-  }, [userId]);
+  }, [userId, customLoaded]);
 
   async function saveToSupabase(updates: Record<string, any>) {
     if (!userId) return;
@@ -433,20 +446,20 @@ export default function JeuxPage() {
   }
 
   function handleChoiceClick(choice: string, wordList: typeof GAME_WORDS, answered: string | null, correctWord: string, handler: (c: string) => void) {
-  if (!answered) { handler(choice); return; }
-  const localDef = lookup(choice);
-  if (localDef) {
-    setDefPopupWord({ word: choice, def: localDef.defSimple || localDef.defOrig, etym: localDef.etym });
-  } else {
-    const wordData = wordList.find(w => w.word === choice);
-    if (wordData) setDefPopupWord({ word: wordData.word, def: wordData.def, etym: wordData.etym });
+    if (!answered) { handler(choice); return; }
+    const localDef = lookup(choice);
+    if (localDef) {
+      setDefPopupWord({ word: choice, def: localDef.defSimple || localDef.defOrig, etym: localDef.etym });
+    } else {
+      const wordData = wordList.find(w => w.word === choice);
+      if (wordData) setDefPopupWord({ word: wordData.word, def: wordData.def, etym: wordData.etym });
+    }
   }
-}
 
   const citParts  = citation.text.split("***");
   const pCitParts = pCitation.text.split("***");
 
-  if (userId === undefined) {
+  if (userId === undefined || !customLoaded) {
     return (
       <div className={styles.page} style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "60vh" }}>
         <div style={{ color: "var(--text-dim)", fontSize: "0.9rem" }}>Chargement...</div>
@@ -528,24 +541,20 @@ export default function JeuxPage() {
               </div>
             </>
           ) : (
-  <>
-    {!anagResult && (
-      <div className={styles.resultOk} style={{ marginBottom: 8 }}>
-        ✅ La réponse était : <strong>{anagWord.word}</strong>
-      </div>
-    )}
-    {anagResult && (
-      <div className={styles.resultOk}>✅ Bravo ! +3 XP</div>
-    )}
-    {!anagResult && (
-      <div className={styles.anagramme} style={{ marginTop: 4 }}>
-        {anagSelected.map(l => (
-          <span key={l.id} className={styles.letter}>{l.char}</span>
-        ))}
-      </div>
-    )}
-  </>
-)}
+            <>
+              {!anagResult && (
+                <div className={styles.resultOk} style={{ marginBottom: 8 }}>
+                  ✅ La réponse était : <strong>{anagWord.word}</strong>
+                </div>
+              )}
+              {anagResult && <div className={styles.resultOk}>✅ Bravo ! +3 XP</div>}
+              {!anagResult && (
+                <div className={styles.anagramme} style={{ marginTop: 4 }}>
+                  {anagSelected.map(l => <span key={l.id} className={styles.letter}>{l.char}</span>)}
+                </div>
+              )}
+            </>
+          )}
           {!userId && <div className={styles.loginHint}>Connecte-toi pour gagner des XP !</div>}
         </div>
 
@@ -600,15 +609,15 @@ export default function JeuxPage() {
               <button key={choice}
                 className={`${styles.choiceBtn} ${pDefAnswer ? choice === pDefWord.word ? styles.correct : choice === pDefAnswer ? styles.wrong : styles.disabled : ""}`}
                 onClick={() => {
-  if (!pDefAnswer) { handlePDefAnswer(choice); return; }
-  const localDef = lookup(choice);
-  if (localDef) {
-    setDefPopupWord({ word: choice, def: localDef.defSimple || localDef.defOrig, etym: localDef.etym });
-  } else {
-    const w = PREMIUM_WORDS.find(w => w.word === choice);
-    if (w) setDefPopupWord({ word: w.word, def: w.def, etym: w.etym });
-  }
-}}>
+                  if (!pDefAnswer) { handlePDefAnswer(choice); return; }
+                  const localDef = lookup(choice);
+                  if (localDef) {
+                    setDefPopupWord({ word: choice, def: localDef.defSimple || localDef.defOrig, etym: localDef.etym });
+                  } else {
+                    const w = PREMIUM_WORDS.find(w => w.word === choice);
+                    if (w) setDefPopupWord({ word: w.word, def: w.def, etym: w.etym });
+                  }
+                }}>
                 {choice}
               </button>
             ))}
@@ -656,24 +665,20 @@ export default function JeuxPage() {
               </div>
             </>
           ) : (
-  <>
-    {!pAnagResult && (
-      <div className={styles.resultOk} style={{ marginBottom: 8 }}>
-        ✅ La réponse était : <strong>{pAnagWord.word}</strong>
-      </div>
-    )}
-    {pAnagResult && (
-      <div className={styles.resultOk}>✅ Bravo ! +3 XP</div>
-    )}
-    {!pAnagResult && (
-      <div className={styles.anagramme} style={{ marginTop: 4 }}>
-        {pAnagSelected.map(l => (
-          <span key={l.id} className={styles.letter}>{l.char}</span>
-        ))}
-      </div>
-    )}
-  </>
-)}
+            <>
+              {!pAnagResult && (
+                <div className={styles.resultOk} style={{ marginBottom: 8 }}>
+                  ✅ La réponse était : <strong>{pAnagWord.word}</strong>
+                </div>
+              )}
+              {pAnagResult && <div className={styles.resultOk}>✅ Bravo ! +3 XP</div>}
+              {!pAnagResult && (
+                <div className={styles.anagramme} style={{ marginTop: 4 }}>
+                  {pAnagSelected.map(l => <span key={l.id} className={styles.letter}>{l.char}</span>)}
+                </div>
+              )}
+            </>
+          )}
         </div>
 
         <div className={`${styles.card} ${styles.cardWide} ${styles.premiumCard}`}>
@@ -715,7 +720,6 @@ export default function JeuxPage() {
       )}
       <a href="/" className={styles.back}>← Retour aux histoires</a>
 
-      {/* ── POPUP DÉFINITION CHOIX ── */}
       {defPopupWord && (
         <div style={{ position: "fixed", inset: 0, zIndex: 300, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(0,0,0,0.6)", backdropFilter: "blur(4px)", padding: "24px" }}
           onClick={() => setDefPopupWord(null)}>
