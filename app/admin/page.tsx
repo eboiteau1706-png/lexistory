@@ -27,6 +27,7 @@ interface Announcement {
 interface Stats {
   totalPlayers: number;
   activeToday: number;
+  onlineNow: number;
   premiumCount: number;
   totalWordsClicked: number;
   totalStoriesRead: number;
@@ -98,12 +99,15 @@ export default function AdminPage() {
   }
 
   async function loadStats() {
-    const today = new Date().toISOString().slice(0, 10);
+    const parisNow   = new Date(new Date().toLocaleString("en-US", { timeZone: "Europe/Paris" }));
+    const parisToday = parisNow.toISOString().slice(0, 10);
+    const tenMinAgo  = new Date(Date.now() - 10 * 60 * 1000).toISOString();
 
     const { count: total } = await supabase.from("profiles").select("id", { count: "exact" });
     const { count: premium } = await supabase.from("profiles").select("id", { count: "exact" }).eq("is_premium", true);
-    const { count: activeToday } = await supabase.from("profiles").select("id", { count: "exact" }).gte("last_active_at", today);
-    const { count: newToday } = await supabase.from("profiles").select("id", { count: "exact" }).gte("created_at", today);
+    const { count: activeToday } = await supabase.from("profiles").select("id", { count: "exact" }).gte("last_active_at", parisToday + "T00:00:00+02:00");
+    const { count: onlineNow } = await supabase.from("profiles").select("id", { count: "exact" }).gte("last_active_at", tenMinAgo);
+    const { count: newToday } = await supabase.from("profiles").select("id", { count: "exact" }).gte("created_at", parisToday + "T00:00:00+02:00");
     const { count: wordsTotal } = await supabase.from("words_seen").select("id", { count: "exact" });
     const { count: storiesTotal } = await supabase.from("stories_read").select("id", { count: "exact" });
 
@@ -111,6 +115,7 @@ export default function AdminPage() {
       totalPlayers: total ?? 0,
       premiumCount: premium ?? 0,
       activeToday: activeToday ?? 0,
+      onlineNow: onlineNow ?? 0,
       newPlayersToday: newToday ?? 0,
       totalWordsClicked: wordsTotal ?? 0,
       totalStoriesRead: storiesTotal ?? 0,
@@ -136,7 +141,7 @@ export default function AdminPage() {
     const { data: wordsTodayData } = await supabase
       .from("words_seen")
       .select("word")
-      .gte("seen_at", today)
+      .gte("seen_at", parisToday)
       .limit(500);
     if (wordsTodayData) {
       const counts: Record<string, number> = {};
@@ -145,7 +150,7 @@ export default function AdminPage() {
     }
 
     // Jeux aujourd'hui
-    const { count: gamesPlayed } = await supabase.from("game_completions").select("id", { count: "exact" }).eq("game_date", today);
+    const { count: gamesPlayed } = await supabase.from("game_completions").select("id", { count: "exact" }).eq("game_date", parisToday);
     setGamesStats({ played: gamesPlayed ?? 0, total: total ?? 0 });
   }
 
@@ -299,7 +304,15 @@ export default function AdminPage() {
 
   function formatDate(d?: string) {
     if (!d) return "—";
-    return new Date(d).toLocaleString("fr-FR", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" });
+    return new Date(d).toLocaleString("fr-FR", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit", timeZone: "Europe/Paris" });
+  }
+
+  function activityDot(last_active_at?: string) {
+    if (!last_active_at) return <span title="Jamais actif" style={{ display: "inline-block", width: 8, height: 8, borderRadius: "50%", background: "#555", marginRight: 6 }} />;
+    const diff = Date.now() - new Date(last_active_at).getTime();
+    const color = diff < 10 * 60 * 1000 ? "#22c55e" : diff < 60 * 60 * 1000 ? "#f97316" : "#ef4444";
+    const label = diff < 10 * 60 * 1000 ? "En ligne" : diff < 60 * 60 * 1000 ? "Actif < 1h" : "Inactif";
+    return <span title={label} style={{ display: "inline-block", width: 8, height: 8, borderRadius: "50%", background: color, marginRight: 6, flexShrink: 0 }} />;
   }
 
   function isExpired(d: string) { return new Date(d) < new Date(); }
@@ -333,7 +346,8 @@ export default function AdminPage() {
         <div className={styles.dashGrid}>
           {stats && (<>
             <div className={styles.statCard}><div className={styles.statBig}>{stats.totalPlayers}</div><div className={styles.statLbl}>👥 Joueurs total</div></div>
-            <div className={styles.statCard}><div className={styles.statBig}>{stats.activeToday}</div><div className={styles.statLbl}>🟢 Actifs aujourd'hui</div></div>
+            <div className={styles.statCard}><div className={styles.statBig}>{stats.onlineNow}</div><div className={styles.statLbl}>🟢 En ligne maintenant</div></div>
+            <div className={styles.statCard}><div className={styles.statBig}>{stats.activeToday}</div><div className={styles.statLbl}>📅 Actifs aujourd'hui</div></div>
             <div className={styles.statCard}><div className={styles.statBig}>{stats.newPlayersToday}</div><div className={styles.statLbl}>🆕 Nouveaux aujourd'hui</div></div>
             <div className={styles.statCard}><div className={styles.statBig}>{stats.premiumCount}</div><div className={styles.statLbl}>✨ Premium</div></div>
             <div className={styles.statCard}><div className={styles.statBig}>{stats.totalStoriesRead}</div><div className={styles.statLbl}>📖 Histoires lues</div></div>
@@ -376,7 +390,7 @@ export default function AdminPage() {
               {filtered.map(p => (
                 <div key={p.id} className={`${styles.item} ${selected?.id === p.id ? styles.itemActive : ""}`} onClick={() => selectProfile(p)}>
                   <div className={styles.itemLeft}>
-                    <div className={styles.itemName}>{p.username || <span className={styles.noName}>sans pseudo</span>}</div>
+                    <div className={styles.itemName} style={{ display: "flex", alignItems: "center" }}>{activityDot(p.last_active_at)}{p.username || <span className={styles.noName}>sans pseudo</span>}</div>
                     <div className={styles.itemId}>{p.id.slice(0, 8)}...</div>
                   </div>
                   <div className={styles.itemRight}>
