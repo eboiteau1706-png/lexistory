@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { createClient } from "@/lib/supabase";
 import { useRouter, usePathname } from "next/navigation";
 import { getLevel, getXpProgress } from "@/lib/xp";
@@ -18,9 +18,10 @@ export default function Nav() {
   const [menuOpen, setMenuOpen]         = useState(false);
   const [pendingCount, setPendingCount] = useState(0);
   const [isAdmin, setIsAdmin]           = useState(false);
-  const supabase = createClient();
-  const router   = useRouter();
-  const pathname = usePathname();
+  const supabase  = createClient();
+  const router    = useRouter();
+  const pathname  = usePathname();
+  const userIdRef = useRef<string | null>(null);
 
   async function loadUserData(userId: string) {
     const { data: profile } = await supabase
@@ -79,14 +80,23 @@ export default function Nav() {
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null);
+      userIdRef.current = session?.user?.id ?? null;
       setReady(true);
       if (session?.user) loadUserData(session.user.id);
     });
     const { data: listener } = supabase.auth.onAuthStateChange((_e, session) => {
       setUser(session?.user ?? null);
+      userIdRef.current = session?.user?.id ?? null;
       if (session?.user) loadUserData(session.user.id);
       else { setIsPremium(false); setStreak(0); setXp(0); setPendingCount(0); setDaysLeft(null); setIsAdmin(false); }
     });
+
+    const pingInterval = setInterval(() => {
+      if (userIdRef.current) {
+        supabase.from("profiles").update({ last_active_at: new Date().toISOString() }).eq("id", userIdRef.current);
+      }
+    }, 5000);
+
     const onStoryRead = () => {
       supabase.auth.getSession().then(({ data: { session } }) => {
         if (session?.user) loadUserData(session.user.id);
@@ -101,6 +111,7 @@ export default function Nav() {
     window.addEventListener("lexistory:friend-accepted", onFriendAccepted);
     return () => {
       listener.subscription.unsubscribe();
+      clearInterval(pingInterval);
       window.removeEventListener("lexistory:story-read", onStoryRead);
       window.removeEventListener("lexistory:friend-accepted", onFriendAccepted);
     };
