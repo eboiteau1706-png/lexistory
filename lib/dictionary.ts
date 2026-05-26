@@ -1185,11 +1185,71 @@ function normalize(str: string): string {
     .replace(/[^a-z]/g, "");
 }
 
-export function lookup(word: string): Definition | null {
+// Pre-built map: normalized key \u2192 original dict key (O(1) lookups)
+const NORM_MAP: Record<string, string> = {};
+for (const key of Object.keys(DICT)) {
+  NORM_MAP[normalize(key)] = key;
+}
+
+function dictLookup(word: string): Definition | null {
   if (DICT[word]) return DICT[word];
-  const norm = normalize(word);
-  for (const key of Object.keys(DICT)) {
-    if (normalize(key) === norm) return DICT[key];
+  const key = NORM_MAP[normalize(word)];
+  return key ? DICT[key] : null;
+}
+
+// Generates inflected-form candidates to try when direct lookup fails.
+// All candidates are checked against the dict, so false positives are harmless.
+function generateCandidates(word: string): string[] {
+  const cands: string[] = [];
+  const add = (stem: string, suf: string) => { if (stem.length >= 2) cands.push(stem + suf); };
+
+  // \u2500\u2500 Adjectifs \u2500\u2500
+  if (word.endsWith('ales'))  add(word.slice(0,-4), 'al');   // fondamentales \u2192 fondamental
+  if (word.endsWith('aux'))   add(word.slice(0,-3), 'al');   // fondamentaux \u2192 fondamental
+  if (word.endsWith('ale'))   add(word.slice(0,-3), 'al');   // fondamentale \u2192 fondamental
+  if (word.endsWith('elles')) add(word.slice(0,-5), 'el');   // formelles \u2192 formel
+  if (word.endsWith('elle'))  add(word.slice(0,-4), 'el');   // formelle \u2192 formel
+  if (word.endsWith('ives'))  add(word.slice(0,-4), 'if');   // actives \u2192 actif
+  if (word.endsWith('ive'))   add(word.slice(0,-3), 'if');   // active \u2192 actif
+  if (word.endsWith('euses')) add(word.slice(0,-5), 'eux');  // heureuses \u2192 heureux
+  if (word.endsWith('euse'))  add(word.slice(0,-4), 'eux');  // heureuse \u2192 heureux
+  if (word.endsWith('i\u00e8res')) add(word.slice(0,-5), 'ier');  // premi\u00e8res \u2192 premier
+  if (word.endsWith('i\u00e8re'))  add(word.slice(0,-4), 'ier');  // premi\u00e8re \u2192 premier
+  if (word.endsWith('\u00e8res'))  add(word.slice(0,-4), 'er');   // l\u00e9g\u00e8res \u2192 l\u00e9ger
+  if (word.endsWith('\u00e8re'))   add(word.slice(0,-3), 'er');   // l\u00e9g\u00e8re \u2192 l\u00e9ger
+  // pluriel/f\u00e9minin simples (conservative: stem \u2265 3 chars)
+  if (word.length > 4 && word.endsWith('es')) cands.push(word.slice(0,-2));
+  if (word.length > 3 && word.endsWith('s'))  cands.push(word.slice(0,-1));
+
+  // \u2500\u2500 Verbes 1er groupe (-er) \u2500\u2500
+  for (const suf of ['aient','eront','erait','erez','erai','ons','ent','ais','ait','ez'] as const) {
+    if (word.endsWith(suf)) add(word.slice(0, -suf.length), 'er');
+  }
+  // Participe pass\u00e9 -\u00e9 \u2192 -er
+  for (const suf of ['\u00e9es','\u00e9e','\u00e9s','\u00e9'] as const) {
+    if (word.endsWith(suf)) add(word.slice(0, -suf.length), 'er');
+  }
+
+  // \u2500\u2500 Verbes 2e groupe (-ir, type finir) \u2500\u2500
+  for (const suf of ['issaient','issons','issez','issent','issait','issais'] as const) {
+    if (word.endsWith(suf)) add(word.slice(0, -suf.length), 'ir');
+  }
+
+  // \u2500\u2500 Verbes 3e groupe (-re, type vendre) \u2500\u2500
+  // Strat\u00e9gie: strip ending \u2192 stem + "re"  (vendez \u2192 vend \u2192 vendre)
+  for (const suf of ['aient','ent','ons','ais','ait','ez','us','s','u'] as const) {
+    if (word.endsWith(suf)) add(word.slice(0, -suf.length), 're');
+  }
+
+  return cands;
+}
+
+export function lookup(word: string): Definition | null {
+  const direct = dictLookup(word);
+  if (direct) return direct;
+  for (const candidate of generateCandidates(word)) {
+    const found = dictLookup(candidate);
+    if (found) return found;
   }
   return null;
 }
