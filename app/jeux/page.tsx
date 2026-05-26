@@ -344,8 +344,19 @@ if (data.p_anag_done === true) {
 
   async function saveToSupabase(updates: Record<string, any>) {
     if (!userId) return;
+    // Include current state for all fields so no column gets a wrong DB default on insert
     await supabase.from("game_completions").upsert(
-      { user_id: userId, game_date: todayStr, ...updates },
+      {
+        user_id: userId,
+        game_date: todayStr,
+        def_answer: defAnswer ?? null,
+        anag_done: anagResult ?? null,
+        cit_answer: citAnswer ?? null,
+        p_def_answer: pDefAnswer ?? null,
+        p_anag_done: pAnagResult ?? null,
+        p_cit_answer: pCitAnswer ?? null,
+        ...updates,
+      },
       { onConflict: "user_id,game_date" }
     );
   }
