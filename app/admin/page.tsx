@@ -307,9 +307,24 @@ export default function AdminPage() {
     loadAnnouncements();
   }
 
+  const parisFmt = new Intl.DateTimeFormat("fr-FR", {
+    day: "2-digit", month: "2-digit", year: "numeric",
+    hour: "2-digit", minute: "2-digit",
+    timeZone: "Europe/Paris",
+  });
+
   function formatDate(d?: string) {
     if (!d) return "—";
-    return new Date(d).toLocaleString("fr-FR", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit", timeZone: "Europe/Paris" });
+    return parisFmt.format(new Date(d));
+  }
+
+  function formatRelative(d?: string) {
+    if (!d) return "";
+    const diff = Date.now() - new Date(d).getTime();
+    if (diff < 60_000)  return "il y a moins d'une minute";
+    if (diff < 3600_000) return `il y a ${Math.floor(diff / 60_000)} min`;
+    if (diff < 86400_000) return `il y a ${Math.floor(diff / 3600_000)}h`;
+    return `il y a ${Math.floor(diff / 86400_000)}j`;
   }
 
   function activityDot(last_active_at?: string) {
@@ -414,7 +429,7 @@ export default function AdminPage() {
                   <h2 className={styles.detailName}>{selected.username || "Sans pseudo"}</h2>
                   <div className={styles.detailMeta}>
                     <span>🗓 Inscription : {formatDate(selected.created_at)}</span>
-                    <span>🕐 Dernière activité : {formatDate(selected.last_active_at)}</span>
+                    <span>🕐 Dernière activité : {formatDate(selected.last_active_at)} ({formatRelative(selected.last_active_at)})</span>
                     <span className={styles.detailId}>{selected.id}</span>
                   </div>
                 </div>
