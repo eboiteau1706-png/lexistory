@@ -50,6 +50,9 @@ function getVariants(word: string): string[] {
   // Formes avec accent normalisé
   const norm = normalize(w);
   variants.add(norm);
+  // Variantes apostrophe droite / courbe (groupes de mots avec contractions)
+  variants.add(w.replace(/[‘’‛ʼ]/g, "'")); // → apostrophe droite
+  variants.add(w.replace(/[‘’‛ʼ']/g, "’")); // → apostrophe courbe
   return [...variants];
 }
 

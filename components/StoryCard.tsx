@@ -3,7 +3,7 @@ import { useState, useCallback, useEffect, useRef } from "react";
 import { createClient } from "@/lib/supabase";
 import { getStoryXp, getStreakBonus } from "@/lib/xp";
 import WordPopup from "./WordPopup";
-import ClickableText, { toKey } from "./ClickableText";
+import ClickableText, { toPhrase } from "./ClickableText";
 import CategoryModal from "./CategoryModal";
 import styles from "./StoryCard.module.css";
 import type { Story } from "@/lib/stories";
@@ -38,7 +38,7 @@ export default function StoryCard({ story }: Props) {
     supabase.from("definitions_custom").select("word").eq("is_group", true)
       .then(({ data }) => {
         if (data) setGroupWords(new Set(data.map((d: any) =>
-          (d.word as string).trim().split(/\s+/).map(toKey).join(" ")
+          (d.word as string).trim().split(/\s+/).map(toPhrase).join(" ")
         )));
       });
   }, []);

@@ -20,6 +20,15 @@ export function toKey(raw: string): string {
     .toLowerCase();
 }
 
+// Like toKey but preserves contractions — used for multi-word group keys so
+// "piraha d'amazonie" stays "piraha d'amazonie" instead of "piraha amazonie".
+export function toPhrase(raw: string): string {
+  return raw
+    .replace(PUNCT, "")
+    .replace(/[''‛ʼ]/g, "'")
+    .toLowerCase();
+}
+
 export default function ClickableText({ text, seenWords, onWordClick, groupWords }: Props) {
   const rawTokens = text.split(/(\s+)/);
 
@@ -36,7 +45,7 @@ export default function ClickableText({ text, seenWords, onWordClick, groupWords
     }
 
     // Essaie de former une expression multi-mots (jusqu'à 4 mots) pour tout token
-    let combinedKey = toKey(token);
+    let combinedKey = toPhrase(token);
     let displayCombined = token;
     let j = i + 1;
     let bestMatchKey = "";
@@ -49,7 +58,7 @@ export default function ClickableText({ text, seenWords, onWordClick, groupWords
       if (/^\s+$/.test(nextToken)) { j++; continue; }
       const space = rawTokens[j - 1]?.match(/^\s+$/) ? rawTokens[j - 1] : " ";
       wordCount++;
-      combinedKey = combinedKey + " " + toKey(nextToken);
+      combinedKey = combinedKey + " " + toPhrase(nextToken);
       displayCombined = displayCombined + space + nextToken;
       if (lookup(combinedKey) || groupWords?.has(combinedKey)) {
         bestMatchKey = combinedKey;
