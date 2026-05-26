@@ -28,10 +28,18 @@ export default function StoryCard({ story }: Props) {
   const [alreadyCompleted, setAlreadyCompleted] = useState(false);
   const [showInfo, setShowInfo]                 = useState(false);
   const [showCategory, setShowCategory]         = useState(false);
+  const [groupWords, setGroupWords]             = useState<Set<string>>(new Set());
   const doneRef        = useRef(false);
   const intervalRef    = useRef<NodeJS.Timeout | null>(null);
   const userReadyRef   = useRef(false); // true only when the logged-in user's own timer reached 100
   const supabase       = createClient();
+
+  useEffect(() => {
+    supabase.from("definitions_custom").select("word").eq("is_group", true)
+      .then(({ data }) => {
+        if (data) setGroupWords(new Set(data.map((d: any) => (d.word as string).toLowerCase().trim())));
+      });
+  }, []);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -266,7 +274,7 @@ export default function StoryCard({ story }: Props) {
         <div className={styles.body}>
           {story.paragraphs.map((p, i) => (
             <p key={i}>
-              <ClickableText text={p} seenWords={seenWords} onWordClick={handleWordClick} />
+              <ClickableText text={p} seenWords={seenWords} onWordClick={handleWordClick} groupWords={groupWords} />
             </p>
           ))}
         </div>

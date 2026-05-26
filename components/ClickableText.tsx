@@ -6,6 +6,7 @@ interface Props {
   text: string;
   seenWords: Set<string>;
   onWordClick: (word: string) => void;
+  groupWords?: Set<string>;
 }
 
 const PUNCT = /^[«».,;:!?()'"…—–’“”'\-]+|[«».,;:!?()'"…—–’“”'\-]+$/g;
@@ -18,7 +19,7 @@ function toKey(raw: string): string {
     .toLowerCase();
 }
 
-export default function ClickableText({ text, seenWords, onWordClick }: Props) {
+export default function ClickableText({ text, seenWords, onWordClick, groupWords }: Props) {
   const rawTokens = text.split(/(\s+)/);
 
   const groups: { display: string; key: string; isSpace: boolean }[] = [];
@@ -49,7 +50,7 @@ export default function ClickableText({ text, seenWords, onWordClick }: Props) {
       wordCount++;
       combinedKey = combinedKey + " " + toKey(nextToken);
       displayCombined = displayCombined + space + nextToken;
-      if (lookup(combinedKey)) {
+      if (lookup(combinedKey) || groupWords?.has(combinedKey)) {
         bestMatchKey = combinedKey;
         bestDisplay = displayCombined;
         bestJ = j;
