@@ -12,9 +12,10 @@ interface Props {
 const PUNCT = /^[«».,;:!?()'"…—–’“”'\-]+|[«».,;:!?()'"…—–’“”'\-]+$/g;
 const CONTRACTION = /^[ldmjnstcLDMJNSTC]['’']/i;
 
-function toKey(raw: string): string {
+export function toKey(raw: string): string {
   return raw
     .replace(PUNCT, "")
+    .replace(/[''‛ʼ]/g, "'")
     .replace(CONTRACTION, "")
     .toLowerCase();
 }
