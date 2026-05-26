@@ -78,6 +78,11 @@ export default function AdminPage() {
       loadStats();
       loadAnnouncements();
     });
+    const refreshInterval = setInterval(() => {
+      loadProfiles();
+      loadStats();
+    }, 8000);
+    return () => clearInterval(refreshInterval);
   }, []);
 
   async function adminFetch(userId: string, updates: Record<string, any>) {
