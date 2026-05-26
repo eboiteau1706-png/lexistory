@@ -282,22 +282,30 @@ export default function JeuxPage() {
             if (data.cit_answer)   setCitAnswer(data.cit_answer);
             if (data.p_def_answer) setPDefAnswer(data.p_def_answer);
             if (data.p_cit_answer) setPCitAnswer(data.p_cit_answer);
-            if (data.anag_done !== null && data.anag_done !== undefined) {
-              setAnagResult(data.anag_done);
-              setAnagLetters([]);
-              setAnagSelected(anagWord.word.split("").map((char: string, i: number) => ({ char, id: i })));
-            } else {
-              setAnagLetters(anagramme.split("").map((char: string, i: number) => ({ char, id: i })));
-              setAnagSelected([]);
-            }
-            if (data.p_anag_done !== null && data.p_anag_done !== undefined) {
-              setPAnagResult(data.p_anag_done);
-              setPAnagLetters([]);
-              setPAnagSelected(pAnagWord.word.split("").map((char: string, i: number) => ({ char, id: i })));
-            } else {
-              setPAnagLetters(pAnagramme.split("").map((char: string, i: number) => ({ char, id: i })));
-              setPAnagSelected([]);
-            }
+            if (data.anag_done === true) {
+  setAnagResult(true);
+  setAnagLetters([]);
+  setAnagSelected(anagWord.word.split("").map((char: string, i: number) => ({ char, id: i })));
+} else if (data.anag_done === false) {
+  setAnagResult(false);
+  setAnagLetters([]);
+  setAnagSelected(anagWord.word.split("").map((char: string, i: number) => ({ char, id: i })));
+} else {
+  setAnagLetters(anagramme.split("").map((char: string, i: number) => ({ char, id: i })));
+  setAnagSelected([]);
+}
+if (data.p_anag_done === true) {
+  setPAnagResult(true);
+  setPAnagLetters([]);
+  setPAnagSelected(pAnagWord.word.split("").map((char: string, i: number) => ({ char, id: i })));
+} else if (data.p_anag_done === false) {
+  setPAnagResult(false);
+  setPAnagLetters([]);
+  setPAnagSelected(pAnagWord.word.split("").map((char: string, i: number) => ({ char, id: i })));
+} else {
+  setPAnagLetters(pAnagramme.split("").map((char: string, i: number) => ({ char, id: i })));
+  setPAnagSelected([]);
+}
           } else {
             setAnagLetters(anagramme.split("").map((char: string, i: number) => ({ char, id: i })));
             setPAnagLetters(pAnagramme.split("").map((char: string, i: number) => ({ char, id: i })));
