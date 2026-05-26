@@ -313,14 +313,20 @@ export default function AdminPage() {
     timeZone: "Europe/Paris",
   });
 
+  function parseUTC(d: string): Date {
+    const s = d.replace(" ", "T");
+    if (!s.endsWith("Z") && !/[+-]\d{2}:\d{2}$/.test(s)) return new Date(s + "Z");
+    return new Date(s);
+  }
+
   function formatDate(d?: string) {
     if (!d) return "—";
-    return parisFmt.format(new Date(d));
+    return parisFmt.format(parseUTC(d));
   }
 
   function formatRelative(d?: string) {
     if (!d) return "";
-    const diff = Date.now() - new Date(d).getTime();
+    const diff = Date.now() - parseUTC(d).getTime();
     if (diff < 60_000)  return "il y a moins d'une minute";
     if (diff < 3600_000) return `il y a ${Math.floor(diff / 60_000)} min`;
     if (diff < 86400_000) return `il y a ${Math.floor(diff / 3600_000)}h`;
@@ -329,7 +335,7 @@ export default function AdminPage() {
 
   function activityDot(last_active_at?: string) {
     if (!last_active_at) return <span title="Jamais actif" style={{ display: "inline-block", width: 8, height: 8, borderRadius: "50%", background: "#555", marginRight: 6 }} />;
-    const diff = Date.now() - new Date(last_active_at).getTime();
+    const diff = Date.now() - parseUTC(last_active_at).getTime();
     const color = diff < 10 * 1000 ? "#22c55e" : diff < 60 * 60 * 1000 ? "#f97316" : "#ef4444";
     const label = diff < 10 * 1000 ? "En ligne" : diff < 60 * 60 * 1000 ? "Actif < 1h" : "Inactif";
     return <span title={label} style={{ display: "inline-block", width: 8, height: 8, borderRadius: "50%", background: color, marginRight: 6, flexShrink: 0 }} />;
