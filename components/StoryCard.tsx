@@ -32,6 +32,7 @@ export default function StoryCard({ story }: Props) {
   const doneRef        = useRef(false);
   const intervalRef    = useRef<NodeJS.Timeout | null>(null);
   const userReadyRef   = useRef(false); // true only when the logged-in user's own timer reached 100
+  const pausedRef      = useRef(false);
   const supabase       = createClient();
 
   useEffect(() => {
@@ -53,6 +54,13 @@ export default function StoryCard({ story }: Props) {
     });
   }, []);
 
+  // Pause timer when tab is hidden
+  useEffect(() => {
+    const onVisibility = () => { pausedRef.current = document.hidden; };
+    document.addEventListener("visibilitychange", onVisibility);
+    return () => document.removeEventListener("visibilitychange", onVisibility);
+  }, []);
+
   useEffect(() => {
     setSeenWords(new Set());
     setActiveWord(null);
@@ -72,6 +80,7 @@ export default function StoryCard({ story }: Props) {
     if (!userId) {
       if (savedPct < 100) {
         intervalRef.current = setInterval(() => {
+          if (pausedRef.current) return;
           setReadPct(prev => {
             const next = prev >= 100 ? 100 : prev + 1;
             localStorage.setItem(getProgressKey(story.slug, null), String(next));
@@ -102,6 +111,7 @@ export default function StoryCard({ story }: Props) {
           localStorage.removeItem(getProgressKey(story.slug, userId));
           setReadPct(0);
           intervalRef.current = setInterval(() => {
+            if (pausedRef.current) return;
             setReadPct(prev => {
               const next = prev >= 100 ? 100 : prev + 1;
               localStorage.setItem(getProgressKey(story.slug, userId), String(next));
@@ -111,6 +121,7 @@ export default function StoryCard({ story }: Props) {
           }, 600);
         } else if (savedPct < 100) {
           intervalRef.current = setInterval(() => {
+            if (pausedRef.current) return;
             setReadPct(prev => {
               const next = prev >= 100 ? 100 : prev + 1;
               localStorage.setItem(getProgressKey(story.slug, userId), String(next));
