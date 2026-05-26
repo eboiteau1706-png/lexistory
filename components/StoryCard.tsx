@@ -28,9 +28,10 @@ export default function StoryCard({ story }: Props) {
   const [alreadyCompleted, setAlreadyCompleted] = useState(false);
   const [showInfo, setShowInfo]                 = useState(false);
   const [showCategory, setShowCategory]         = useState(false);
-  const doneRef     = useRef(false);
-  const intervalRef = useRef<NodeJS.Timeout | null>(null);
-  const supabase    = createClient();
+  const doneRef        = useRef(false);
+  const intervalRef    = useRef<NodeJS.Timeout | null>(null);
+  const userReadyRef   = useRef(false); // true only when the logged-in user's own timer reached 100
+  const supabase       = createClient();
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -48,6 +49,7 @@ export default function StoryCard({ story }: Props) {
     setXpGained(null);
     setAlreadyCompleted(false);
     doneRef.current = false;
+    userReadyRef.current = false;
     if (intervalRef.current) {
       clearInterval(intervalRef.current);
       intervalRef.current = null;
@@ -93,7 +95,7 @@ export default function StoryCard({ story }: Props) {
             setReadPct(prev => {
               const next = prev >= 100 ? 100 : prev + 1;
               localStorage.setItem(getProgressKey(story.slug, userId), String(next));
-              if (next >= 100 && intervalRef.current) clearInterval(intervalRef.current);
+              if (next >= 100) { userReadyRef.current = true; if (intervalRef.current) clearInterval(intervalRef.current); }
               return next;
             });
           }, 600);
@@ -102,7 +104,7 @@ export default function StoryCard({ story }: Props) {
             setReadPct(prev => {
               const next = prev >= 100 ? 100 : prev + 1;
               localStorage.setItem(getProgressKey(story.slug, userId), String(next));
-              if (next >= 100 && intervalRef.current) clearInterval(intervalRef.current);
+              if (next >= 100) { userReadyRef.current = true; if (intervalRef.current) clearInterval(intervalRef.current); }
               return next;
             });
           }, 600);
@@ -118,7 +120,7 @@ export default function StoryCard({ story }: Props) {
   }, [story.slug, userId]);
 
   useEffect(() => {
-    if (readPct < 100 || !userId || doneRef.current || alreadyCompleted) return;
+    if (readPct < 100 || !userId || doneRef.current || alreadyCompleted || !userReadyRef.current) return;
     doneRef.current = true;
 
     const markRead = async () => {
