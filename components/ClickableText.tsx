@@ -53,7 +53,7 @@ export default function ClickableText({ text, seenWords, onWordClick, groupWords
     let bestJ = i;
     let wordCount = 1;
 
-    while (j < rawTokens.length && wordCount < 4) {
+    while (j < rawTokens.length && wordCount < 10) {
       const nextToken = rawTokens[j];
       if (/^\s+$/.test(nextToken)) { j++; continue; }
       const space = rawTokens[j - 1]?.match(/^\s+$/) ? rawTokens[j - 1] : " ";
