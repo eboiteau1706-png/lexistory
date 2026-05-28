@@ -56,12 +56,6 @@ function getVariants(word: string): string[] {
   return [...variants];
 }
 
-const BADGE: Record<NonNullable<Source>, { label: string; color: string }> = {
-  dictionnaire: { label: "Dictionnaire", color: "#888" },
-  cache:        { label: "Cache",         color: "#22c55e" },
-  api:          { label: "Claude AI",     color: "#f97316" },
-  limit:        { label: "",              color: "" },
-};
 
 export default function WordPopup({ word, seenCount, onClose }: Props) {
   const supabase = createClient();
@@ -164,7 +158,7 @@ export default function WordPopup({ word, seenCount, onClose }: Props) {
   const defSimple     = currentSense?.defSimple ?? "";
   const etym          = currentSense?.etym      ?? "";
   const multipleSenses = senses.length > 1;
-  const badge         = source ? BADGE[source] : null;
+
 
   async function toggleFav() {
     if (!userId) return;
@@ -195,14 +189,7 @@ export default function WordPopup({ word, seenCount, onClose }: Props) {
         )}
 
         <div className={styles.wordRow}>
-          <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
-            <div className={styles.word}>{word}</div>
-            {badge && badge.label && (
-              <span style={{ fontSize: "0.65rem", fontWeight: 700, padding: "2px 7px", borderRadius: "50px", background: `${badge.color}22`, border: `1px solid ${badge.color}66`, color: badge.color, letterSpacing: "0.5px" }}>
-                {badge.label}
-              </span>
-            )}
-          </div>
+          <div className={styles.word}>{word}</div>
           {userId && (
             <button className={styles.favBtn} onClick={toggleFav} disabled={favLoading} data-active={isFav} title={isFav ? "Retirer des favoris" : "Ajouter aux favoris"}>⭐</button>
           )}
