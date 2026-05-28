@@ -1,133 +1,84 @@
 import { NextRequest, NextResponse } from "next/server";
+import { createClient } from "@supabase/supabase-js";
+import Anthropic from "@anthropic-ai/sdk";
 
-async function fetchWikt(word: string): Promise<string | null> {
+const supabaseAdmin = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
+);
+
+const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+
+export async function POST(request: NextRequest) {
   try {
-    const normalized = word.normalize("NFC");
-    const url = `https://fr.wiktionary.org/w/api.php?action=query&titles=${encodeURIComponent(normalized)}&prop=revisions&rvprop=content&format=json&formatversion=2`;
-    const res = await fetch(url, {
-      headers: { "User-Agent": "LexiStory/1.0 (contact: e.boiteau1706@gmail.com)" },
-      next: { revalidate: 3600 }
+    const { raw, key }: { raw: string; key: string } = await request.json();
+
+    // A) Cache lookup
+    const { data: cached } = await supabaseAdmin
+      .from("definitions_cache")
+      .select("result")
+      .eq("word_key", key)
+      .maybeSingle();
+
+    if (cached) {
+      return NextResponse.json({ source: "cache", result: cached.result });
+    }
+
+    // B) Monthly usage cap
+    const month = new Date().toISOString().slice(0, 7);
+
+    const { data: usage } = await supabaseAdmin
+      .from("api_usage")
+      .select("call_count")
+      .eq("month", month)
+      .maybeSingle();
+
+    if (!usage) {
+      await supabaseAdmin
+        .from("api_usage")
+        .insert({ month, call_count: 0 });
+    } else if (usage.call_count >= 1600) {
+      return NextResponse.json({ source: "limit", result: null });
+    }
+
+    // C) Anthropic API call
+    const prompt = `Tu es un dictionnaire intelligent intégré dans une application de lecture française.
+L'utilisateur a sélectionné : ${raw} (forme normalisée : ${key})
+Analyse intelligemment : si nom propre → biographie courte, si mot conjugué → ramène à l'infinitif, si pluriel → ramène au singulier, si groupe de mots → traite comme une unité, si plusieurs sens → liste tous les sens.
+Fournis : étymologie si disponible (une seule fois), pour chaque sens : définition officielle courte + définition simplifiée accessible à un enfant de 10 ans.
+Réponds UNIQUEMENT en JSON valide sans markdown ni backticks.
+Format : { forme_base: string, type: string, etymologie: string, sens: [{ label: string, officielle: string, simplifiee: string }] }`;
+
+    const message = await anthropic.messages.create({
+      model: "claude-sonnet-4-20250514",
+      max_tokens: 1000,
+      messages: [{ role: "user", content: prompt }],
     });
-    if (!res.ok) return null;
-    const data = await res.json();
-    const page = data.query?.pages?.[0];
-    if (!page || page.missing) return null;
 
-    const content = page.revisions?.[0]?.content || "";
-    const lines = content.split("\n");
-
-    for (const line of lines) {
-      if (line.startsWith("# ") && !line.startsWith("## ")) {
-        const clean = line
-          .replace(/^# /, "")
-          .replace(/\[\[([^\]|]+)\|?[^\]]*\]\]/g, "$1")
-          .replace(/\{\{[^}]*\}\}/g, "")
-          .replace(/'{2,3}/g, "")
-          .replace(/<[^>]*>/g, "")
-          .trim();
-        if (clean.length > 5) {
-          if (clean.toLowerCase().includes("chiffre romain")) continue;
-          if (clean.toLowerCase().includes("lettre") && clean.length < 50) continue;
-          if (clean.toLowerCase().includes("alphabet")) continue;
-          if (clean.toLowerCase().includes("synonyme de")) continue;
-          if (clean.toLowerCase().startsWith("voir ")) continue;
-          return clean;
-        }
-      }
-    }
-    return null;
-  } catch { return null; }
-}
-
-function extractBaseWord(def: string): string | null {
-  const patterns = [
-    /^([\w\u00C0-\u017E]+)\.$/, // "évènement." → "évènement"
-    /pluriel de [«"']?([\w\u00C0-\u017E]+)[»"']?/i,
-    /f[ée]minin(?:\s+pluriel)? de [«"']?([\w\u00C0-\u017E]+)[»"']?/i,
-    /action de [«"']?([\w\u00C0-\u017E]+)[»"']?/i,
-    /participe (?:pass[ée]|pr[ée]sent) de [«"']?([\w\u00C0-\u017E]+)[»"']?/i,
-    /personne .+ de [«"']?([\w\u00C0-\u017E]+)[»"']?/i,
-    /forme .+ (?:du verbe|de) [«"']?([\w\u00C0-\u017E]+)[»"']?/i,
-    /du verbe [«"']?([\w\u00C0-\u017E]+)[»"']?/i,
-  ];
-  for (const p of patterns) {
-    const m = def.match(p);
-    if (m?.[1]) return m[1];
-  }
-  return null;
-}
-
-function getVariants(word: string): string[] {
-  const w = word.toLowerCase();
-  const variants = [w];
-
-  // Sans accents
-  const withoutAccents = w.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-  if (withoutAccents !== w) variants.push(withoutAccents);
-
-  // Sans accents ET sans s final
-  if (withoutAccents.endsWith("s") && withoutAccents.length > 3) {
-    variants.push(withoutAccents.slice(0, -1));
-  }
-  if (withoutAccents.endsWith("ments")) {
-    variants.push(withoutAccents.slice(0, -1)); // evenements → evenement
-  }
-
-  if (w.endsWith("eulent")) variants.push(w.slice(0, -6) + "oir");
-  if (w.endsWith("ulent"))  variants.push(w.slice(0, -5) + "oir");
-  if (w.endsWith("ient"))   variants.push(w.slice(0, -4) + "ir", w.slice(0, -4) + "enir");
-  if (w.endsWith("vent"))   variants.push(w.slice(0, -4) + "ir");
-  if (w.endsWith("ont"))    variants.push(w.slice(0, -3) + "ir", w.slice(0, -3) + "re");
-  if (w.endsWith("aient"))  variants.push(w.slice(0, -5) + "er", w.slice(0, -5) + "re");
-  if (w.endsWith("ons"))    variants.push(w.slice(0, -3) + "er");
-  if (w.endsWith("ez"))     variants.push(w.slice(0, -2) + "er");
-  if (w.endsWith("ait"))    variants.push(w.slice(0, -3) + "er", w.slice(0, -3) + "re");
-  if (w.endsWith("ant"))    variants.push(w.slice(0, -3) + "er", w.slice(0, -3) + "re");
-  if (w.endsWith("ent"))    variants.push(w.slice(0, -3) + "er", w.slice(0, -3) + "re");
-  if (w.endsWith("és"))     variants.push(w.slice(0, -2) + "er", w.slice(0, -1));
-  if (w.endsWith("ées"))    variants.push(w.slice(0, -3) + "er");
-  if (w.endsWith("ée"))     variants.push(w.slice(0, -2) + "er");
-  if (w.endsWith("ué"))     variants.push(w.slice(0, -2) + "uer");
-  if (w.endsWith("ié"))     variants.push(w.slice(0, -2) + "ier");
-  if (w.endsWith("aux"))    variants.push(w.slice(0, -3) + "al");
-  if (w.endsWith("eaux"))   variants.push(w.slice(0, -4) + "eau");
-  if (w.endsWith("s") && w.length > 3) variants.push(w.slice(0, -1));
-  if (w.endsWith("x") && w.length > 3) variants.push(w.slice(0, -1));
-  if (w.endsWith("ves"))    variants.push(w.slice(0, -3) + "f");
-  if (w.endsWith("ve"))     variants.push(w.slice(0, -2) + "f");
-  if (w.endsWith("nne"))    variants.push(w.slice(0, -2));
-  if (w.endsWith("nnes"))   variants.push(w.slice(0, -3));
-
-  return [...new Set(variants)].filter(v => v.length > 2);
-}
-
-export async function GET(request: NextRequest) {
-  const { searchParams } = new URL(request.url);
-  const word = searchParams.get("word");
-  if (!word) return NextResponse.json({ error: "Mot manquant" }, { status: 400 });
-
-  try {
-    const variants = getVariants(word);
-
-    for (const variant of variants) {
-      let def = await fetchWikt(variant);
-      if (!def) continue;
-
-      for (let i = 0; i < 3; i++) {
-        const base = extractBaseWord(def);
-        if (!base) break;
-        const baseDef = await fetchWikt(base);
-        if (baseDef) def = baseDef;
-        else break;
-      }
-
-      if (extractBaseWord(def)) continue;
-
-      return NextResponse.json({ found: true, word, defOrig: def });
+    const textBlock = message.content.find((b) => b.type === "text");
+    if (!textBlock || textBlock.type !== "text") {
+      return NextResponse.json({ error: "No text response" }, { status: 500 });
     }
 
-    return NextResponse.json({ found: false });
-  } catch {
-    return NextResponse.json({ found: false });
+    const result = JSON.parse(textBlock.text);
+
+    // D) Save to cache
+    await supabaseAdmin
+      .from("definitions_cache")
+      .insert({ word_key: key, raw, result });
+
+    // E) Increment call count
+    await supabaseAdmin
+      .from("api_usage")
+      .upsert(
+        { month, call_count: (usage?.call_count ?? 0) + 1 },
+        { onConflict: "month" }
+      );
+
+    // F) Return result
+    return NextResponse.json({ source: "api", result });
+  } catch (err) {
+    console.error("definition API error:", err);
+    return NextResponse.json({ error: "Internal error" }, { status: 500 });
   }
 }
