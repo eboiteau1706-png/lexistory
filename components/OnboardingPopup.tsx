@@ -13,7 +13,12 @@ const STEPS = [
   {
     emoji: "💡",
     title: "Clique sur les mots",
-    desc: "Chaque mot de l'histoire est cliquable. Tape dessus pour voir sa définition, son étymologie et un exemple. Les mots que tu as vus passent en vert — tes mots appris s'accumulent dans ton profil.",
+    desc: "Clique sur n'importe quel mot pour obtenir sa définition complète : étymologie, définition officielle et explication simple. Version gratuite : 3 définitions par histoire par jour. Les mots consultés s'accumulent dans ton profil.",
+  },
+  {
+    emoji: "⭐",
+    title: "Notes et personnalisation",
+    desc: "Note les histoires avec les étoiles en haut de chaque article — les mieux notées remontent dans les catégories. Personnalise ton avatar dans ton profil pour te démarquer dans le classement.",
   },
   {
     emoji: "🎮",
@@ -26,23 +31,17 @@ const STEPS = [
     desc: "",
     isPremium: true,
     perks: [
+      "🔍 Définitions illimitées + accès à toutes les fonctionnalités",
       "📅 Accès à toutes les histoires passées",
       "⚡ Boost XP ×1,5 — +4 XP par histoire au lieu de 3",
-      "📊 Stats avancées : rang, record, assiduité",
       "🎮 4 mini-jeux exclusifs supplémentaires par jour (+12 XP)",
     ],
-  },
-  {
-    emoji: "👥",
-    title: "Amis et classement",
-    desc: "Ajoute tes amis par pseudo et retrouve-les dans le classement. Compare vos XP, vos séries de lecture et montez de niveau ensemble. Un classement global te montre où tu te situes parmi tous les joueurs.",
   },
   {
     emoji: "🏆",
     title: "10 niveaux à débloquer",
     desc: "Gagne des XP en lisant les histoires (+3 XP chacune) et en jouant aux mini-jeux (+3 XP par jeu). Maintiens ta série quotidienne pour des bonus XP ! Passe de Graine à Légende en 10 niveaux.",
   },
-  
 ];
 
 export default function OnboardingPopup() {
