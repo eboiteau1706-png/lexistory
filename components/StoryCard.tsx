@@ -292,7 +292,7 @@ export default function StoryCard({ story }: Props) {
           </div>
         </div>
 
-        <StoryRating storyId={story.slug} initialAvg={story.avg_rating ?? 0} initialCount={story.ratings_count ?? 0} />
+        <StoryRating key={story.slug} storyId={story.slug} initialAvg={story.avg_rating ?? 0} initialCount={story.ratings_count ?? 0} />
 
         <div className={styles.body}>
           {story.paragraphs.map((p, i) => (

@@ -171,8 +171,13 @@ export default function CategoryModal({ category: initialCategory, currentLevel,
                                 {today && <span style={{ fontSize: "0.65rem", fontWeight: 700, color: "var(--accent)", padding: "1px 6px", borderRadius: "50px", background: "rgba(232,201,122,0.15)", border: "1px solid rgba(232,201,122,0.3)" }}>Aujourd'hui</span>}
                                 {locked && <span style={{ fontSize: "0.65rem", color: "var(--text-dim)" }}>🔒</span>}
                               </div>
-                              <div style={{ fontSize: "0.85rem", fontWeight: 600, color: locked ? "var(--text-dim)" : "var(--text)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                                {locked ? "Histoire Premium" : story.title}
+                              <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                                <div style={{ fontSize: "0.85rem", fontWeight: 600, color: locked ? "var(--text-dim)" : "var(--text)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", flex: 1, minWidth: 0 }}>
+                                  {locked ? "Histoire Premium" : story.title}
+                                </div>
+                                <span style={{ fontSize: "13px", color: "#d4a843", flexShrink: 0 }}>
+                                  ★ {story.avg_rating && story.avg_rating > 0 ? story.avg_rating.toFixed(1) : "—"}
+                                </span>
                               </div>
                               {!locked && <div style={{ fontSize: "0.7rem", color: "var(--text-dim)" }}>{formatDate(story.date)}</div>}
                             </div>
@@ -203,8 +208,13 @@ export default function CategoryModal({ category: initialCategory, currentLevel,
                       {today && <span style={{ fontSize: "0.68rem", fontWeight: 700, color: "var(--accent)", padding: "2px 8px", borderRadius: "50px", background: "rgba(232,201,122,0.12)", border: "1px solid rgba(232,201,122,0.3)" }}>Aujourd'hui ✨</span>}
                       {locked && <span style={{ fontSize: "0.68rem", color: "var(--text-dim)" }}>🔒 Premium</span>}
                     </div>
-                    <div style={{ fontSize: "0.88rem", fontWeight: 600, color: locked ? "var(--text-dim)" : "var(--text)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                      {locked ? "Histoire Premium" : story.title}
+                    <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                      <div style={{ fontSize: "0.88rem", fontWeight: 600, color: locked ? "var(--text-dim)" : "var(--text)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", flex: 1, minWidth: 0 }}>
+                        {locked ? "Histoire Premium" : story.title}
+                      </div>
+                      <span style={{ fontSize: "13px", color: "#d4a843", flexShrink: 0 }}>
+                        ★ {story.avg_rating && story.avg_rating > 0 ? story.avg_rating.toFixed(1) : "—"}
+                      </span>
                     </div>
                     {!locked && <div style={{ fontSize: "0.72rem", color: "var(--text-dim)", marginTop: "2px" }}>{formatDate(story.date)} · {story.readTime}</div>}
                   </div>

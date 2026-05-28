@@ -18,6 +18,7 @@ export default function StoryRating({ storyId, initialAvg = 0, initialCount = 0 
   const [loading, setLoading]   = useState(false);
 
   useEffect(() => {
+    setUserRating(null);
     supabase.auth.getSession().then(({ data: { session: s } }) => {
       setSession(s);
       if (s?.user?.id) {
