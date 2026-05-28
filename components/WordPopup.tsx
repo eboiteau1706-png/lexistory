@@ -223,28 +223,15 @@ export default function WordPopup({ word, seenCount, onClose }: Props) {
 
         {loading ? (
           <div className={styles.loading}>
-            {/* Ligne étymologie */}
-            <div className={styles.skeletonLine} style={{ width: "42%", marginBottom: "4px" }} />
-
-            {/* Bloc définition */}
-            <div className={styles.section} style={{ marginBottom: "14px" }}>
-              <div className={styles.label}>Définition</div>
-              <div className={styles.skeletonBlock}>
-                <div className={styles.skeletonLine} />
-                <div className={styles.skeletonLine} style={{ width: "88%" }} />
-              </div>
+            <div className={styles.bookWrap}>
+              <div className={styles.spine} />
+              <div className={styles.coverLeft} />
+              <div className={styles.coverRight} />
+              <div className={`${styles.page} ${styles.page1}`} />
+              <div className={`${styles.page} ${styles.page2}`} />
+              <div className={`${styles.page} ${styles.page3}`} />
             </div>
-
-            {/* Bloc en clair */}
-            <div className={styles.section}>
-              <div className={styles.label}>En clair 💡</div>
-              <div className={styles.skeletonBlock} style={{ background: "rgba(232,201,122,0.04)", borderLeftColor: "rgba(232,201,122,0.3)" }}>
-                <div className={styles.skeletonLine} />
-                <div className={styles.skeletonLine} style={{ width: "72%" }} />
-              </div>
-            </div>
-
-            <div className={styles.thinkingText}>Claude réfléchit...</div>
+            <p className={styles.loadingText}>Claude feuillette les définitions…</p>
           </div>
         ) : source === "limit" ? (
           <div className={styles.contentFadeIn}>
