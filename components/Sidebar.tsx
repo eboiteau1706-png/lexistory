@@ -31,7 +31,12 @@ export default function Sidebar() {
   const diffDays     = Math.floor((parisNow.getTime() - reference.getTime()) / (1000 * 60 * 60 * 24));
   const levelStories = STORIES.filter(s => s.level === level);
   const currentIndex = diffDays % levelStories.length;
-  const availableStories = levelStories.slice(0, currentIndex + 1).reverse();
+  // After a full cycle all stories have been shown — never cap at currentIndex+1
+  const daysAvailable = Math.min(diffDays + 1, levelStories.length);
+  const historyItems = Array.from({ length: daysAvailable }, (_, i) => ({
+    dayNum: diffDays - i,
+    story:  levelStories[((currentIndex - i) % levelStories.length + levelStories.length) % levelStories.length],
+  }));
 
   async function loadStats(uid: string) {
     const { data: profile } = await supabase.from("profiles").select("is_premium, xp").eq("id", uid).single();
@@ -47,10 +52,11 @@ export default function Sidebar() {
     const { data: reads } = await supabase.from("stories_read").select("read_at").eq("user_id", uid).order("read_at", { ascending: false });
     if (reads && reads.length > 0) {
       let s = 1;
-      const dates = [...new Set(reads.map((d: any) => new Date(d.read_at).toDateString()))];
+      const toDay = (iso: string) => { const d = new Date(new Date(iso).toLocaleString("en-US", { timeZone: "Europe/Paris" })); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`; };
+      const dates = [...new Set(reads.map((d: any) => toDay(d.read_at)))];
       for (let i = 1; i < dates.length; i++) {
         const diff = (new Date(dates[i-1]).getTime() - new Date(dates[i]).getTime()) / 86400000;
-        if (diff === 1) s++; else break;
+        if (Math.round(diff) === 1) s++; else break;
       }
       setStreak(s);
     }
@@ -156,21 +162,20 @@ export default function Sidebar() {
 
           {showHistory && (
             <div className={`${styles.historyList} ${!isPremium ? styles.historyListBlurred : ""}`}>
-              {availableStories.map((s, i) => {
-                const realIndex = currentIndex - i;
-                const isToday = realIndex === currentIndex;
+              {historyItems.map(({ dayNum, story: s }, i) => {
+                const isToday = i === 0;
                 return (
                   <button
                     key={s.slug}
                     className={`${styles.historyItem} ${isToday ? styles.historyItemActive : ""} ${!isPremium && !isToday ? styles.historyItemLocked : ""}`}
                     onClick={() => {
                       if (!isPremium && !isToday) { setShowPremiumPopup(true); return; }
-                      router.push(`/?level=${level}&day=${realIndex}`);
+                      router.push(`/?level=${level}&day=${dayNum}`);
                     }}
                   >
                     <span className={styles.historyDot} />
                     <div className={styles.historyContent}>
-                      <span className={styles.historyDay}>{isToday ? "Aujourd'hui" : `Jour ${realIndex + 1}`}</span>
+                      <span className={styles.historyDay}>{isToday ? "Aujourd'hui" : `Jour ${dayNum + 1}`}</span>
                       <span className={styles.historyTitle}>{s.title}</span>
                     </div>
                     {!isPremium && !isToday && <span className={styles.lockIcon}>🔒</span>}

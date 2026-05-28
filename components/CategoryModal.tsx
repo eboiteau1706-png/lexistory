@@ -44,7 +44,10 @@ const ALL_CATEGORIES = [...new Set(
 
 function isFuture(story: Story) {
   const levelStories = STORIES.filter(s => s.level === story.level);
-  const todayIdx = getDayIndex(levelStories);
+  const reference = new Date("2026-05-17T00:00:00");
+  const diffDays = Math.floor((getParisNow().getTime() - reference.getTime()) / 86400000);
+  if (diffDays >= levelStories.length) return false; // full cycle done — all stories unlocked
+  const todayIdx = diffDays % levelStories.length;
   const storyIdx = levelStories.findIndex(s => s.slug === story.slug);
   return storyIdx > todayIdx;
 }
