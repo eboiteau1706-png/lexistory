@@ -15,7 +15,8 @@ function getProgressKey(slug: string, userId: string | null) {
 }
 
 function toParisDateStr(date: Date): string {
-  return new Date(date.toLocaleString("en-US", { timeZone: "Europe/Paris" })).toDateString();
+  const d = new Date(date.toLocaleString("en-US", { timeZone: "Europe/Paris" }));
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 }
 
 export default function StoryCard({ story }: Props) {
