@@ -19,10 +19,11 @@ interface Sense {
 
 type Source = "dictionnaire" | "cache" | "api" | "limit" | null;
 
-const LEADING_PUNCT = /^[.,;:!?«»"“”‘’''()\[\]\s]+/g;
-const TRAILING_PUNCT = /[.,;:!?«»"“”‘’''()\[\]\s]+$/g;
-const ARTICLE_CONTRACTION = /^(l[''’]|d[''’])\s*/i;
+const LEADING_PUNCT = /^[.,;:!?«»”””’’’’()\[\]\s]+/g;
+const TRAILING_PUNCT = /[.,;:!?«»”””’’’’()\[\]\s]+$/g;
+const ARTICLE_CONTRACTION = /^(l[‘’’]|d[‘’’])\s*/i;
 const ARTICLE_WORD = /^(les?\s+|la\s+|un[e]?\s+|des?\s+|du\s+|de\s+la\s+|de\s+)/i;
+const IGNORE_RE = /^[\d\s%.,°#nN°èmeèreXVILCDMxvilcdm\-\/]+$/;
 
 function normalizeToKey(raw: string): string | null {
   let key = raw
@@ -89,6 +90,7 @@ export default function WordPopup({ word, seenCount, onClose }: Props) {
 
   useEffect(() => {
     if (!key || key.length < 2) return;
+    if (IGNORE_RE.test(key)) { onClose(); return; }
 
     setSource(null);
     setSenses([]);
