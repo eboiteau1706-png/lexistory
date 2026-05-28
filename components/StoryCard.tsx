@@ -339,7 +339,7 @@ export default function StoryCard({ story }: Props) {
       )}
 
       {activeWord && (
-        <WordPopup word={activeWord} seenCount={seenWords.size} onClose={() => setActiveWord(null)} />
+        <WordPopup word={activeWord} seenCount={seenWords.size} storyId={story.slug} onClose={() => setActiveWord(null)} />
       )}
 
       {showCategory && (

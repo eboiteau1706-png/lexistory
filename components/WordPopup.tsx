@@ -7,6 +7,7 @@ import styles from "./WordPopup.module.css";
 interface Props {
   word: string;
   seenCount: number;
+  storyId?: string;
   onClose: () => void;
 }
 
@@ -17,7 +18,7 @@ interface Sense {
   defSimple: string;
 }
 
-type Source = "dictionnaire" | "cache" | "api" | "limit" | null;
+type Source = "dictionnaire" | "cache" | "api" | "limit" | "limit_free" | null;
 
 const LEADING_PUNCT = /^[.,;:!?«»”””’’’’()\[\]\s]+/g;
 const TRAILING_PUNCT = /[.,;:!?«»”””’’’’()\[\]\s]+$/g;
@@ -57,7 +58,7 @@ function getVariants(word: string): string[] {
 }
 
 
-export default function WordPopup({ word, seenCount, onClose }: Props) {
+export default function WordPopup({ word, seenCount, storyId, onClose }: Props) {
   const supabase = createClient();
   const [source, setSource]         = useState<Source>(null);
   const [senses, setSenses]         = useState<Sense[]>([]);
@@ -126,15 +127,19 @@ export default function WordPopup({ word, seenCount, onClose }: Props) {
 
       // ── Étape 2 : POST /api/definition ─────────────────────────────────
       try {
+        const { data: { session } } = await supabase.auth.getSession();
+        const headers: Record<string, string> = { "Content-Type": "application/json" };
+        if (session?.access_token) headers["Authorization"] = `Bearer ${session.access_token}`;
+
         const res = await fetch("/api/definition", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ raw: word, key }),
+          headers,
+          body: JSON.stringify({ raw: word, key, story_id: storyId }),
         });
         const data = await res.json();
         setSource(data.source ?? null);
 
-        if (data.result && data.source !== "limit") {
+        if (data.result && data.source !== "limit" && data.source !== "limit_free") {
           const etym = data.result.etymologie ?? "";
           setSenses(
             (data.result.sens ?? []).map((s: any) => ({
@@ -220,6 +225,18 @@ export default function WordPopup({ word, seenCount, onClose }: Props) {
               <div className={`${styles.page} ${styles.page3}`} />
             </div>
             <p className={styles.loadingText}>Claude feuillette les définitions…</p>
+          </div>
+        ) : source === "limit_free" ? (
+          <div className={styles.contentFadeIn}>
+            <div className={styles.section}>
+              <div className={styles.defOrig} style={{ color: "var(--text-muted)", fontSize: "0.88rem", lineHeight: 1.6 }}>
+                Tu as atteint ta limite de 3 définitions pour cette histoire aujourd&apos;hui.<br />
+                Passe au Premium pour un accès illimité !
+              </div>
+            </div>
+            <a href="/profile" style={{ display: "block", marginTop: "12px", padding: "10px 20px", borderRadius: "50px", background: "var(--accent)", color: "var(--bg)", fontFamily: "inherit", fontSize: "0.88rem", fontWeight: 700, textAlign: "center", textDecoration: "none", transition: "opacity 0.2s" }}>
+              ✨ Découvrir le Premium
+            </a>
           </div>
         ) : source === "limit" ? (
           <div className={styles.contentFadeIn}>

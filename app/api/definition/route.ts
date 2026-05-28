@@ -9,9 +9,14 @@ const supabaseAdmin = createClient(
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
+function getParisDate(): string {
+  const d = new Date(new Date().toLocaleString("en-US", { timeZone: "Europe/Paris" }));
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+
 export async function POST(request: NextRequest) {
   try {
-    const { raw, key }: { raw: string; key: string } = await request.json();
+    const { raw, key, story_id }: { raw: string; key: string; story_id?: string } = await request.json();
 
     // A) Cache lookup
     const { data: cached } = await supabaseAdmin
@@ -24,7 +29,41 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ source: "cache", result: cached.result });
     }
 
-    // B) Monthly usage cap
+    // B) Auth — identify user and premium status
+    const token = request.headers.get("Authorization")?.replace("Bearer ", "");
+    let userId: string | null = null;
+    let isPremium = false;
+
+    if (token) {
+      const { data: { user } } = await supabaseAdmin.auth.getUser(token);
+      if (user) {
+        userId = user.id;
+        const { data: profile } = await supabaseAdmin
+          .from("profiles")
+          .select("is_premium")
+          .eq("id", user.id)
+          .single();
+        isPremium = profile?.is_premium ?? false;
+      }
+    }
+
+    // C) Free user daily limit (3 definitions per story)
+    if (userId && !isPremium && story_id) {
+      const today = getParisDate();
+      const { data: dayUsage } = await supabaseAdmin
+        .from("definition_usage")
+        .select("count")
+        .eq("user_id", userId)
+        .eq("story_id", story_id)
+        .eq("date", today)
+        .maybeSingle();
+
+      if ((dayUsage?.count ?? 0) >= 3) {
+        return NextResponse.json({ source: "limit_free", result: null });
+      }
+    }
+
+    // D) Monthly usage cap
     const month = new Date().toISOString().slice(0, 7);
 
     const { data: usage } = await supabaseAdmin
@@ -41,7 +80,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ source: "limit", result: null });
     }
 
-    // C) Anthropic API call
+    // E) Anthropic API call
     const prompt = `Tu es un dictionnaire intelligent intégré dans une application de lecture française.
 L'utilisateur a sélectionné : ${raw} (forme normalisée : ${key})
 Analyse intelligemment : si nom propre → biographie courte, si mot conjugué → ramène à l'infinitif, si pluriel → ramène au singulier, si groupe de mots → traite comme une unité, si plusieurs sens → liste tous les sens.
@@ -63,12 +102,12 @@ Format : { forme_base: string, type: string, etymologie: string, sens: [{ label:
     const cleaned = textBlock.text.replace(/```json|```/g, "").trim();
     const result = JSON.parse(cleaned);
 
-    // D) Save to cache
+    // F) Save to cache
     await supabaseAdmin
       .from("definitions_cache")
       .insert({ word_key: key, raw, result });
 
-    // E) Increment call count
+    // G) Increment monthly call count
     await supabaseAdmin
       .from("api_usage")
       .upsert(
@@ -76,7 +115,30 @@ Format : { forme_base: string, type: string, etymologie: string, sens: [{ label:
         { onConflict: "month" }
       );
 
-    // F) Return result
+    // H) Increment free user daily story usage
+    if (userId && !isPremium && story_id) {
+      const today = getParisDate();
+      const { data: existing } = await supabaseAdmin
+        .from("definition_usage")
+        .select("id, count")
+        .eq("user_id", userId)
+        .eq("story_id", story_id)
+        .eq("date", today)
+        .maybeSingle();
+
+      if (existing) {
+        await supabaseAdmin
+          .from("definition_usage")
+          .update({ count: (existing.count ?? 0) + 1 })
+          .eq("id", existing.id);
+      } else {
+        await supabaseAdmin
+          .from("definition_usage")
+          .insert({ user_id: userId, story_id, date: today, count: 1 });
+      }
+    }
+
+    // I) Return result
     return NextResponse.json({ source: "api", result });
   } catch (error) {
     console.error("DEFINITION ROUTE ERROR:", error);
