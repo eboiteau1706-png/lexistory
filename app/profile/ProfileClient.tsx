@@ -1,11 +1,12 @@
 "use client";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
 import { getLevel, getXpProgress, LEVELS } from "@/lib/xp";
 import { lookup } from "@/lib/dictionary";
 import type { User } from "@supabase/supabase-js";
 import styles from "./profile.module.css";
+import { AVATAR_SEEDS, getAvatarUrl } from "@/lib/avatar";
 
 interface FavWord {
   word: string;
@@ -47,10 +48,10 @@ export default function ProfileClient({ user }: { user: User }) {
   const [favPopup, setFavPopup]   = useState<FavWord | null>(null);
 
   // Avatar
-  const [avatarUrl, setAvatarUrl]         = useState<string | null>(null);
-  const [uploadingAvatar, setUploadingAvatar] = useState(false);
-  const [avatarError, setAvatarError]     = useState("");
-  const avatarInputRef = useRef<HTMLInputElement>(null);
+  const [avatarSeed, setAvatarSeed]       = useState<string | null>(null);
+  const [showAvatarGrid, setShowAvatarGrid] = useState(false);
+  const [pendingSeed, setPendingSeed]     = useState<string | null>(null);
+  const [savingAvatar, setSavingAvatar]   = useState(false);
 
   // Email
   const [currentEmail, setCurrentEmail]   = useState(user.email ?? "");
@@ -81,7 +82,7 @@ export default function ProfileClient({ user }: { user: User }) {
         if (data?.is_premium) setIsPremium(data.is_premium);
         setXp(data?.xp ?? 0);
         setStripeCustomerId(data?.stripe_customer_id ?? null);
-        if (data?.avatar_url) setAvatarUrl(data.avatar_url);
+        if (data?.avatar_url) setAvatarSeed(data.avatar_url);
         if (data?.stripe_customer_id) {
           fetch("/api/subscription").then(r => r.json()).then(d => {
             if (d.renewalDate) setRenewalDate(d.renewalDate);
@@ -205,27 +206,13 @@ export default function ProfileClient({ user }: { user: User }) {
     finally { setDeleting(false); }
   }
 
-  async function handleAvatarChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    if (file.size > 2 * 1024 * 1024) { setAvatarError("Image trop grande (max 2 Mo)"); return; }
-    setAvatarError("");
-    setUploadingAvatar(true);
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      const fd = new FormData();
-      fd.append("file", file);
-      const res  = await fetch("/api/upload-avatar", {
-        method: "POST",
-        headers: { Authorization: `Bearer ${session?.access_token}` },
-        body: fd,
-      });
-      const data = await res.json();
-      if (data.avatar_url) setAvatarUrl(data.avatar_url);
-      else setAvatarError(data.error ?? "Erreur lors de l'upload");
-    } catch { setAvatarError("Erreur lors de l'upload"); }
-    setUploadingAvatar(false);
-    e.target.value = "";
+  async function handleSaveAvatar() {
+    if (!pendingSeed) return;
+    setSavingAvatar(true);
+    await supabase.from("profiles").update({ avatar_url: pendingSeed }).eq("id", user.id);
+    setAvatarSeed(pendingSeed);
+    setShowAvatarGrid(false);
+    setSavingAvatar(false);
   }
 
   const initial    = (username?.[0] || currentEmail?.[0] || "?").toUpperCase();
@@ -246,18 +233,35 @@ export default function ProfileClient({ user }: { user: User }) {
   return (
     <div className={styles.page}>
       <div className={styles.card}>
-        <div className={styles.avatarWrap} onClick={() => avatarInputRef.current?.click()} title="Changer l'avatar">
-          <div className={styles.avatar}>
-            {avatarUrl
-              ? <img src={avatarUrl} alt="avatar" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-              : initial}
-          </div>
-          {uploadingAvatar
-            ? <div className={styles.avatarSpinner}>⏳</div>
-            : <div className={styles.avatarOverlay}>✏️</div>}
+        <div className={styles.avatar}>
+          {getAvatarUrl(avatarSeed)
+            ? <img src={getAvatarUrl(avatarSeed)!} alt="avatar" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+            : initial}
         </div>
-        <input ref={avatarInputRef} type="file" accept="image/*" style={{ display: "none" }} onChange={handleAvatarChange} />
-        {avatarError && <p style={{ color: "#e07070", fontSize: "0.75rem", margin: "0 0 6px", textAlign: "center" }}>{avatarError}</p>}
+        <button className={styles.btnEditAvatar} onClick={() => { setPendingSeed(avatarSeed); setShowAvatarGrid(true); }}>
+          Changer d&apos;avatar
+        </button>
+
+        {showAvatarGrid && (
+          <div onClick={() => setShowAvatarGrid(false)} style={{ position: "fixed", inset: 0, zIndex: 400, background: "rgba(0,0,0,0.6)", backdropFilter: "blur(4px)", display: "flex", alignItems: "center", justifyContent: "center", padding: "24px" }}>
+            <div onClick={e => e.stopPropagation()} style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: "20px", padding: "24px", maxWidth: "340px", width: "100%", display: "flex", flexDirection: "column", gap: "16px" }}>
+              <div style={{ fontFamily: "var(--font-playfair), serif", fontSize: "1.1rem", fontWeight: 700, color: "var(--accent)", textAlign: "center" }}>Choisis ton avatar</div>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "10px", justifyItems: "center" }}>
+                {AVATAR_SEEDS.map(seed => (
+                  <button key={seed} onClick={() => setPendingSeed(seed)} style={{ background: "none", border: `3px solid ${pendingSeed === seed ? "#d4a843" : "transparent"}`, borderRadius: "50%", padding: "2px", cursor: "pointer", transition: "border-color 0.15s" }}>
+                    <img src={getAvatarUrl(seed)!} alt={seed} style={{ width: 56, height: 56, borderRadius: "50%", display: "block" }} />
+                  </button>
+                ))}
+              </div>
+              <div style={{ display: "flex", gap: "8px", justifyContent: "center" }}>
+                <button onClick={() => setShowAvatarGrid(false)} style={{ padding: "8px 20px", borderRadius: "50px", background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text-muted)", fontFamily: "inherit", fontSize: "0.85rem", cursor: "pointer" }}>Annuler</button>
+                <button onClick={handleSaveAvatar} disabled={savingAvatar || !pendingSeed} style={{ padding: "8px 20px", borderRadius: "50px", background: "var(--accent)", border: "none", color: "var(--bg)", fontFamily: "inherit", fontSize: "0.85rem", fontWeight: 700, cursor: "pointer", opacity: !pendingSeed ? 0.5 : 1 }}>
+                  {savingAvatar ? "Sauvegarde…" : "Confirmer"}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
         {isPremium && (
           <div className={`${styles.premiumBadge} ${isLifetime ? styles.premiumBadgeLifetime : ""}`}>
             {isLifetime ? "✨ Premium à vie" : isCancelled ? "⏳ Premium (résilié)" : "✨ Premium"}

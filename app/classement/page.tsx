@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase";
 import { getLevel } from "@/lib/xp";
 import styles from "./classement.module.css";
+import { getAvatarUrl } from "@/lib/avatar";
 
 interface Player {
   id: string;
@@ -126,9 +127,9 @@ export default function ClassementPage() {
                     <div className={styles.rank}>
                       {medal || <span className={styles.rankNum}>#{i + 1}</span>}
                     </div>
-                    <div style={{ width: 32, height: 32, borderRadius: "50%", overflow: "hidden", flexShrink: 0, background: player.avatar_url ? "transparent" : avatarBg(player.username ?? "?"), display: "flex", alignItems: "center", justifyContent: "center", fontSize: "0.85rem", fontWeight: 700, color: "#fff" }}>
-                      {player.avatar_url
-                        ? <img src={player.avatar_url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                    <div style={{ width: 36, height: 36, borderRadius: "50%", overflow: "hidden", flexShrink: 0, background: getAvatarUrl(player.avatar_url) ? "var(--surface2)" : avatarBg(player.username ?? "?"), display: "flex", alignItems: "center", justifyContent: "center", fontSize: "0.85rem", fontWeight: 700, color: "#fff" }}>
+                      {getAvatarUrl(player.avatar_url)
+                        ? <img src={getAvatarUrl(player.avatar_url)!} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
                         : (player.username?.[0] ?? "?").toUpperCase()}
                     </div>
                     <div className={styles.playerInfo}>

@@ -21,19 +21,9 @@
   animation: fadeUp 0.5s ease both;
 }
 
-.avatarWrap {
-  position: relative;
-  width: 72px;
-  height: 72px;
-  cursor: pointer;
-  margin-bottom: 4px;
-  flex-shrink: 0;
-}
-.avatarWrap:hover .avatarOverlay { opacity: 1; }
-
 .avatar {
-  width: 72px;
-  height: 72px;
+  width: 80px;
+  height: 80px;
   border-radius: 50%;
   background: linear-gradient(135deg, var(--accent2), var(--accent));
   color: var(--bg);
@@ -44,33 +34,24 @@
   align-items: center;
   justify-content: center;
   overflow: hidden;
+  border: 2px solid #d4a843;
+  margin-bottom: 4px;
+  flex-shrink: 0;
 }
 
-.avatarOverlay {
-  position: absolute;
-  inset: 0;
-  border-radius: 50%;
-  background: rgba(0, 0, 0, 0.45);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.1rem;
-  opacity: 0;
-  transition: opacity 0.2s;
+.btnEditAvatar {
+  font-size: 0.75rem;
+  color: var(--text-dim);
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 4px 12px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: color 0.15s, border-color 0.15s;
+  margin-bottom: 4px;
 }
-
-.avatarSpinner {
-  position: absolute;
-  inset: 0;
-  border-radius: 50%;
-  background: rgba(0, 0, 0, 0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.2rem;
-  animation: spin 1s linear infinite;
-}
-@keyframes spin { to { transform: rotate(360deg); } }
+.btnEditAvatar:hover { color: var(--accent); border-color: var(--accent); }
 
 .since {
   font-size: 0.78rem;
