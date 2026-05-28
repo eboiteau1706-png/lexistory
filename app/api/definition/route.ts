@@ -60,7 +60,8 @@ Format : { forme_base: string, type: string, etymologie: string, sens: [{ label:
       return NextResponse.json({ error: "No text response" }, { status: 500 });
     }
 
-    const result = JSON.parse(textBlock.text);
+    const cleaned = textBlock.text.replace(/```json|```/g, "").trim();
+    const result = JSON.parse(cleaned);
 
     // D) Save to cache
     await supabaseAdmin
