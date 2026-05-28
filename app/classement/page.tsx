@@ -9,6 +9,14 @@ interface Player {
   username: string;
   xp: number;
   is_premium: boolean;
+  avatar_url?: string | null;
+}
+
+const AVATAR_COLORS = ["#d4a843", "#6ba3be", "#7ac97a", "#e07070", "#9b7fdb", "#e09070"];
+function avatarBg(username: string) {
+  let h = 0;
+  for (const c of username) h = c.charCodeAt(0) + h * 31;
+  return AVATAR_COLORS[Math.abs(h) % AVATAR_COLORS.length];
 }
 
 export default function ClassementPage() {
@@ -24,7 +32,7 @@ export default function ClassementPage() {
   const supabase = createClient();
 
   useEffect(() => {
-    supabase.from("profiles").select("id, username, xp, is_premium")
+    supabase.from("profiles").select("id, username, xp, is_premium, avatar_url")
       .not("username", "is", null).order("xp", { ascending: false }).limit(50)
       .then(({ data }) => { setPlayers((data as Player[]) ?? []); setLoading(false); });
 
@@ -59,13 +67,13 @@ export default function ClassementPage() {
     const { data: allF } = await supabase.from("friendships")
       .select("user_id, friend_id").or(`user_id.eq.${uid},friend_id.eq.${uid}`).eq("status", "accepted");
     if (!allF || allF.length === 0) {
-      const { data: me } = await supabase.from("profiles").select("id, username, xp, is_premium").eq("id", uid).single();
+      const { data: me } = await supabase.from("profiles").select("id, username, xp, is_premium, avatar_url").eq("id", uid).single();
       if (me) setFriends([me as Player]);
       return;
     }
     const ids = allF.map((f: any) => f.user_id === uid ? f.friend_id : f.user_id);
     ids.push(uid);
-    const { data: profiles } = await supabase.from("profiles").select("id, username, xp, is_premium")
+    const { data: profiles } = await supabase.from("profiles").select("id, username, xp, is_premium, avatar_url")
       .in("id", ids).not("username", "is", null).order("xp", { ascending: false });
     setFriends((profiles as Player[]) ?? []);
   }
@@ -117,6 +125,11 @@ export default function ClassementPage() {
                   <div key={player.id} className={`${styles.row} ${isMe ? styles.rowMe : ""} ${i < 3 ? styles.rowTop : ""}`}>
                     <div className={styles.rank}>
                       {medal || <span className={styles.rankNum}>#{i + 1}</span>}
+                    </div>
+                    <div style={{ width: 32, height: 32, borderRadius: "50%", overflow: "hidden", flexShrink: 0, background: player.avatar_url ? "transparent" : avatarBg(player.username ?? "?"), display: "flex", alignItems: "center", justifyContent: "center", fontSize: "0.85rem", fontWeight: 700, color: "#fff" }}>
+                      {player.avatar_url
+                        ? <img src={player.avatar_url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                        : (player.username?.[0] ?? "?").toUpperCase()}
                     </div>
                     <div className={styles.playerInfo}>
                       <a href={`/joueur/${player.username}`} className={styles.playerName} style={{ textDecoration: "none", color: "inherit" }}>

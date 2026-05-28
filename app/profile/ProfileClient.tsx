@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { createClient } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
 import { getLevel, getXpProgress, LEVELS } from "@/lib/xp";
@@ -46,6 +46,12 @@ export default function ProfileClient({ user }: { user: User }) {
   const [favorites, setFavorites] = useState<FavWord[]>([]);
   const [favPopup, setFavPopup]   = useState<FavWord | null>(null);
 
+  // Avatar
+  const [avatarUrl, setAvatarUrl]         = useState<string | null>(null);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const [avatarError, setAvatarError]     = useState("");
+  const avatarInputRef = useRef<HTMLInputElement>(null);
+
   // Email
   const [currentEmail, setCurrentEmail]   = useState(user.email ?? "");
   const [editingEmail, setEditingEmail]   = useState(false);
@@ -69,12 +75,13 @@ export default function ProfileClient({ user }: { user: User }) {
       });
     });
 
-    supabase.from("profiles").select("username, is_premium, xp, stripe_customer_id").eq("id", user.id).single()
+    supabase.from("profiles").select("username, is_premium, xp, stripe_customer_id, avatar_url").eq("id", user.id).single()
       .then(({ data }) => {
         if (data?.username) setUsername(data.username);
         if (data?.is_premium) setIsPremium(data.is_premium);
         setXp(data?.xp ?? 0);
         setStripeCustomerId(data?.stripe_customer_id ?? null);
+        if (data?.avatar_url) setAvatarUrl(data.avatar_url);
         if (data?.stripe_customer_id) {
           fetch("/api/subscription").then(r => r.json()).then(d => {
             if (d.renewalDate) setRenewalDate(d.renewalDate);
@@ -198,6 +205,29 @@ export default function ProfileClient({ user }: { user: User }) {
     finally { setDeleting(false); }
   }
 
+  async function handleAvatarChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 2 * 1024 * 1024) { setAvatarError("Image trop grande (max 2 Mo)"); return; }
+    setAvatarError("");
+    setUploadingAvatar(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const fd = new FormData();
+      fd.append("file", file);
+      const res  = await fetch("/api/upload-avatar", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${session?.access_token}` },
+        body: fd,
+      });
+      const data = await res.json();
+      if (data.avatar_url) setAvatarUrl(data.avatar_url);
+      else setAvatarError(data.error ?? "Erreur lors de l'upload");
+    } catch { setAvatarError("Erreur lors de l'upload"); }
+    setUploadingAvatar(false);
+    e.target.value = "";
+  }
+
   const initial    = (username?.[0] || currentEmail?.[0] || "?").toUpperCase();
   const level      = getLevel(xp);
   const { current, needed, pct } = getXpProgress(xp);
@@ -216,7 +246,18 @@ export default function ProfileClient({ user }: { user: User }) {
   return (
     <div className={styles.page}>
       <div className={styles.card}>
-        <div className={styles.avatar}>{initial}</div>
+        <div className={styles.avatarWrap} onClick={() => avatarInputRef.current?.click()} title="Changer l'avatar">
+          <div className={styles.avatar}>
+            {avatarUrl
+              ? <img src={avatarUrl} alt="avatar" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+              : initial}
+          </div>
+          {uploadingAvatar
+            ? <div className={styles.avatarSpinner}>⏳</div>
+            : <div className={styles.avatarOverlay}>✏️</div>}
+        </div>
+        <input ref={avatarInputRef} type="file" accept="image/*" style={{ display: "none" }} onChange={handleAvatarChange} />
+        {avatarError && <p style={{ color: "#e07070", fontSize: "0.75rem", margin: "0 0 6px", textAlign: "center" }}>{avatarError}</p>}
         {isPremium && (
           <div className={`${styles.premiumBadge} ${isLifetime ? styles.premiumBadgeLifetime : ""}`}>
             {isLifetime ? "✨ Premium à vie" : isCancelled ? "⏳ Premium (résilié)" : "✨ Premium"}
