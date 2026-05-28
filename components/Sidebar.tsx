@@ -31,12 +31,19 @@ export default function Sidebar() {
   const diffDays     = Math.floor((parisNow.getTime() - reference.getTime()) / (1000 * 60 * 60 * 24));
   const levelStories = STORIES.filter(s => s.level === level);
   const currentIndex = diffDays % levelStories.length;
-  // After a full cycle all stories have been shown — never cap at currentIndex+1
-  const daysAvailable = Math.min(diffDays + 1, levelStories.length);
-  const historyItems = Array.from({ length: daysAvailable }, (_, i) => ({
+  // Show every day since launch, wrapping through the static stories
+  const historyItems = Array.from({ length: diffDays + 1 }, (_, i) => ({
     dayNum: diffDays - i,
     story:  levelStories[((currentIndex - i) % levelStories.length + levelStories.length) % levelStories.length],
   }));
+
+  function dayLabel(dayNum: number): string {
+    if (dayNum === diffDays) return "Aujourd'hui";
+    if (dayNum === diffDays - 1) return "Hier";
+    const d = new Date(reference.getTime() + dayNum * 86400000);
+    const paris = new Date(d.toLocaleString("en-US", { timeZone: "Europe/Paris" }));
+    return paris.toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" });
+  }
 
   async function loadStats(uid: string) {
     const { data: profile } = await supabase.from("profiles").select("is_premium, xp").eq("id", uid).single();
@@ -175,7 +182,7 @@ export default function Sidebar() {
                   >
                     <span className={styles.historyDot} />
                     <div className={styles.historyContent}>
-                      <span className={styles.historyDay}>{isToday ? "Aujourd'hui" : `Jour ${dayNum + 1}`}</span>
+                      <span className={styles.historyDay}>{dayLabel(dayNum)}</span>
                       <span className={styles.historyTitle}>{s.title}</span>
                     </div>
                     {!isPremium && !isToday && <span className={styles.lockIcon}>🔒</span>}

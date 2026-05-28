@@ -4,6 +4,8 @@ import { createClient } from "@/lib/supabase";
 import { STORIES } from "@/lib/stories";
 import type { Story } from "@/lib/stories";
 
+const REFERENCE = new Date("2026-05-17T00:00:00");
+
 interface Props {
   category?: string;
   currentLevel?: Story["level"];
@@ -20,49 +22,18 @@ function getParisNow() {
   return new Date(new Date().toLocaleString("en-US", { timeZone: "Europe/Paris" }));
 }
 
-function getDayIndex(levelStories: Story[]) {
-  const reference = new Date("2026-05-17T00:00:00");
-  const paris = getParisNow();
-  const diffDays = Math.floor((paris.getTime() - reference.getTime()) / 86400000);
-  return Math.abs(diffDays) % levelStories.length;
-}
-
-function getTodaySlug(level: Story["level"]) {
-  const levelStories = STORIES.filter(s => s.level === level);
-  return levelStories[getDayIndex(levelStories)]?.slug ?? "";
-}
-
-const TODAY_SLUGS = {
-  "Curieux": getTodaySlug("Curieux"),
-  "Lecteur": getTodaySlug("Lecteur"),
-  "Érudit":  getTodaySlug("Érudit"),
-};
-
-const ALL_CATEGORIES = [...new Set(
-  STORIES.flatMap(s => s.category.split(" · "))
-)].sort();
-
-function isFuture(story: Story) {
-  const levelStories = STORIES.filter(s => s.level === story.level);
-  const reference = new Date("2026-05-17T00:00:00");
-  const diffDays = Math.floor((getParisNow().getTime() - reference.getTime()) / 86400000);
-  if (diffDays >= levelStories.length) return false; // full cycle done — all stories unlocked
-  const todayIdx = diffDays % levelStories.length;
-  const storyIdx = levelStories.findIndex(s => s.slug === story.slug);
-  return storyIdx > todayIdx;
-}
-
-function isToday(story: Story) {
-  return TODAY_SLUGS[story.level] === story.slug;
+function getTodayISO(): string {
+  const p = getParisNow();
+  return `${p.getFullYear()}-${String(p.getMonth() + 1).padStart(2, "0")}-${String(p.getDate()).padStart(2, "0")}`;
 }
 
 export default function CategoryModal({ category: initialCategory, currentLevel, onClose }: Props) {
   const supabase = createClient();
   const [isPremium, setIsPremium] = useState(false);
   const [expandedCategory, setExpandedCategory] = useState<string | null>(initialCategory ?? null);
+  const [customStories, setCustomStories] = useState<Story[]>([]);
 
   useEffect(() => {
-    // Bloque le scroll de la page en arrière-plan
     document.body.style.overflow = "hidden";
     return () => { document.body.style.overflow = ""; };
   }, []);
@@ -74,6 +45,18 @@ export default function CategoryModal({ category: initialCategory, currentLevel,
           .then(({ data }) => { if (data?.is_premium) setIsPremium(true); });
       }
     });
+    supabase.from("stories_custom").select("*").then(({ data }) => {
+      if (data) setCustomStories(data.map((c: any) => ({
+        slug:      c.slug ?? `custom-${c.date}-${c.level}`,
+        date:      c.date,
+        title:     c.title,
+        category:  c.category,
+        level:     c.level as Story["level"],
+        readTime:  c.read_time ?? "3 min de lecture",
+        source:    c.source ?? "",
+        paragraphs: Array.isArray(c.paragraphs) ? c.paragraphs : [],
+      })));
+    });
   }, []);
 
   useEffect(() => {
@@ -82,8 +65,15 @@ export default function CategoryModal({ category: initialCategory, currentLevel,
     return () => window.removeEventListener("keydown", handler);
   }, [onClose]);
 
+  const todayISO = getTodayISO();
+  const allStories = [...STORIES, ...customStories];
+  const allCategories = [...new Set(allStories.flatMap(s => s.category.split(" · ")))].sort();
+
+  function isToday(story: Story)  { return story.date === todayISO; }
+  function isFuture(story: Story) { return story.date > todayISO; }
+
   function getStoriesForCategory(cat: string) {
-    return STORIES
+    return allStories
       .filter(s => s.category === cat || s.category.split(" · ").includes(cat))
       .filter(s => !isFuture(s))
       .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
@@ -91,9 +81,8 @@ export default function CategoryModal({ category: initialCategory, currentLevel,
 
   function handleStoryClick(story: Story) {
     if (!isPremium && !isToday(story)) return;
-    const levelStories = STORIES.filter(s => s.level === story.level);
-    const dayIdx = levelStories.findIndex(s => s.slug === story.slug);
-    window.location.href = `/?level=${story.level}&day=${dayIdx}`;
+    const dayNum = Math.floor((new Date(story.date + "T00:00:00").getTime() - REFERENCE.getTime()) / 86400000);
+    window.location.href = `/?level=${story.level}&day=${dayNum}`;
     onClose();
   }
 
@@ -140,7 +129,7 @@ export default function CategoryModal({ category: initialCategory, currentLevel,
         {/* Contenu scrollable — flex: 1 + minHeight: 0 = scroll correct */}
         <div style={{ overflowY: "auto", flex: 1, minHeight: 0, display: "flex", flexDirection: "column", gap: "8px", paddingRight: "4px" }}>
           {showCategoryList ? (
-            ALL_CATEGORIES.map(cat => {
+            allCategories.map(cat => {
               const catStories = getStoriesForCategory(cat);
               if (catStories.length === 0) return null;
               const isOpen = expandedCategory === cat;
