@@ -2,10 +2,9 @@
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase";
 
-const CAP        = 1600;
-const BUDGET_EUR = 5;
-const USD_PER_CALL = 0.01;
-const EUR_RATE     = 0.93;
+const CAP          = 500;
+const BUDGET_EUR   = 5;
+const EUR_PER_CALL = 0.009;
 
 interface Data {
   callCount:  number;
@@ -53,7 +52,7 @@ export default function ApiDefStats() {
 
   const callCount      = data?.callCount  ?? 0;
   const cacheTotal     = data?.cacheTotal ?? 0;
-  const costEur        = callCount * USD_PER_CALL * EUR_RATE;
+  const costEur        = callCount * EUR_PER_CALL;
   const remainingBudget = Math.max(0, BUDGET_EUR - costEur);
   const remainingCalls  = Math.max(0, CAP - callCount);
   const pct             = Math.min(100, (callCount / CAP) * 100);
@@ -101,7 +100,7 @@ export default function ApiDefStats() {
               <div style={{ fontSize: "0.72rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.8px", color: "var(--text-dim)", marginBottom: 12 }}>
                 💰 Budget ce mois
               </div>
-              <Row label="Dépensé"       value={`${costEur.toFixed(3)} €`} sub={`${(callCount * USD_PER_CALL).toFixed(2)} $`} />
+              <Row label="Dépensé"       value={`${costEur.toFixed(3)} €`} />
               <Row label="Restant"       value={`${remainingBudget.toFixed(3)} €`} sub={`/ ${BUDGET_EUR} €`} />
               <Row label="Appels Claude" value={`${callCount}`} sub={`/ ${CAP}`} />
               <Row label="Restants"      value={`${remainingCalls}`} sub="appels" />
@@ -125,7 +124,7 @@ export default function ApiDefStats() {
               </div>
               <Row label="Mots en cache"       value={`${cacheTotal}`} sub="définitions sauvegardées" />
               <Row label="Réinitialisation"     value={`1er du mois`}  sub={resetDate} />
-              <Row label="Coût par appel"       value={`${(USD_PER_CALL * EUR_RATE * 100).toFixed(1)} ¢`} sub="€ / définition" />
+              <Row label="Coût par appel"       value={`${(EUR_PER_CALL * 100).toFixed(1)} ¢`} sub="€ / définition" />
               <Row label="Budget total"         value={`${BUDGET_EUR} €`} sub="/ mois" />
 
               <div style={{ marginTop: 16, padding: "10px 14px", borderRadius: 10, background: "rgba(232,201,122,0.06)", border: "1px solid rgba(232,201,122,0.2)", fontSize: "0.78rem", color: "var(--text-muted)", lineHeight: 1.5 }}>

@@ -37,7 +37,7 @@ export async function POST(request: NextRequest) {
       await supabaseAdmin
         .from("api_usage")
         .insert({ month, call_count: 0 });
-    } else if (usage.call_count >= 1600) {
+    } else if (usage.call_count >= 500) {
       return NextResponse.json({ source: "limit", result: null });
     }
 
