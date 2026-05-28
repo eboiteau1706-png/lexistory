@@ -50,7 +50,7 @@ Réponds UNIQUEMENT en JSON valide sans markdown ni backticks.
 Format : { forme_base: string, type: string, etymologie: string, sens: [{ label: string, officielle: string, simplifiee: string }] }`;
 
     const message = await anthropic.messages.create({
-      model: "claude-sonnet-4-20250514",
+      model: "claude-sonnet-4-5",
       max_tokens: 1000,
       messages: [{ role: "user", content: prompt }],
     });
@@ -77,8 +77,11 @@ Format : { forme_base: string, type: string, etymologie: string, sens: [{ label:
 
     // F) Return result
     return NextResponse.json({ source: "api", result });
-  } catch (err) {
-    console.error("definition API error:", err);
-    return NextResponse.json({ error: "Internal error" }, { status: 500 });
+  } catch (error) {
+    console.error("DEFINITION ROUTE ERROR:", error);
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : String(error) },
+      { status: 500 }
+    );
   }
 }
