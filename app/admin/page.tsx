@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
 import styles from "./admin.module.css";
+import ApiDefStats from "@/components/ApiDefStats";
 
 const ADMIN_ID = "0450c58e-35b2-47e6-9600-13db5626e96d";
 
@@ -369,6 +370,7 @@ export default function AdminPage() {
 
       {/* ── DASHBOARD ── */}
       {activeTab === "dashboard" && (
+        <>
         <div className={styles.dashGrid}>
           {stats && (<>
             <div className={styles.statCard}><div className={styles.statBig}>{stats.totalPlayers}</div><div className={styles.statLbl}>👥 Joueurs total</div></div>
@@ -405,6 +407,8 @@ export default function AdminPage() {
               ))}
           </div>
         </div>
+        <ApiDefStats />
+        </>
       )}
 
       {/* ── JOUEURS ── */}
