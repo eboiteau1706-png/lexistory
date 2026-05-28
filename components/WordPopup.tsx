@@ -182,12 +182,6 @@ export default function WordPopup({ word, seenCount, onClose }: Props) {
       <div className={styles.popup}>
         <button className={styles.close} onClick={onClose}>✕</button>
 
-        {(loading || source === "api") && (
-          <span style={{ position: "absolute", top: 18, right: 56, fontSize: "11px", fontWeight: 500, padding: "2px 8px", borderRadius: "6px", background: "rgba(245,166,35,0.12)", border: "0.5px solid rgba(245,166,35,0.4)", color: "#f5a623", lineHeight: 1.5, pointerEvents: "none" }}>
-            Claude IA
-          </span>
-        )}
-
         <div className={styles.wordRow}>
           <div className={styles.word}>{word}</div>
           {userId && (

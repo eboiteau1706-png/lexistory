@@ -219,7 +219,13 @@ export default function StoryCard({ story }: Props) {
   }, [readPct, userId, story.slug, isPremium]);
 
   const handleWordClick = useCallback(async (word: string) => {
-    setSeenWords(prev => new Set(prev).add(word));
+    setSeenWords(prev => {
+      const next = new Set(prev);
+      // Multi-word group: remove individual component words so they don't double-count
+      if (word.includes(" ")) word.split(/\s+/).forEach(part => next.delete(part));
+      next.add(word);
+      return next;
+    });
     setActiveWord(word);
     if (userId) {
       await supabase.from("words_seen").upsert(
