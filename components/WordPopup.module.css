@@ -184,3 +184,43 @@
   margin-top: -8px;
   font-style: italic;
 }
+
+/* ── Skeleton loader ─────────────────────────────────────────────────────── */
+.skeletonLine {
+  height: 12px;
+  border-radius: 6px;
+  background: linear-gradient(90deg, var(--surface2) 25%, var(--border) 50%, var(--surface2) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.4s ease-in-out infinite;
+}
+
+.skeletonBlock {
+  padding: 12px 16px;
+  border-radius: 10px;
+  background: var(--surface2);
+  border-left: 3px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+
+.thinkingText {
+  font-size: 0.72rem;
+  color: var(--text-dim);
+  font-style: italic;
+  text-align: center;
+  margin-top: 4px;
+  animation: thinkPulse 1.6s ease-in-out infinite;
+}
+@keyframes thinkPulse {
+  0%, 100% { opacity: 0.35; }
+  50%       { opacity: 0.85; }
+}
+
+.contentFadeIn {
+  animation: contentFadeIn 0.4s ease;
+}
+@keyframes contentFadeIn {
+  from { opacity: 0; transform: translateY(5px); }
+  to   { opacity: 1; transform: translateY(0); }
+}

@@ -223,20 +223,42 @@ export default function WordPopup({ word, seenCount, onClose }: Props) {
 
         {loading ? (
           <div className={styles.loading}>
-            <div className={styles.shimmerBox} />
-            <div className={styles.shimmerBox} style={{ height: "48px" }} />
+            {/* Ligne étymologie */}
+            <div className={styles.skeletonLine} style={{ width: "42%", marginBottom: "4px" }} />
+
+            {/* Bloc définition */}
+            <div className={styles.section} style={{ marginBottom: "14px" }}>
+              <div className={styles.label}>Définition</div>
+              <div className={styles.skeletonBlock}>
+                <div className={styles.skeletonLine} />
+                <div className={styles.skeletonLine} style={{ width: "88%" }} />
+              </div>
+            </div>
+
+            {/* Bloc en clair */}
+            <div className={styles.section}>
+              <div className={styles.label}>En clair 💡</div>
+              <div className={styles.skeletonBlock} style={{ background: "rgba(232,201,122,0.04)", borderLeftColor: "rgba(232,201,122,0.3)" }}>
+                <div className={styles.skeletonLine} />
+                <div className={styles.skeletonLine} style={{ width: "72%" }} />
+              </div>
+            </div>
+
+            <div className={styles.thinkingText}>Claude réfléchit...</div>
           </div>
         ) : source === "limit" ? (
-          <div className={styles.section}>
-            <div className={styles.defOrig} style={{ color: "var(--text-muted)", fontSize: "0.88rem" }}>
-              Budget mensuel atteint.{" "}
-              <a href={`https://fr.wiktionary.org/wiki/${encodeURIComponent(key)}`} target="_blank" rel="noopener noreferrer" style={{ color: "var(--accent)" }}>
-                Voir sur Wiktionnaire →
-              </a>
+          <div className={styles.contentFadeIn}>
+            <div className={styles.section}>
+              <div className={styles.defOrig} style={{ color: "var(--text-muted)", fontSize: "0.88rem" }}>
+                Budget mensuel atteint.{" "}
+                <a href={`https://fr.wiktionary.org/wiki/${encodeURIComponent(key)}`} target="_blank" rel="noopener noreferrer" style={{ color: "var(--accent)" }}>
+                  Voir sur Wiktionnaire →
+                </a>
+              </div>
             </div>
           </div>
         ) : defOrig ? (
-          <>
+          <div className={styles.contentFadeIn}>
             <div className={styles.section}>
               <div className={styles.label}>Définition</div>
               <div className={styles.defOrig}>{defOrig}</div>
@@ -247,9 +269,9 @@ export default function WordPopup({ word, seenCount, onClose }: Props) {
                 <div className={styles.defSimple}>{defSimple}</div>
               </div>
             )}
-          </>
+          </div>
         ) : !loading && source !== null ? (
-          <>
+          <div className={styles.contentFadeIn}>
             <div className={styles.section}>
               <div className={styles.label}>Définition</div>
               <div className={styles.defOrig}>Ce mot n&apos;est pas encore dans notre dictionnaire.</div>
@@ -258,7 +280,7 @@ export default function WordPopup({ word, seenCount, onClose }: Props) {
               <div className={styles.label}>En clair 💡</div>
               <div className={styles.defSimple}>Nous ajoutons de nouveaux mots régulièrement ! 📚</div>
             </div>
-          </>
+          </div>
         ) : null}
 
         <div className={styles.footer}>
