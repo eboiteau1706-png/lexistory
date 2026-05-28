@@ -51,7 +51,9 @@ export default async function Home({
         level: custom.level as Story["level"],
         readTime: custom.read_time ?? "3 min de lecture",
         source: custom.source ?? "",
-        paragraphs: Array.isArray(custom.paragraphs) ? custom.paragraphs : [],
+        paragraphs:     Array.isArray(custom.paragraphs) ? custom.paragraphs : [],
+        avg_rating:     custom.avg_rating    ?? 0,
+        ratings_count:  custom.ratings_count ?? 0,
       };
     }
   } catch {}

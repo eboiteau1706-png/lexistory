@@ -1,13 +1,15 @@
 // lib/stories.ts
 export interface Story {
-  slug:       string;
-  date:       string;
-  title:      string;
-  category:   string;
-  level:      "Curieux" | "Lecteur" | "Érudit";
-  readTime:   string;
-  source:     string;
-  paragraphs: string[];
+  slug:          string;
+  date:          string;
+  title:         string;
+  category:      string;
+  level:         "Curieux" | "Lecteur" | "Érudit";
+  readTime:      string;
+  source:        string;
+  paragraphs:    string[];
+  avg_rating?:   number;
+  ratings_count?: number;
 }
 
 export const STORIES: Story[] = [

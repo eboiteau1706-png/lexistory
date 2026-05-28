@@ -47,14 +47,16 @@ export default function CategoryModal({ category: initialCategory, currentLevel,
     });
     supabase.from("stories_custom").select("*").then(({ data }) => {
       if (data) setCustomStories(data.map((c: any) => ({
-        slug:      c.slug ?? `custom-${c.date}-${c.level}`,
-        date:      c.date,
-        title:     c.title,
-        category:  c.category,
-        level:     c.level as Story["level"],
-        readTime:  c.read_time ?? "3 min de lecture",
-        source:    c.source ?? "",
-        paragraphs: Array.isArray(c.paragraphs) ? c.paragraphs : [],
+        slug:          c.slug ?? `custom-${c.date}-${c.level}`,
+        date:          c.date,
+        title:         c.title,
+        category:      c.category,
+        level:         c.level as Story["level"],
+        readTime:      c.read_time ?? "3 min de lecture",
+        source:        c.source ?? "",
+        paragraphs:    Array.isArray(c.paragraphs) ? c.paragraphs : [],
+        avg_rating:    c.avg_rating    ?? 0,
+        ratings_count: c.ratings_count ?? 0,
       })));
     });
   }, []);
@@ -76,7 +78,10 @@ export default function CategoryModal({ category: initialCategory, currentLevel,
     return allStories
       .filter(s => s.category === cat || s.category.split(" · ").includes(cat))
       .filter(s => !isFuture(s))
-      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+      .sort((a, b) => {
+        const rDiff = (b.avg_rating ?? 0) - (a.avg_rating ?? 0);
+        return rDiff !== 0 ? rDiff : new Date(b.date).getTime() - new Date(a.date).getTime();
+      });
   }
 
   function handleStoryClick(story: Story) {

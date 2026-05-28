@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase";
 import { getStoryXp, getStreakBonus } from "@/lib/xp";
 import WordPopup from "./WordPopup";
 import ClickableText, { toPhrase } from "./ClickableText";
+import StoryRating from "./StoryRating";
 import CategoryModal from "./CategoryModal";
 import styles from "./StoryCard.module.css";
 import type { Story } from "@/lib/stories";
@@ -290,6 +291,8 @@ export default function StoryCard({ story }: Props) {
             }
           </div>
         </div>
+
+        <StoryRating storyId={story.slug} initialAvg={story.avg_rating ?? 0} initialCount={story.ratings_count ?? 0} />
 
         <div className={styles.body}>
           {story.paragraphs.map((p, i) => (
