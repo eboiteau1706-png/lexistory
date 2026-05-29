@@ -5,11 +5,15 @@ import { getStoryXp, getStreakBonus } from "@/lib/xp";
 import WordPopup from "./WordPopup";
 import ClickableText, { toPhrase } from "./ClickableText";
 import StoryRating from "./StoryRating";
+import { lookup } from "@/lib/dictionary";
 import CategoryModal from "./CategoryModal";
 import styles from "./StoryCard.module.css";
 import type { Story } from "@/lib/stories";
 
 interface Props { story: Story; }
+
+const ADMIN_ID = "0450c58e-35b2-47e6-9600-13db5626e96d";
+interface WGroup { id: string; story_id: string; group_text: string; words: string[]; }
 
 function getProgressKey(slug: string, userId: string | null) {
   return `lx_progress_${userId ?? "guest"}_${slug}`;
@@ -31,6 +35,12 @@ export default function StoryCard({ story }: Props) {
   const [showInfo, setShowInfo]                 = useState(false);
   const [showCategory, setShowCategory]         = useState(false);
   const [groupWords, setGroupWords]             = useState<Set<string>>(new Set());
+  const [isAdmin, setIsAdmin]                   = useState(false);
+  const [wordGroupsList, setWordGroupsList]     = useState<WGroup[]>([]);
+  const [ctxMenu, setCtxMenu]                   = useState<{x:number;y:number;sel:string}|null>(null);
+  const [defModal, setDefModal]                 = useState<{word:string;etym:string;defOrig:string;defSimple:string}|null>(null);
+  const [defSaving, setDefSaving]               = useState(false);
+  const [toast, setToast]                       = useState<string|null>(null);
   const doneRef        = useRef(false);
   const intervalRef    = useRef<NodeJS.Timeout | null>(null);
   const userReadyRef   = useRef(false); // true only when the logged-in user's own timer reached 100
@@ -50,11 +60,21 @@ export default function StoryCard({ story }: Props) {
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session?.user) {
         setUserId(session.user.id);
+        setIsAdmin(session.user.id === ADMIN_ID);
         supabase.from("profiles").select("is_premium").eq("id", session.user.id).single()
           .then(({ data }) => { if (data?.is_premium) setIsPremium(true); });
       }
     });
   }, []);
+
+  // Load word groups for this story
+  const loadWordGroups = async () => {
+    const r = await fetch(`/api/word-groups?story_id=${story.slug}`);
+    const d = await r.json();
+    if (Array.isArray(d.groups)) setWordGroupsList(d.groups);
+  };
+
+  useEffect(() => { loadWordGroups(); }, [story.slug]);
 
   // Pause timer when tab is hidden
   useEffect(() => {
@@ -220,22 +240,104 @@ export default function StoryCard({ story }: Props) {
   }, [readPct, userId, story.slug, isPremium]);
 
   const handleWordClick = useCallback(async (word: string) => {
+    // If this word belongs to a word group, use the group text instead
+    const group = wordGroupsList.find(g =>
+      g.words.some(w => w.toLowerCase() === word.toLowerCase())
+    );
+    const effectiveWord = group ? group.group_text.toLowerCase() : word;
+
     setSeenWords(prev => {
       const next = new Set(prev);
-      // Multi-word group: remove individual component words so they don't double-count
-      if (word.includes(" ")) word.split(/\s+/).forEach(part => next.delete(part));
-      next.add(word);
+      if (effectiveWord.includes(" ")) effectiveWord.split(/\s+/).forEach(part => next.delete(part));
+      next.add(effectiveWord);
       return next;
     });
-    setActiveWord(word);
+    setActiveWord(effectiveWord);
     if (userId) {
       await supabase.from("words_seen").upsert(
-        { user_id: userId, word },
+        { user_id: userId, word: effectiveWord },
         { onConflict: "user_id,word" }
       );
       window.dispatchEvent(new CustomEvent("lexistory:word-seen"));
     }
-  }, [userId]);
+  }, [userId, wordGroupsList]);
+
+  // ── Admin helpers ─────────────────────────────────────────────────────────
+  function showToast(msg: string) {
+    setToast(msg);
+    setTimeout(() => setToast(null), 2500);
+  }
+
+  async function getToken(): Promise<string | null> {
+    const { data: { session } } = await supabase.auth.getSession();
+    return session?.access_token ?? null;
+  }
+
+  function handleContextMenu(e: React.MouseEvent) {
+    if (!isAdmin) return;
+    const sel = window.getSelection()?.toString().trim() ?? "";
+    if (sel.length < 2) return;
+    e.preventDefault();
+    setCtxMenu({ x: e.clientX, y: e.clientY, sel });
+  }
+
+  async function adminAddGroup(sel: string) {
+    const words = sel.toLowerCase().split(/\s+/).filter(Boolean);
+    const token = await getToken();
+    await fetch("/api/word-groups", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ story_id: story.slug, group_text: sel, words }),
+    });
+    await loadWordGroups();
+    setCtxMenu(null);
+    showToast("Groupe ajouté ✓");
+  }
+
+  async function adminRemoveGroup(sel: string) {
+    const grp = wordGroupsList.find(g => g.group_text.toLowerCase() === sel.toLowerCase());
+    if (!grp) { setCtxMenu(null); showToast("Ce groupe n'existe pas"); return; }
+    const token = await getToken();
+    await fetch("/api/word-groups", {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ id: grp.id }),
+    });
+    await loadWordGroups();
+    setCtxMenu(null);
+    showToast("Groupe supprimé ✓");
+  }
+
+  async function openDefModal(sel: string) {
+    const wordKey = sel.toLowerCase();
+    const local = lookup(wordKey);
+    let etym = local?.etym ?? "";
+    let defOrig = local?.defOrig ?? "";
+    let defSimple = local?.defSimple ?? "";
+    const { data: custom } = await supabase
+      .from("definitions_custom").select("senses").eq("word", wordKey).maybeSingle();
+    if (custom?.senses?.[0]) {
+      etym     = custom.senses[0].etym     || etym;
+      defOrig  = custom.senses[0].defOrig  || defOrig;
+      defSimple = custom.senses[0].defSimple || defSimple;
+    }
+    setCtxMenu(null);
+    setDefModal({ word: sel, etym, defOrig, defSimple });
+  }
+
+  async function saveDefinition() {
+    if (!defModal) return;
+    setDefSaving(true);
+    await supabase.from("definitions_custom").upsert({
+      word: defModal.word.toLowerCase(),
+      is_group: false,
+      senses: [{ label: "", etym: defModal.etym, defOrig: defModal.defOrig, defSimple: defModal.defSimple }],
+      story_origin: story.slug,
+    }, { onConflict: "word" });
+    setDefSaving(false);
+    setDefModal(null);
+    showToast("Définition enregistrée ✓");
+  }
 
   const displayPct = alreadyCompleted ? 100 : readPct;
 
@@ -294,7 +396,7 @@ export default function StoryCard({ story }: Props) {
 
         <StoryRating key={story.slug} storyId={story.slug} initialAvg={story.avg_rating ?? 0} initialCount={story.ratings_count ?? 0} />
 
-        <div className={styles.body}>
+        <div className={styles.body} onContextMenu={handleContextMenu}>
           {story.paragraphs.map((p, i) => (
             <p key={i}>
               <ClickableText text={p} seenWords={seenWords} onWordClick={handleWordClick} groupWords={groupWords} />
@@ -343,6 +445,68 @@ export default function StoryCard({ story }: Props) {
 
       {activeWord && (
         <WordPopup word={activeWord} seenCount={seenWords.size} storyId={story.slug} onClose={() => setActiveWord(null)} />
+      )}
+
+      {/* ── Admin context menu ── */}
+      {ctxMenu && (
+        <div onClick={() => setCtxMenu(null)} style={{ position: "fixed", inset: 0, zIndex: 500 }}>
+          <div
+            onClick={e => e.stopPropagation()}
+            style={{ position: "fixed", left: ctxMenu.x, top: ctxMenu.y, zIndex: 501, background: "var(--surface)", border: "1px solid var(--border)", borderRadius: "10px", padding: "6px 0", minWidth: "200px", boxShadow: "0 8px 24px rgba(0,0,0,0.4)", fontSize: "0.85rem" }}
+          >
+            <div style={{ padding: "3px 10px 6px", fontSize: "0.7rem", color: "var(--text-dim)", borderBottom: "1px solid var(--border)", marginBottom: "4px", fontStyle: "italic" }}>
+              « {ctxMenu.sel.length > 30 ? ctxMenu.sel.slice(0, 30) + "…" : ctxMenu.sel} »
+            </div>
+            {[
+              { icon: "📚", label: "Définir comme groupe", fn: () => adminAddGroup(ctxMenu.sel) },
+              { icon: "✂️", label: "Séparer les mots",    fn: () => adminRemoveGroup(ctxMenu.sel) },
+              { icon: "✏️", label: "Modifier la définition", fn: () => openDefModal(ctxMenu.sel) },
+            ].map(({ icon, label, fn }) => (
+              <button key={label} onClick={fn} style={{ display: "block", width: "100%", textAlign: "left", padding: "8px 14px", background: "none", border: "none", color: "var(--text)", cursor: "pointer", fontFamily: "inherit", fontSize: "0.85rem" }}
+                onMouseEnter={e => (e.currentTarget.style.background = "var(--surface2)")}
+                onMouseLeave={e => (e.currentTarget.style.background = "none")}>
+                {icon} {label}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* ── Admin definition modal ── */}
+      {defModal && (
+        <div onClick={() => setDefModal(null)} style={{ position: "fixed", inset: 0, zIndex: 500, background: "rgba(0,0,0,0.6)", backdropFilter: "blur(4px)", display: "flex", alignItems: "center", justifyContent: "center", padding: "24px" }}>
+          <div onClick={e => e.stopPropagation()} style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: "16px", padding: "24px", maxWidth: "460px", width: "100%", display: "flex", flexDirection: "column", gap: "12px" }}>
+            <div style={{ fontFamily: "var(--font-playfair)", fontSize: "1.1rem", fontWeight: 700, color: "var(--accent)" }}>
+              ✏️ {defModal.word}
+            </div>
+            {(["etym", "defOrig", "defSimple"] as const).map((field) => (
+              <div key={field}>
+                <label style={{ fontSize: "0.7rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.8px", color: "var(--text-dim)", display: "block", marginBottom: "4px" }}>
+                  {field === "etym" ? "Étymologie" : field === "defOrig" ? "Définition officielle" : "Définition simplifiée"}
+                </label>
+                <textarea
+                  value={defModal[field]}
+                  onChange={e => setDefModal(prev => prev ? { ...prev, [field]: e.target.value } : prev)}
+                  rows={field === "etym" ? 2 : 3}
+                  style={{ width: "100%", background: "var(--surface2)", border: "1px solid var(--border)", borderRadius: "8px", padding: "8px 10px", color: "var(--text)", fontFamily: "inherit", fontSize: "0.85rem", resize: "vertical", boxSizing: "border-box" }}
+                />
+              </div>
+            ))}
+            <div style={{ display: "flex", gap: "8px", justifyContent: "flex-end", marginTop: "4px" }}>
+              <button onClick={() => setDefModal(null)} style={{ padding: "8px 18px", borderRadius: "8px", background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text-muted)", cursor: "pointer", fontFamily: "inherit" }}>Annuler</button>
+              <button onClick={saveDefinition} disabled={defSaving} style={{ padding: "8px 18px", borderRadius: "8px", background: "var(--accent)", border: "none", color: "var(--bg)", fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}>
+                {defSaving ? "Sauvegarde…" : "Enregistrer"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Toast ── */}
+      {toast && (
+        <div style={{ position: "fixed", bottom: "28px", left: "50%", transform: "translateX(-50%)", zIndex: 600, background: "var(--surface)", border: "1px solid var(--border)", borderRadius: "50px", padding: "10px 20px", fontSize: "0.85rem", color: "var(--text)", boxShadow: "0 4px 16px rgba(0,0,0,0.3)", pointerEvents: "none" }}>
+          {toast}
+        </div>
       )}
 
       {showCategory && (
