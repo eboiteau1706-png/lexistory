@@ -31,7 +31,6 @@ export default function ClassementPage() {
     supabase.from("profiles")
       .select("id, username, xp, is_premium, avatar_url")
       .not("username", "is", null)
-      .neq("username", "")
       .order("xp", { ascending: false })
       .limit(200)
       .then(({ data }) => {

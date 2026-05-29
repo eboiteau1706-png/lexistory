@@ -79,7 +79,7 @@ export default function ProfileClient({ user }: { user: User }) {
     supabase.from("profiles").select("username, is_premium, xp, stripe_customer_id, avatar_url").eq("id", user.id).single()
       .then(({ data }) => {
         if (data?.username) setUsername(data.username);
-        if (data?.is_premium) setIsPremium(data.is_premium);
+        setIsPremium(data?.is_premium === true);
         setXp(data?.xp ?? 0);
         setStripeCustomerId(data?.stripe_customer_id ?? null);
         if (data?.avatar_url) setAvatarSeed(data.avatar_url);
@@ -154,7 +154,7 @@ export default function ProfileClient({ user }: { user: User }) {
     if (!newUsername.trim()) return;
     if (!/^[a-zA-Z0-9_-]{2,20}$/.test(newUsername.trim())) { setError("Pseudo invalide. Lettres, chiffres, - ou _ uniquement."); return; }
     setSaving(true); setError("");
-    const { error } = await supabase.from("profiles").upsert({ id: user.id, username: newUsername.trim() });
+    const { error } = await supabase.from("profiles").update({ username: newUsername.trim() }).eq("id", user.id);
     setSaving(false);
     if (error) setError(error.message.includes("unique") ? "Ce pseudo est déjà pris !" : "Erreur, réessaie.");
     else { setUsername(newUsername.trim()); setEditing(false); setNewUsername(""); }
