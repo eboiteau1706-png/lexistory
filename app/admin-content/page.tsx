@@ -196,7 +196,9 @@ export default function AdminContent() {
     if (expandedGameDate === date) { setExpandedGameDate(null); return; }
     setExpandedGameDate(date); setGameMsg("");
     setGameLoading(true);
-    const { data } = await supabase.from("games_custom").select("*").eq("game_date", date).maybeSingle();
+    const { data: rows, error: gameErr } = await supabase.from("games_custom").select("*").eq("game_date", date).limit(1);
+    if (gameErr) { setGameMsg("❌ Erreur fetch: " + gameErr.message); setGameLoading(false); return; }
+    const data = rows?.[0] ?? null;
     if (data) {
       setGameForm({
         word_of_day: data.word_of_day ?? "", word_of_day_def: data.word_of_day_def ?? "", word_of_day_etym: data.word_of_day_etym ?? "",
