@@ -88,6 +88,7 @@ export default function AdminContent() {
   const [gameForm, setGameForm] = useState<GameForm>(emptyGame());
   const [gameSaving, setGameSaving] = useState(false);
   const [gameMsg, setGameMsg] = useState("");
+  const [gameLoading, setGameLoading] = useState(false);
   const [existingGames, setExistingGames] = useState<Record<string, boolean>>({});
 
   // ── DEFS ──
@@ -194,6 +195,7 @@ export default function AdminContent() {
   async function openGame(date: string) {
     if (expandedGameDate === date) { setExpandedGameDate(null); return; }
     setExpandedGameDate(date); setGameMsg("");
+    setGameLoading(true);
     const { data } = await supabase.from("games_custom").select("*").eq("game_date", date).maybeSingle();
     if (data) {
       setGameForm({
@@ -211,6 +213,7 @@ export default function AdminContent() {
         p_cit_choice1: data.p_cit_choice1 ?? "", p_cit_choice2: data.p_cit_choice2 ?? "", p_cit_choice3: data.p_cit_choice3 ?? "", p_cit_choice4: data.p_cit_choice4 ?? "",
       });
     } else { setGameForm(emptyGame()); }
+    setGameLoading(false);
   }
 
   async function saveGame(date: string) {
@@ -436,6 +439,10 @@ export default function AdminContent() {
                   <div style={{ fontSize: "0.85rem", fontWeight: 700, color: "var(--text)", marginBottom: "14px" }}>🎮 Jeux du {formatDateFr(date)}</div>
                   {gameMsg && <div style={{ marginBottom: "10px", fontSize: "0.82rem", color: gameMsg.startsWith("✅") ? "var(--green)" : "#e07070" }}>{gameMsg}</div>}
 
+                  {gameLoading ? (
+                    <div style={{ textAlign: "center", padding: "24px", color: "var(--text-dim)", fontSize: "0.88rem" }}>⏳ Chargement…</div>
+                  ) : <>
+
                   <div style={section}>
                     <div style={sectionTitle}>📚 Jeux gratuits</div>
                     <div style={{ ...lbl, color: "var(--accent)" }}>📖 Mot du jour</div>
@@ -494,10 +501,12 @@ export default function AdminContent() {
                     <button onClick={() => saveGame(date)} disabled={gameSaving} style={{ flex: 1, padding: "10px", borderRadius: "10px", background: "var(--accent)", border: "none", color: "var(--bg)", fontFamily: "inherit", fontSize: "0.88rem", fontWeight: 700, cursor: "pointer" }}>
                       {gameSaving ? "Sauvegarde..." : "💾 Sauvegarder"}
                     </button>
+                    <button onClick={() => setGameForm(emptyGame())} style={{ padding: "10px 14px", borderRadius: "10px", background: "none", border: "1px solid var(--border)", color: "var(--text-muted)", cursor: "pointer", fontFamily: "inherit", fontSize: "0.88rem" }}>🗑️ Effacer</button>
                     {existingGames[date] && (
-                      <button onClick={() => deleteGame(date)} style={{ padding: "10px 16px", borderRadius: "10px", background: "none", border: "1px solid #e07070", color: "#e07070", cursor: "pointer", fontFamily: "inherit", fontSize: "0.88rem" }}>🗑️</button>
+                      <button onClick={() => deleteGame(date)} style={{ padding: "10px 14px", borderRadius: "10px", background: "none", border: "1px solid #e07070", color: "#e07070", cursor: "pointer", fontFamily: "inherit", fontSize: "0.88rem" }}>❌ Supprimer</button>
                     )}
                   </div>
+                  </>}
                 </div>
               )}
             </div>
