@@ -10,7 +10,6 @@ export async function GET() {
   const { data } = await supabaseAdmin
     .from("profiles")
     .select("id, username, xp, is_premium, avatar_url")
-    .not("username", "is", null)
     .order("xp", { ascending: false })
     .limit(200);
 

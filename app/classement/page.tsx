@@ -141,8 +141,8 @@ export default function ClassementPage() {
                       <img src={getAvatarUrl(player.avatar_url)} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
                     </div>
                     <div className={styles.playerInfo}>
-                      <a href={`/joueur/${player.username}`} className={styles.playerName} style={{ textDecoration: "none", color: "inherit" }}>
-                        {player.username}
+                      <a href={player.username ? `/joueur/${player.username}` : "#"} className={styles.playerName} style={{ textDecoration: "none", color: "inherit" }}>
+                        {player.username ?? <span style={{ color: "var(--text-dim)", fontStyle: "italic" }}>Sans pseudo</span>}
                         {player.is_premium && <span className={styles.premiumTag}>✨</span>}
                         {isMe && <span className={styles.meTag}>toi</span>}
                       </a>
@@ -173,7 +173,7 @@ export default function ClassementPage() {
 
               {list.length === 0 && (
                 <div className={styles.empty}>
-                  {tab === "amis" ? "Ajoute des amis pour les voir ici !" : "Personne n'a encore de pseudo — sois le premier ! 🚀"}
+                  {tab === "amis" ? "Ajoute des amis pour les voir ici !" : "Aucun joueur trouvé."}
                 </div>
               )}
             </div>
