@@ -34,7 +34,22 @@
   align-items: center;
   justify-content: center;
   margin-bottom: 4px;
+  overflow: hidden;
 }
+
+.btnEditAvatar {
+  font-size: 0.75rem;
+  color: var(--text-dim);
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 4px 12px;
+  cursor: pointer;
+  font-family: inherit;
+  margin-bottom: 4px;
+  transition: color 0.15s, border-color 0.15s;
+}
+.btnEditAvatar:hover { color: var(--accent); border-color: var(--accent); }
 
 .since {
   font-size: 0.78rem;
