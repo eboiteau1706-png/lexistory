@@ -143,9 +143,9 @@ export default function ClassementPage() {
                     <div className={styles.rank}>
                       {medal || <span className={styles.rankNum}>#{i + 1}</span>}
                     </div>
-                    <div style={{ width: 36, height: 36, borderRadius: "50%", flexShrink: 0, overflow: "hidden", background: avatarBg(player.username ?? "?"), display: "flex", alignItems: "center", justifyContent: "center", fontSize: "0.85rem", fontWeight: 700, color: "#fff", alignSelf: "center" }}>
+                    <div style={{ width: 40, height: 40, minWidth: 40, minHeight: 40, borderRadius: "50%", flexShrink: 0, overflow: "hidden", background: avatarBg(player.username ?? "?"), display: "flex", alignItems: "center", justifyContent: "center", fontSize: "0.9rem", fontWeight: 700, color: "#fff", alignSelf: "center" }}>
                       {getAvatarUrl(player.avatar_url ?? null)
-                        ? <img src={getAvatarUrl(player.avatar_url ?? null)!} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
+                        ? <img src={getAvatarUrl(player.avatar_url ?? null)!} alt="" style={{ width: 40, height: 40, objectFit: "cover", display: "block" }} />
                         : (player.username?.[0] ?? "?").toUpperCase()}
                     </div>
                     <div className={styles.playerInfo}>
