@@ -6,6 +6,7 @@ import AdBanner from "@/components/AdBanner";
 import UsernameModal from "@/components/UsernameModal";
 import OnboardingPopup from "@/components/OnboardingPopup";
 import AnnouncementBanner from "@/components/Announcement";
+import CookieBanner from "@/components/CookieBanner";
 import "./globals.css";
 
 const playfair = Playfair_Display({
@@ -72,6 +73,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         {children}
         <AdBanner />
         <Footer />
+        <CookieBanner />
       </body>
     </html>
   );
