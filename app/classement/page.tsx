@@ -13,12 +13,6 @@ interface Player {
   avatar_url?: string | null;
 }
 
-const AVATAR_COLORS = ["#d4a843", "#6ba3be", "#7ac97a", "#e07070", "#9b7fdb", "#e09070"];
-function avatarBg(username: string) {
-  let h = 0;
-  for (const c of username) h = c.charCodeAt(0) + h * 31;
-  return AVATAR_COLORS[Math.abs(h) % AVATAR_COLORS.length];
-}
 
 export default function ClassementPage() {
   const [players, setPlayers]         = useState<Player[]>([]);
@@ -146,10 +140,8 @@ export default function ClassementPage() {
                     <div className={styles.rank}>
                       {medal || <span className={styles.rankNum}>#{i + 1}</span>}
                     </div>
-                    <div style={{ width: 36, height: 36, borderRadius: "50%", overflow: "hidden", flexShrink: 0, background: getAvatarUrl(player.avatar_url) ? "var(--surface2)" : avatarBg(player.username ?? "?"), display: "flex", alignItems: "center", justifyContent: "center", fontSize: "0.85rem", fontWeight: 700, color: "#fff" }}>
-                      {getAvatarUrl(player.avatar_url)
-                        ? <img src={getAvatarUrl(player.avatar_url)!} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                        : (player.username?.[0] ?? "?").toUpperCase()}
+                    <div style={{ width: 36, height: 36, borderRadius: "50%", overflow: "hidden", flexShrink: 0 }}>
+                      <img src={getAvatarUrl(player.avatar_url)} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
                     </div>
                     <div className={styles.playerInfo}>
                       <a href={`/joueur/${player.username}`} className={styles.playerName} style={{ textDecoration: "none", color: "inherit" }}>

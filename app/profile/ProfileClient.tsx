@@ -244,18 +244,22 @@ export default function ProfileClient({ user }: { user: User }) {
 
         {showAvatarGrid && (
           <div onClick={() => setShowAvatarGrid(false)} style={{ position: "fixed", inset: 0, zIndex: 400, background: "rgba(0,0,0,0.6)", backdropFilter: "blur(4px)", display: "flex", alignItems: "center", justifyContent: "center", padding: "24px" }}>
-            <div onClick={e => e.stopPropagation()} style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: "20px", padding: "24px", maxWidth: "340px", width: "100%", display: "flex", flexDirection: "column", gap: "16px" }}>
-              <div style={{ fontFamily: "var(--font-playfair), serif", fontSize: "1.1rem", fontWeight: 700, color: "var(--accent)", textAlign: "center" }}>Choisis ton avatar</div>
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "10px", justifyItems: "center" }}>
-                {AVATAR_SEEDS.map(seed => (
-                  <button key={seed} onClick={() => setPendingSeed(seed)} style={{ background: "none", border: `3px solid ${pendingSeed === seed ? "#d4a843" : "transparent"}`, borderRadius: "50%", padding: "2px", cursor: "pointer", transition: "border-color 0.15s" }}>
-                    <img src={getAvatarUrl(seed)!} alt={seed} style={{ width: 56, height: 56, borderRadius: "50%", display: "block" }} />
-                  </button>
-                ))}
+            <div onClick={e => e.stopPropagation()} style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: "20px", padding: "28px 24px", maxWidth: "480px", width: "100%", display: "flex", flexDirection: "column", gap: "20px" }}>
+              <div style={{ fontFamily: "var(--font-playfair), serif", fontSize: "1.2rem", fontWeight: 700, color: "var(--accent)", textAlign: "center" }}>Choisis ton avatar</div>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "14px", justifyItems: "center" }}>
+                {AVATAR_SEEDS.map(seed => {
+                  const selected = pendingSeed === seed;
+                  return (
+                    <button key={seed} onClick={() => setPendingSeed(seed)}
+                      style={{ background: "none", border: `3px solid ${selected ? "#d4a843" : "transparent"}`, borderRadius: "50%", padding: "3px", cursor: "pointer", transition: "border-color 0.15s, box-shadow 0.15s", boxShadow: selected ? "0 0 10px rgba(212,168,67,0.55)" : "none" }}>
+                      <img src={getAvatarUrl(seed)} alt={seed} style={{ width: 90, height: 90, borderRadius: "50%", display: "block" }} />
+                    </button>
+                  );
+                })}
               </div>
               <div style={{ display: "flex", gap: "8px", justifyContent: "center" }}>
-                <button onClick={() => setShowAvatarGrid(false)} style={{ padding: "8px 20px", borderRadius: "50px", background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text-muted)", fontFamily: "inherit", fontSize: "0.85rem", cursor: "pointer" }}>Annuler</button>
-                <button onClick={handleSaveAvatar} disabled={savingAvatar || !pendingSeed} style={{ padding: "8px 20px", borderRadius: "50px", background: "var(--accent)", border: "none", color: "var(--bg)", fontFamily: "inherit", fontSize: "0.85rem", fontWeight: 700, cursor: "pointer", opacity: !pendingSeed ? 0.5 : 1 }}>
+                <button onClick={() => setShowAvatarGrid(false)} style={{ padding: "9px 22px", borderRadius: "50px", background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text-muted)", fontFamily: "inherit", fontSize: "0.88rem", cursor: "pointer" }}>Annuler</button>
+                <button onClick={handleSaveAvatar} disabled={savingAvatar || !pendingSeed} style={{ padding: "9px 22px", borderRadius: "50px", background: "var(--accent)", border: "none", color: "var(--bg)", fontFamily: "inherit", fontSize: "0.88rem", fontWeight: 700, cursor: "pointer", opacity: !pendingSeed ? 0.5 : 1 }}>
                   {savingAvatar ? "Sauvegarde…" : "Confirmer"}
                 </button>
               </div>
