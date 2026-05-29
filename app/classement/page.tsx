@@ -3,14 +3,18 @@ import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase";
 import { getLevel } from "@/lib/xp";
 import styles from "./classement.module.css";
-import { getAvatarUrl } from "@/lib/avatar";
 
 interface Player {
   id: string;
   username: string;
   xp: number;
   is_premium: boolean;
-  avatar_url?: string | null;
+}
+
+const AVATAR_COLORS = ["#d4a843", "#6ba3be", "#7ac97a", "#e07070", "#9b7fdb"];
+function avatarBg(u: string) {
+  let h = 0; for (const c of u) h = c.charCodeAt(0) + h * 31;
+  return AVATAR_COLORS[Math.abs(h) % AVATAR_COLORS.length];
 }
 
 
@@ -45,7 +49,7 @@ export default function ClassementPage() {
 
       // Always ensure current user appears even if outside top 200
       supabase.from("profiles")
-        .select("id, username, xp, is_premium, avatar_url")
+        .select("id, username, xp, is_premium")
         .eq("id", uid)
         .single()
         .then(({ data }) => {
@@ -78,13 +82,13 @@ export default function ClassementPage() {
     const { data: allF } = await supabase.from("friendships")
       .select("user_id, friend_id").or(`user_id.eq.${uid},friend_id.eq.${uid}`).eq("status", "accepted");
     if (!allF || allF.length === 0) {
-      const { data: me } = await supabase.from("profiles").select("id, username, xp, is_premium, avatar_url").eq("id", uid).single();
+      const { data: me } = await supabase.from("profiles").select("id, username, xp, is_premium").eq("id", uid).single();
       if (me) setFriends([me as Player]);
       return;
     }
     const ids = allF.map((f: any) => f.user_id === uid ? f.friend_id : f.user_id);
     ids.push(uid);
-    const { data: profiles } = await supabase.from("profiles").select("id, username, xp, is_premium, avatar_url")
+    const { data: profiles } = await supabase.from("profiles").select("id, username, xp, is_premium")
       .in("id", ids).not("username", "is", null).order("xp", { ascending: false });
     setFriends((profiles as Player[]) ?? []);
   }
@@ -137,8 +141,8 @@ export default function ClassementPage() {
                     <div className={styles.rank}>
                       {medal || <span className={styles.rankNum}>#{i + 1}</span>}
                     </div>
-                    <div style={{ width: 36, height: 36, borderRadius: "50%", overflow: "hidden", flexShrink: 0 }}>
-                      <img src={getAvatarUrl(player.avatar_url)} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                    <div style={{ width: 36, height: 36, borderRadius: "50%", flexShrink: 0, background: avatarBg(player.username ?? "?"), display: "flex", alignItems: "center", justifyContent: "center", fontSize: "0.85rem", fontWeight: 700, color: "#fff" }}>
+                      {(player.username?.[0] ?? "?").toUpperCase()}
                     </div>
                     <div className={styles.playerInfo}>
                       <a href={player.username ? `/joueur/${player.username}` : "#"} className={styles.playerName} style={{ textDecoration: "none", color: "inherit" }}>

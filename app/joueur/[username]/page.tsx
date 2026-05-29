@@ -3,7 +3,6 @@ import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import { createClient } from "@/lib/supabase";
 import { getLevel, getXpProgress } from "@/lib/xp";
-import { getAvatarUrl } from "@/lib/avatar";
 import styles from "../../profile/profile.module.css";
 
 export default function ProfilPublicPage() {
@@ -27,7 +26,7 @@ export default function ProfilPublicPage() {
       // Charge le profil cible
       const { data: target } = await supabase
         .from("profiles")
-        .select("id, username, xp, is_premium, avatar_url")
+        .select("id, username, xp, is_premium")
         .eq("username", username)
         .single();
 
@@ -105,9 +104,7 @@ export default function ProfilPublicPage() {
   return (
     <div className={styles.page}>
       <div className={styles.card}>
-        <div className={styles.avatar}>
-          <img src={getAvatarUrl(profile.avatar_url)} alt="avatar" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-        </div>
+        <div className={styles.avatar}>{(profile.username?.[0] ?? "?").toUpperCase()}</div>
         {profile.is_premium && <div className={styles.premiumBadge}>✨ Premium</div>}
 
         <div className={styles.nameWrap}>

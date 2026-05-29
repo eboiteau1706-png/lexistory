@@ -9,9 +9,11 @@ const supabaseAdmin = createClient(
 export async function GET() {
   const { data } = await supabaseAdmin
     .from("profiles")
-    .select("id, username, xp, is_premium, avatar_url")
+    .select("id, username, xp, is_premium")
+    .not("username", "is", null)
+    .neq("username", "")
     .order("xp", { ascending: false })
-    .limit(200);
+    .limit(100);
 
   return NextResponse.json({ players: data ?? [] });
 }
