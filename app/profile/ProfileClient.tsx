@@ -256,7 +256,7 @@ export default function ProfileClient({ user }: { user: User }) {
           <div onClick={() => setShowAvatarGrid(false)} style={{ position: "fixed", inset: 0, zIndex: 400, background: "rgba(0,0,0,0.6)", backdropFilter: "blur(4px)", display: "flex", alignItems: "center", justifyContent: "center", padding: "24px" }}>
             <div onClick={e => e.stopPropagation()} style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: "20px", padding: "24px", maxWidth: "400px", width: "100%", display: "flex", flexDirection: "column", gap: "16px" }}>
               <div style={{ fontFamily: "var(--font-playfair), serif", fontSize: "1.1rem", fontWeight: 700, color: "var(--accent)", textAlign: "center" }}>Choisis ton avatar</div>
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "12px", justifyItems: "center" }}>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "12px", justifyItems: "center", margin: "0 auto", textAlign: "center" }}>
                 {AVATAR_SEEDS.map(seed => (
                   <button key={seed} onClick={() => setPendingSeed(seed)}
                     style={{ background: "none", border: `3px solid ${pendingSeed === seed ? "#d4a843" : "transparent"}`, borderRadius: "50%", padding: "2px", cursor: "pointer", transition: "border-color 0.15s" }}>

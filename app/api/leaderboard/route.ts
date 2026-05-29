@@ -9,7 +9,7 @@ const supabaseAdmin = createClient(
 export async function GET() {
   const { data } = await supabaseAdmin
     .from("profiles")
-    .select("id, username, xp, is_premium")
+    .select("id, username, xp, is_premium, avatar_url")
     .not("username", "is", null)
     .neq("username", "")
     .order("xp", { ascending: false })
