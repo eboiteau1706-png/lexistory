@@ -1,5 +1,5 @@
 "use client";
-import { useState, useCallback, useEffect, useRef } from "react";
+import { useState, useCallback, useEffect, useRef, useMemo } from "react";
 import { createClient } from "@/lib/supabase";
 import { getStoryXp, getStreakBonus } from "@/lib/xp";
 import WordPopup from "./WordPopup";
@@ -339,6 +339,16 @@ export default function StoryCard({ story }: Props) {
     showToast("Définition enregistrée ✓");
   }
 
+  // Merge definitions_custom groups + per-story word_groups into one set for ClickableText
+  const allGroupWords = useMemo(() => {
+    const merged = new Set(groupWords);
+    wordGroupsList.forEach(g => {
+      const normalized = g.group_text.trim().split(/\s+/).map(toPhrase).join(" ");
+      merged.add(normalized);
+    });
+    return merged;
+  }, [groupWords, wordGroupsList]);
+
   const displayPct = alreadyCompleted ? 100 : readPct;
 
   return (
@@ -399,7 +409,7 @@ export default function StoryCard({ story }: Props) {
         <div className={styles.body} onContextMenu={handleContextMenu}>
           {story.paragraphs.map((p, i) => (
             <p key={i}>
-              <ClickableText text={p} seenWords={seenWords} onWordClick={handleWordClick} groupWords={groupWords} />
+              <ClickableText text={p} seenWords={seenWords} onWordClick={handleWordClick} groupWords={allGroupWords} />
             </p>
           ))}
         </div>
