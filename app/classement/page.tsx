@@ -33,18 +33,37 @@ export default function ClassementPage() {
   const supabase = createClient();
 
   useEffect(() => {
-    supabase.from("profiles").select("id, username, xp, is_premium, avatar_url")
-      .not("username", "is", null).order("xp", { ascending: false }).limit(50)
-      .then(({ data }) => { setPlayers((data as Player[]) ?? []); setLoading(false); });
+    // Fetch global leaderboard — exclude null/empty usernames, higher limit
+    supabase.from("profiles")
+      .select("id, username, xp, is_premium, avatar_url")
+      .not("username", "is", null)
+      .neq("username", "")
+      .order("xp", { ascending: false })
+      .limit(200)
+      .then(({ data }) => {
+        setPlayers((data as Player[]) ?? []);
+        setLoading(false);
+      });
 
     supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session?.user) {
-        setMyId(session.user.id);
-        loadFriends(session.user.id);
-        loadFriendStatus(session.user.id);
-      } else {
-        setLoading(false);
-      }
+      if (!session?.user) { setLoading(false); return; }
+      const uid = session.user.id;
+      setMyId(uid);
+      loadFriends(uid);
+      loadFriendStatus(uid);
+
+      // Always ensure current user appears even if outside top 200
+      supabase.from("profiles")
+        .select("id, username, xp, is_premium, avatar_url")
+        .eq("id", uid)
+        .single()
+        .then(({ data }) => {
+          if (!data?.username) return;
+          setPlayers(prev => {
+            if (prev.some(p => p.id === uid)) return prev;
+            return [...prev, data as Player].sort((a, b) => b.xp - a.xp);
+          });
+        });
     });
   }, []);
 
