@@ -32,14 +32,14 @@ export function toPhrase(raw: string): string {
 export default function ClickableText({ text, seenWords, onWordClick, groupWords }: Props) {
   const rawTokens = text.split(/(\s+)/);
 
-  const groups: { display: string; key: string; isSpace: boolean }[] = [];
+  const groups: { display: string; key: string; isSpace: boolean; isGroup: boolean }[] = [];
 
   let i = 0;
   while (i < rawTokens.length) {
     const token = rawTokens[i];
 
     if (/^\s+$/.test(token)) {
-      groups.push({ display: token, key: "", isSpace: true });
+      groups.push({ display: token, key: "", isSpace: true, isGroup: false });
       i++;
       continue;
     }
@@ -69,13 +69,13 @@ export default function ClickableText({ text, seenWords, onWordClick, groupWords
     }
 
     if (bestMatchKey) {
-      groups.push({ display: bestDisplay, key: bestMatchKey, isSpace: false });
+      groups.push({ display: bestDisplay, key: bestMatchKey, isSpace: false, isGroup: true });
       i = bestJ + 1;
       continue;
     }
 
     const key = toKey(token);
-    groups.push({ display: token, key, isSpace: false });
+    groups.push({ display: token, key, isSpace: false, isGroup: false });
     i++;
   }
 
@@ -87,7 +87,7 @@ export default function ClickableText({ text, seenWords, onWordClick, groupWords
         return (
           <span
             key={idx}
-            className={`${styles.word} ${seen ? styles.seen : ""}`}
+            className={`${styles.word} ${seen ? styles.seen : ""} ${g.isGroup ? styles.wordGroup : ""}`}
             onClick={() => g.key.length >= 2 && onWordClick(g.key)}
           >
             {g.display}

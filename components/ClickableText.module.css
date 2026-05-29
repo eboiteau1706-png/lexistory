@@ -16,3 +16,9 @@
   background: rgba(109, 186, 138, 0.1);
   color: var(--green);
 }
+
+.wordGroup:hover {
+  background: rgba(212, 168, 67, 0.22);
+  color: var(--accent);
+  border-radius: 3px;
+}
