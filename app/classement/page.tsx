@@ -3,16 +3,13 @@ import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase";
 import { getLevel } from "@/lib/xp";
 import styles from "./classement.module.css";
-import { getAvatarUrl } from "@/lib/avatar";
 
 interface Player {
   id: string;
   username: string;
   xp: number;
   is_premium: boolean;
-  avatar_url?: string | null;
 }
-
 
 export default function ClassementPage() {
   const [players, setPlayers]         = useState<Player[]>([]);
@@ -27,34 +24,18 @@ export default function ClassementPage() {
   const supabase = createClient();
 
   useEffect(() => {
-    // Fetch via admin route to bypass RLS and always see all players
-    fetch("/api/leaderboard")
-      .then(r => r.json())
-      .then(({ players }) => {
-        setPlayers((players as Player[]) ?? []);
-        setLoading(false);
-      })
-      .catch(() => setLoading(false));
+    supabase.from("profiles").select("id, username, xp, is_premium")
+      .not("username", "is", null).order("xp", { ascending: false }).limit(50)
+      .then(({ data }) => { setPlayers((data as Player[]) ?? []); setLoading(false); });
 
     supabase.auth.getSession().then(({ data: { session } }) => {
-      if (!session?.user) { setLoading(false); return; }
-      const uid = session.user.id;
-      setMyId(uid);
-      loadFriends(uid);
-      loadFriendStatus(uid);
-
-      // Always ensure current user appears even if outside top 200
-      supabase.from("profiles")
-        .select("id, username, xp, is_premium, avatar_url")
-        .eq("id", uid)
-        .single()
-        .then(({ data }) => {
-          if (!data?.username) return;
-          setPlayers(prev => {
-            if (prev.some(p => p.id === uid)) return prev;
-            return [...prev, data as Player].sort((a, b) => b.xp - a.xp);
-          });
-        });
+      if (session?.user) {
+        setMyId(session.user.id);
+        loadFriends(session.user.id);
+        loadFriendStatus(session.user.id);
+      } else {
+        setLoading(false);
+      }
     });
   }, []);
 
@@ -78,13 +59,13 @@ export default function ClassementPage() {
     const { data: allF } = await supabase.from("friendships")
       .select("user_id, friend_id").or(`user_id.eq.${uid},friend_id.eq.${uid}`).eq("status", "accepted");
     if (!allF || allF.length === 0) {
-      const { data: me } = await supabase.from("profiles").select("id, username, xp, is_premium, avatar_url").eq("id", uid).single();
+      const { data: me } = await supabase.from("profiles").select("id, username, xp, is_premium").eq("id", uid).single();
       if (me) setFriends([me as Player]);
       return;
     }
     const ids = allF.map((f: any) => f.user_id === uid ? f.friend_id : f.user_id);
     ids.push(uid);
-    const { data: profiles } = await supabase.from("profiles").select("id, username, xp, is_premium, avatar_url")
+    const { data: profiles } = await supabase.from("profiles").select("id, username, xp, is_premium")
       .in("id", ids).not("username", "is", null).order("xp", { ascending: false });
     setFriends((profiles as Player[]) ?? []);
   }
@@ -137,12 +118,9 @@ export default function ClassementPage() {
                     <div className={styles.rank}>
                       {medal || <span className={styles.rankNum}>#{i + 1}</span>}
                     </div>
-                    <div style={{ width: 36, height: 36, borderRadius: "50%", overflow: "hidden", flexShrink: 0 }}>
-                      <img src={getAvatarUrl(player.avatar_url)} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                    </div>
                     <div className={styles.playerInfo}>
-                      <a href={player.username ? `/joueur/${player.username}` : "#"} className={styles.playerName} style={{ textDecoration: "none", color: "inherit" }}>
-                        {player.username ?? <span style={{ color: "var(--text-dim)", fontStyle: "italic" }}>Sans pseudo</span>}
+                      <a href={`/joueur/${player.username}`} className={styles.playerName} style={{ textDecoration: "none", color: "inherit" }}>
+                        {player.username}
                         {player.is_premium && <span className={styles.premiumTag}>✨</span>}
                         {isMe && <span className={styles.meTag}>toi</span>}
                       </a>
@@ -173,7 +151,7 @@ export default function ClassementPage() {
 
               {list.length === 0 && (
                 <div className={styles.empty}>
-                  {tab === "amis" ? "Ajoute des amis pour les voir ici !" : "Aucun joueur trouvé."}
+                  {tab === "amis" ? "Ajoute des amis pour les voir ici !" : "Personne n'a encore de pseudo — sois le premier ! 🚀"}
                 </div>
               )}
             </div>

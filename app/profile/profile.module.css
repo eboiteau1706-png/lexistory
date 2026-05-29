@@ -22,8 +22,8 @@
 }
 
 .avatar {
-  width: 80px;
-  height: 80px;
+  width: 72px;
+  height: 72px;
   border-radius: 50%;
   background: linear-gradient(135deg, var(--accent2), var(--accent));
   color: var(--bg);
@@ -33,25 +33,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  overflow: hidden;
-  border: 2px solid #d4a843;
-  margin-bottom: 4px;
-  flex-shrink: 0;
-}
-
-.btnEditAvatar {
-  font-size: 0.75rem;
-  color: var(--text-dim);
-  background: none;
-  border: 1px solid var(--border);
-  border-radius: 20px;
-  padding: 4px 12px;
-  cursor: pointer;
-  font-family: inherit;
-  transition: color 0.15s, border-color 0.15s;
   margin-bottom: 4px;
 }
-.btnEditAvatar:hover { color: var(--accent); border-color: var(--accent); }
 
 .since {
   font-size: 0.78rem;

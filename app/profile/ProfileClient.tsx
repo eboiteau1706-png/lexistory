@@ -6,7 +6,6 @@ import { getLevel, getXpProgress, LEVELS } from "@/lib/xp";
 import { lookup } from "@/lib/dictionary";
 import type { User } from "@supabase/supabase-js";
 import styles from "./profile.module.css";
-import { AVATAR_SEEDS, getAvatarUrl } from "@/lib/avatar";
 
 interface FavWord {
   word: string;
@@ -47,12 +46,6 @@ export default function ProfileClient({ user }: { user: User }) {
   const [favorites, setFavorites] = useState<FavWord[]>([]);
   const [favPopup, setFavPopup]   = useState<FavWord | null>(null);
 
-  // Avatar
-  const [avatarSeed, setAvatarSeed]       = useState<string | null>(null);
-  const [showAvatarGrid, setShowAvatarGrid] = useState(false);
-  const [pendingSeed, setPendingSeed]     = useState<string | null>(null);
-  const [savingAvatar, setSavingAvatar]   = useState(false);
-
   // Email
   const [currentEmail, setCurrentEmail]   = useState(user.email ?? "");
   const [editingEmail, setEditingEmail]   = useState(false);
@@ -70,31 +63,26 @@ export default function ProfileClient({ user }: { user: User }) {
       window.location.reload();
     }
 
-    // Refresh session FIRST, then load profile so RLS (auth.uid() = id) passes
-    supabase.auth.refreshSession().then(async () => {
-      const { data: sessionData } = await supabase.auth.getSession();
-      if (sessionData.session?.user?.email) setCurrentEmail(sessionData.session.user.email);
-
-      const { data } = await supabase
-        .from("profiles")
-        .select("username, is_premium, xp, stripe_customer_id, avatar_url")
-        .eq("id", user.id)
-        .single();
-
-      if (data?.username)         setUsername(data.username);
-      setIsPremium(data?.is_premium === true);
-      setXp(data?.xp ?? 0);
-      setStripeCustomerId(data?.stripe_customer_id ?? null);
-      setAvatarSeed(data?.avatar_url ?? null);   // always set, even if null
-
-      if (data?.stripe_customer_id) {
-        fetch("/api/subscription").then(r => r.json()).then(d => {
-          if (d.renewalDate)      setRenewalDate(d.renewalDate);
-          if (d.daysLeft)         setDaysLeft(d.daysLeft);
-          if (d.cancelAtPeriodEnd) setCancelAtPeriodEnd(true);
-        });
-      }
+    supabase.auth.refreshSession().then(() => {
+      supabase.auth.getSession().then(({ data }) => {
+        if (data.session?.user?.email) setCurrentEmail(data.session.user.email);
+      });
     });
+
+    supabase.from("profiles").select("username, is_premium, xp, stripe_customer_id").eq("id", user.id).single()
+      .then(({ data }) => {
+        if (data?.username) setUsername(data.username);
+        if (data?.is_premium) setIsPremium(data.is_premium);
+        setXp(data?.xp ?? 0);
+        setStripeCustomerId(data?.stripe_customer_id ?? null);
+        if (data?.stripe_customer_id) {
+          fetch("/api/subscription").then(r => r.json()).then(d => {
+            if (d.renewalDate) setRenewalDate(d.renewalDate);
+            if (d.daysLeft) setDaysLeft(d.daysLeft);
+            if (d.cancelAtPeriodEnd) setCancelAtPeriodEnd(true);
+          });
+        }
+      });
 
     supabase.from("words_seen").select("word", { count: "exact" }).eq("user_id", user.id).order("seen_at", { ascending: false })
       .then(({ count, data }) => {
@@ -158,7 +146,7 @@ export default function ProfileClient({ user }: { user: User }) {
     if (!newUsername.trim()) return;
     if (!/^[a-zA-Z0-9_-]{2,20}$/.test(newUsername.trim())) { setError("Pseudo invalide. Lettres, chiffres, - ou _ uniquement."); return; }
     setSaving(true); setError("");
-    const { error } = await supabase.from("profiles").update({ username: newUsername.trim() }).eq("id", user.id);
+    const { error } = await supabase.from("profiles").upsert({ id: user.id, username: newUsername.trim() });
     setSaving(false);
     if (error) setError(error.message.includes("unique") ? "Ce pseudo est déjà pris !" : "Erreur, réessaie.");
     else { setUsername(newUsername.trim()); setEditing(false); setNewUsername(""); }
@@ -210,18 +198,6 @@ export default function ProfileClient({ user }: { user: User }) {
     finally { setDeleting(false); }
   }
 
-  async function handleSaveAvatar() {
-    if (!pendingSeed || !user?.id) return;   // guard: never run without a valid user id
-    setSavingAvatar(true);
-    const { error } = await supabase
-      .from("profiles")
-      .update({ avatar_url: pendingSeed })   // only avatar_url — nothing else
-      .eq("id", user.id);
-    if (!error) setAvatarSeed(pendingSeed);
-    setShowAvatarGrid(false);
-    setSavingAvatar(false);
-  }
-
   const initial    = (username?.[0] || currentEmail?.[0] || "?").toUpperCase();
   const level      = getLevel(xp);
   const { current, needed, pct } = getXpProgress(xp);
@@ -240,39 +216,7 @@ export default function ProfileClient({ user }: { user: User }) {
   return (
     <div className={styles.page}>
       <div className={styles.card}>
-        <div className={styles.avatar}>
-          {getAvatarUrl(avatarSeed)
-            ? <img src={getAvatarUrl(avatarSeed)!} alt="avatar" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-            : initial}
-        </div>
-        <button className={styles.btnEditAvatar} onClick={() => { setPendingSeed(avatarSeed); setShowAvatarGrid(true); }}>
-          Changer d&apos;avatar
-        </button>
-
-        {showAvatarGrid && (
-          <div onClick={() => setShowAvatarGrid(false)} style={{ position: "fixed", inset: 0, zIndex: 400, background: "rgba(0,0,0,0.6)", backdropFilter: "blur(4px)", display: "flex", alignItems: "center", justifyContent: "center", padding: "24px" }}>
-            <div onClick={e => e.stopPropagation()} style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: "20px", padding: "28px 24px", maxWidth: "480px", width: "100%", display: "flex", flexDirection: "column", gap: "20px" }}>
-              <div style={{ fontFamily: "var(--font-playfair), serif", fontSize: "1.2rem", fontWeight: 700, color: "var(--accent)", textAlign: "center" }}>Choisis ton avatar</div>
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "14px", justifyItems: "center" }}>
-                {AVATAR_SEEDS.map(seed => {
-                  const selected = pendingSeed === seed;
-                  return (
-                    <button key={seed} onClick={() => setPendingSeed(seed)}
-                      style={{ background: "none", border: `3px solid ${selected ? "#d4a843" : "transparent"}`, borderRadius: "50%", padding: "3px", cursor: "pointer", transition: "border-color 0.15s, box-shadow 0.15s", boxShadow: selected ? "0 0 10px rgba(212,168,67,0.55)" : "none" }}>
-                      <img src={getAvatarUrl(seed)} alt={seed} style={{ width: 90, height: 90, borderRadius: "50%", display: "block" }} />
-                    </button>
-                  );
-                })}
-              </div>
-              <div style={{ display: "flex", gap: "8px", justifyContent: "center" }}>
-                <button onClick={() => setShowAvatarGrid(false)} style={{ padding: "9px 22px", borderRadius: "50px", background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text-muted)", fontFamily: "inherit", fontSize: "0.88rem", cursor: "pointer" }}>Annuler</button>
-                <button onClick={handleSaveAvatar} disabled={savingAvatar || !pendingSeed} style={{ padding: "9px 22px", borderRadius: "50px", background: "var(--accent)", border: "none", color: "var(--bg)", fontFamily: "inherit", fontSize: "0.88rem", fontWeight: 700, cursor: "pointer", opacity: !pendingSeed ? 0.5 : 1 }}>
-                  {savingAvatar ? "Sauvegarde…" : "Confirmer"}
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
+        <div className={styles.avatar}>{initial}</div>
         {isPremium && (
           <div className={`${styles.premiumBadge} ${isLifetime ? styles.premiumBadgeLifetime : ""}`}>
             {isLifetime ? "✨ Premium à vie" : isCancelled ? "⏳ Premium (résilié)" : "✨ Premium"}

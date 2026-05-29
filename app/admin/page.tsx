@@ -35,7 +35,7 @@ interface Stats {
   newPlayersToday: number;
 }
 
-type Tab = "dashboard" | "players" | "announcements" | "actions" | "groupes";
+type Tab = "dashboard" | "players" | "announcements" | "actions";
 
 export default function AdminPage() {
   const supabase = createClient();
@@ -53,8 +53,6 @@ export default function AdminPage() {
   const [saving, setSaving] = useState(false);
   const [msg, setMsg] = useState("");
   const [playerStories, setPlayerStories] = useState<any[]>([]);
-  const [wordGroups, setWordGroups]       = useState<any[]>([]);
-  const [loadingGroups, setLoadingGroups] = useState(false);
   const [playerWords, setPlayerWords] = useState<any[]>([]);
   const [playerGames, setPlayerGames] = useState<any[]>([]);
   const [loadingDetail, setLoadingDetail] = useState(false);
@@ -104,18 +102,6 @@ export default function AdminPage() {
       .select("id, username, xp, is_premium, stripe_customer_id, created_at, last_active_at")
       .order("xp", { ascending: false });
     if (data) setProfiles(data);
-  }
-
-  async function loadWordGroupsAdmin() {
-    setLoadingGroups(true);
-    const { data } = await supabase.from("word_groups").select("*").order("created_at", { ascending: false });
-    setWordGroups(data ?? []);
-    setLoadingGroups(false);
-  }
-
-  async function deleteWordGroup(id: string) {
-    await supabase.from("word_groups").delete().eq("id", id);
-    setWordGroups(prev => prev.filter(g => g.id !== id));
   }
 
   async function loadStats() {
@@ -379,7 +365,6 @@ export default function AdminPage() {
   {([["dashboard", "📊 Dashboard"], ["players", "👥 Joueurs"], ["announcements", "📢 Annonces"], ["actions", "⚙️ Actions"]] as [Tab, string][]).map(([tab, label]) => (
     <button key={tab} className={`${styles.tab} ${activeTab === tab ? styles.tabActive : ""}`} onClick={() => setActiveTab(tab as Tab)}>{label}</button>
   ))}
-  <button className={`${styles.tab} ${activeTab === "groupes" ? styles.tabActive : ""}`} onClick={() => { setActiveTab("groupes"); loadWordGroupsAdmin(); }}>📝 Groupes</button>
   <a href="/admin-content" className={styles.tab} style={{ textDecoration: "none", opacity: 0.8 }}>📖 Contenu</a>
 </div>
 
@@ -575,46 +560,6 @@ export default function AdminPage() {
               </div>
             ))}
           </div>
-        </div>
-      )}
-
-      {/* ── GROUPES DE MOTS ── */}
-      {activeTab === "groupes" && (
-        <div>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
-            <div style={{ fontSize: "0.82rem", color: "var(--text-dim)" }}>{wordGroups.length} groupe{wordGroups.length !== 1 ? "s" : ""}</div>
-            <button className={styles.exportBtn} onClick={loadWordGroupsAdmin}>↺ Actualiser</button>
-          </div>
-          {loadingGroups ? (
-            <div className={styles.empty2}>Chargement…</div>
-          ) : wordGroups.length === 0 ? (
-            <div className={styles.empty2}>Aucun groupe défini.</div>
-          ) : (
-            <div style={{ overflowX: "auto" }}>
-              <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.82rem" }}>
-                <thead>
-                  <tr style={{ borderBottom: "1px solid var(--border)", color: "var(--text-dim)", textAlign: "left" }}>
-                    {["Histoire", "Groupe", "Mots", "Créé le", ""].map(h => (
-                      <th key={h} style={{ padding: "8px 10px", fontWeight: 600, fontSize: "0.7rem", textTransform: "uppercase", letterSpacing: "0.6px" }}>{h}</th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {wordGroups.map((g: any) => (
-                    <tr key={g.id} style={{ borderBottom: "1px solid var(--border)" }}>
-                      <td style={{ padding: "8px 10px", color: "var(--text-dim)", maxWidth: "120px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{g.story_id}</td>
-                      <td style={{ padding: "8px 10px", fontWeight: 600, color: "var(--accent)" }}>{g.group_text}</td>
-                      <td style={{ padding: "8px 10px", color: "var(--text-muted)" }}>{Array.isArray(g.words) ? g.words.join(", ") : g.words}</td>
-                      <td style={{ padding: "8px 10px", color: "var(--text-dim)", whiteSpace: "nowrap" }}>{new Date(g.created_at).toLocaleDateString("fr-FR")}</td>
-                      <td style={{ padding: "8px 10px" }}>
-                        <button onClick={() => deleteWordGroup(g.id)} style={{ padding: "3px 10px", borderRadius: "6px", background: "rgba(224,112,112,0.1)", border: "1px solid rgba(224,112,112,0.4)", color: "#e07070", cursor: "pointer", fontFamily: "inherit", fontSize: "0.75rem" }}>Supprimer</button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
         </div>
       )}
 
