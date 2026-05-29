@@ -156,7 +156,7 @@ export default function ClassementPage() {
                       </a>
                       <div className={styles.playerLevel}>{level.emoji} {level.name}</div>
                     </div>
-                    <div style={{ display: "flex", alignItems: "center", gap: "8px", alignSelf: "center" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "8px", flexShrink: 0, minWidth: "130px", justifyContent: "flex-end" }}>
                       <div className={styles.xp}>{player.xp} XP</div>
                       {myId && !isMe && (
                         addMsg[player.id] ? (
