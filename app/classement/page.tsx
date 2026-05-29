@@ -156,23 +156,28 @@ export default function ClassementPage() {
                       </a>
                       <div className={styles.playerLevel}>{level.emoji} {level.name}</div>
                     </div>
-                    <div style={{ display: "flex", alignItems: "center", gap: "8px", flexShrink: 0, minWidth: "130px", justifyContent: "flex-end" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "8px", flexShrink: 0, minWidth: "120px", justifyContent: "flex-end" }}>
                       <div className={styles.xp}>{player.xp} XP</div>
-                      {myId && !isMe && (
+                      {/* Zone ami — toujours présente pour que le XP s'aligne */}
+                      {isMe ? (
+                        <div style={{ width: "52px", visibility: "hidden" }} />
+                      ) : myId ? (
                         addMsg[player.id] ? (
-                          <span style={{ fontSize: "0.72rem", color: addMsg[player.id].startsWith("✅") ? "var(--green)" : "#e07070" }}>{addMsg[player.id]}</span>
+                          <span style={{ fontSize: "0.72rem", color: addMsg[player.id].startsWith("✅") ? "var(--green)" : "#e07070", width: "52px", textAlign: "center" }}>{addMsg[player.id]}</span>
                         ) : isFriend ? (
-                          <span style={{ fontSize: "0.72rem", color: "var(--text-dim)" }}>✓ Ami</span>
+                          <span style={{ fontSize: "0.72rem", color: "var(--text-dim)", width: "52px", textAlign: "center" }}>✓ Ami</span>
                         ) : isPending ? (
-                          <span style={{ fontSize: "0.72rem", color: "var(--text-dim)", fontStyle: "italic" }}>En attente…</span>
+                          <span style={{ fontSize: "0.72rem", color: "var(--text-dim)", fontStyle: "italic", width: "52px", textAlign: "center" }}>…</span>
                         ) : (
                           <button
                             onClick={() => sendFriendRequest(player.id, player.username)}
                             disabled={addingId === player.id}
-                            style={{ padding: "3px 10px", borderRadius: "20px", border: "1px solid var(--accent)", background: "transparent", color: "var(--accent)", cursor: "pointer", fontFamily: "inherit", fontSize: "0.72rem", whiteSpace: "nowrap" }}>
+                            style={{ width: "52px", padding: "3px 0", borderRadius: "20px", border: "1px solid var(--accent)", background: "transparent", color: "var(--accent)", cursor: "pointer", fontFamily: "inherit", fontSize: "0.72rem", textAlign: "center" }}>
                             {addingId === player.id ? "..." : "+ Ami"}
                           </button>
                         )
+                      ) : (
+                        <div style={{ width: "52px" }} />
                       )}
                     </div>
                   </div>
