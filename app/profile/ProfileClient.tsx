@@ -70,27 +70,31 @@ export default function ProfileClient({ user }: { user: User }) {
       window.location.reload();
     }
 
-    supabase.auth.refreshSession().then(() => {
-      supabase.auth.getSession().then(({ data }) => {
-        if (data.session?.user?.email) setCurrentEmail(data.session.user.email);
-      });
-    });
+    // Refresh session FIRST, then load profile so RLS (auth.uid() = id) passes
+    supabase.auth.refreshSession().then(async () => {
+      const { data: sessionData } = await supabase.auth.getSession();
+      if (sessionData.session?.user?.email) setCurrentEmail(sessionData.session.user.email);
 
-    supabase.from("profiles").select("username, is_premium, xp, stripe_customer_id, avatar_url").eq("id", user.id).single()
-      .then(({ data }) => {
-        if (data?.username) setUsername(data.username);
-        setIsPremium(data?.is_premium === true);
-        setXp(data?.xp ?? 0);
-        setStripeCustomerId(data?.stripe_customer_id ?? null);
-        if (data?.avatar_url) setAvatarSeed(data.avatar_url);
-        if (data?.stripe_customer_id) {
-          fetch("/api/subscription").then(r => r.json()).then(d => {
-            if (d.renewalDate) setRenewalDate(d.renewalDate);
-            if (d.daysLeft) setDaysLeft(d.daysLeft);
-            if (d.cancelAtPeriodEnd) setCancelAtPeriodEnd(true);
-          });
-        }
-      });
+      const { data } = await supabase
+        .from("profiles")
+        .select("username, is_premium, xp, stripe_customer_id, avatar_url")
+        .eq("id", user.id)
+        .single();
+
+      if (data?.username)         setUsername(data.username);
+      setIsPremium(data?.is_premium === true);
+      setXp(data?.xp ?? 0);
+      setStripeCustomerId(data?.stripe_customer_id ?? null);
+      setAvatarSeed(data?.avatar_url ?? null);   // always set, even if null
+
+      if (data?.stripe_customer_id) {
+        fetch("/api/subscription").then(r => r.json()).then(d => {
+          if (d.renewalDate)      setRenewalDate(d.renewalDate);
+          if (d.daysLeft)         setDaysLeft(d.daysLeft);
+          if (d.cancelAtPeriodEnd) setCancelAtPeriodEnd(true);
+        });
+      }
+    });
 
     supabase.from("words_seen").select("word", { count: "exact" }).eq("user_id", user.id).order("seen_at", { ascending: false })
       .then(({ count, data }) => {
@@ -207,10 +211,13 @@ export default function ProfileClient({ user }: { user: User }) {
   }
 
   async function handleSaveAvatar() {
-    if (!pendingSeed) return;
+    if (!pendingSeed || !user?.id) return;   // guard: never run without a valid user id
     setSavingAvatar(true);
-    await supabase.from("profiles").update({ avatar_url: pendingSeed }).eq("id", user.id);
-    setAvatarSeed(pendingSeed);
+    const { error } = await supabase
+      .from("profiles")
+      .update({ avatar_url: pendingSeed })   // only avatar_url — nothing else
+      .eq("id", user.id);
+    if (!error) setAvatarSeed(pendingSeed);
     setShowAvatarGrid(false);
     setSavingAvatar(false);
   }

@@ -27,16 +27,14 @@ export default function ClassementPage() {
   const supabase = createClient();
 
   useEffect(() => {
-    // Fetch global leaderboard — exclude null/empty usernames, higher limit
-    supabase.from("profiles")
-      .select("id, username, xp, is_premium, avatar_url")
-      .not("username", "is", null)
-      .order("xp", { ascending: false })
-      .limit(200)
-      .then(({ data }) => {
-        setPlayers((data as Player[]) ?? []);
+    // Fetch via admin route to bypass RLS and always see all players
+    fetch("/api/leaderboard")
+      .then(r => r.json())
+      .then(({ players }) => {
+        setPlayers((players as Player[]) ?? []);
         setLoading(false);
-      });
+      })
+      .catch(() => setLoading(false));
 
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (!session?.user) { setLoading(false); return; }
