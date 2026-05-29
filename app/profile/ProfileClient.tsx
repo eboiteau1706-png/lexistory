@@ -254,17 +254,24 @@ export default function ProfileClient({ user }: { user: User }) {
 
         {showAvatarGrid && (
           <div onClick={() => setShowAvatarGrid(false)} style={{ position: "fixed", inset: 0, zIndex: 400, background: "rgba(0,0,0,0.6)", backdropFilter: "blur(4px)", display: "flex", alignItems: "center", justifyContent: "center", padding: "24px" }}>
-            <div onClick={e => e.stopPropagation()} style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: "20px", padding: "24px", maxWidth: "420px", width: "100%", display: "flex", flexDirection: "column", alignItems: "center", gap: "16px" }}>
-              <div style={{ fontFamily: "var(--font-playfair), serif", fontSize: "1.1rem", fontWeight: 700, color: "var(--accent)", textAlign: "center", width: "100%" }}>Choisis ton avatar</div>
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "12px", justifyContent: "center", justifyItems: "center", margin: "0 auto", width: "100%" }}>
-                {AVATAR_SEEDS.map(seed => (
-                  <button key={seed} onClick={() => setPendingSeed(seed)}
-                    style={{ background: "none", border: `3px solid ${pendingSeed === seed ? "#d4a843" : "transparent"}`, borderRadius: "50%", padding: "2px", cursor: "pointer", transition: "border-color 0.15s" }}>
-                    <img src={getAvatarUrl(seed)!} alt={seed} style={{ width: 80, height: 80, borderRadius: "50%", display: "block" }} />
-                  </button>
-                ))}
+            <div onClick={e => e.stopPropagation()} style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: "20px", maxWidth: "420px", width: "100%", display: "flex", flexDirection: "column", overflow: "hidden", maxHeight: "90vh" }}>
+              {/* Titre sticky */}
+              <div style={{ padding: "20px 24px 12px", fontFamily: "var(--font-playfair), serif", fontSize: "1.1rem", fontWeight: 700, color: "var(--accent)", textAlign: "center", flexShrink: 0, borderBottom: "1px solid var(--border)" }}>
+                Choisis ton avatar
               </div>
-              <div style={{ display: "flex", gap: "8px", justifyContent: "center" }}>
+              {/* Zone scrollable */}
+              <div style={{ overflowY: "auto", padding: "16px 24px", flex: 1 }}>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "12px", justifyContent: "center", justifyItems: "center", width: "100%" }}>
+                  {AVATAR_SEEDS.map(seed => (
+                    <button key={seed} onClick={() => setPendingSeed(seed)}
+                      style={{ background: "none", border: `3px solid ${pendingSeed === seed ? "#d4a843" : "transparent"}`, borderRadius: "50%", padding: "2px", cursor: "pointer", transition: "border-color 0.15s" }}>
+                      <img src={getAvatarUrl(seed)!} alt={seed} style={{ width: 80, height: 80, borderRadius: "50%", display: "block" }} />
+                    </button>
+                  ))}
+                </div>
+              </div>
+              {/* Boutons sticky */}
+              <div style={{ padding: "12px 24px 20px", display: "flex", gap: "8px", justifyContent: "center", flexShrink: 0, borderTop: "1px solid var(--border)" }}>
                 <button onClick={() => setShowAvatarGrid(false)} style={{ padding: "8px 20px", borderRadius: "50px", background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text-muted)", fontFamily: "inherit", fontSize: "0.85rem", cursor: "pointer" }}>Annuler</button>
                 <button onClick={handleSaveAvatar} disabled={savingAvatar || !pendingSeed} style={{ padding: "8px 20px", borderRadius: "50px", background: "var(--accent)", border: "none", color: "var(--bg)", fontFamily: "inherit", fontSize: "0.85rem", fontWeight: 700, cursor: "pointer", opacity: !pendingSeed ? 0.5 : 1 }}>
                   {savingAvatar ? "Sauvegarde…" : "Confirmer"}
