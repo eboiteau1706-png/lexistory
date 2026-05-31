@@ -72,6 +72,11 @@ export default function AdminOverlay({ story, date, level, dayOffset, todayOffse
 
   if (!isAdmin) return null;
 
+  const formatDateFr = (dateStr: string) => {
+    const d = new Date(dateStr + "T12:00:00");
+    return d.toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
+  };
+
   const isFuture  = dayOffset > todayOffset;
   const dayDiff   = dayOffset - todayOffset;
   const prevDay   = dayOffset - 1;
@@ -239,7 +244,7 @@ export default function AdminOverlay({ story, date, level, dayOffset, todayOffse
           style={{ position: "fixed", inset: 0, zIndex: 500, background: "rgba(0,0,0,0.6)", backdropFilter: "blur(4px)", display: "flex", alignItems: "center", justifyContent: "center", padding: "24px" }}>
           <div onClick={e => e.stopPropagation()}
             style={{ background: "var(--surface)", border: "1.5px dashed rgba(212,168,67,0.5)", borderRadius: "16px", padding: "24px", maxWidth: "520px", width: "100%", maxHeight: "80vh", display: "flex", flexDirection: "column", gap: "0", overflow: "hidden" }}>
-            <div style={{ fontFamily: "var(--font-playfair)", fontSize: "1rem", fontWeight: 700, color: "var(--accent)", marginBottom: "12px", flexShrink: 0 }}>🎮 Jeux du {date}</div>
+            <div style={{ fontFamily: "var(--font-playfair)", fontSize: "1rem", fontWeight: 700, color: "var(--accent)", marginBottom: "12px", flexShrink: 0 }}>🎮 Jeux du {formatDateFr(getGameDate())}</div>
             {gameLoading ? (
               <div style={{ textAlign: "center", padding: "24px", color: "var(--text-dim)" }}>Chargement…</div>
             ) : (
@@ -258,10 +263,17 @@ export default function AdminOverlay({ story, date, level, dayOffset, todayOffse
                     <div style={{ fontSize: "0.72rem", fontWeight: 700, color: "rgba(212,168,67,0.8)", marginBottom: "4px" }}>{section as string}</div>
                     {(fields as string[]).map(f => {
                       const [key, placeholder] = f.split(":");
+                      const isCorrect = placeholder.includes("correct");
                       return (
-                        <input key={key} style={inp} placeholder={placeholder}
-                          value={game[key] ?? ""}
-                          onChange={e => setGame(g => ({ ...g, [key]: e.target.value }))} />
+                        <div key={key} style={{ position: "relative" }}>
+                          {isCorrect && (
+                            <span style={{ position: "absolute", top: "50%", right: "8px", transform: "translateY(-50%)", fontSize: "0.7rem", fontWeight: 700, color: "#22c55e", pointerEvents: "none" }}>✓ Correct</span>
+                          )}
+                          <input style={{ ...inp, paddingRight: isCorrect ? "70px" : undefined, borderColor: isCorrect ? "rgba(34,197,94,0.4)" : undefined }}
+                            placeholder={placeholder}
+                            value={game[key] ?? ""}
+                            onChange={e => setGame(g => ({ ...g, [key]: e.target.value }))} />
+                        </div>
                       );
                     })}
                   </div>
