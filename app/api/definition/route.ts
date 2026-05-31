@@ -47,21 +47,7 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // C) Free user daily limit (3 definitions per story)
-    if (userId && !isPremium && story_id) {
-      const today = getParisDate();
-      const { data: dayUsage } = await supabaseAdmin
-        .from("definition_usage")
-        .select("count")
-        .eq("user_id", userId)
-        .eq("story_id", story_id)
-        .eq("date", today)
-        .maybeSingle();
-
-      if ((dayUsage?.count ?? 0) >= 3) {
-        return NextResponse.json({ source: "limit_free", result: null });
-      }
-    }
+    // C) Free user limit is now handled by WordPopup via /api/def-usage before any lookup
 
     // D) Monthly usage cap
     const month = new Date().toISOString().slice(0, 7);
@@ -115,28 +101,7 @@ Format : { forme_base: string, type: string, etymologie: string, sens: [{ label:
         { onConflict: "month" }
       );
 
-    // H) Increment free user daily story usage
-    if (userId && !isPremium && story_id) {
-      const today = getParisDate();
-      const { data: existing } = await supabaseAdmin
-        .from("definition_usage")
-        .select("id, count")
-        .eq("user_id", userId)
-        .eq("story_id", story_id)
-        .eq("date", today)
-        .maybeSingle();
-
-      if (existing) {
-        await supabaseAdmin
-          .from("definition_usage")
-          .update({ count: (existing.count ?? 0) + 1 })
-          .eq("id", existing.id);
-      } else {
-        await supabaseAdmin
-          .from("definition_usage")
-          .insert({ user_id: userId, story_id, date: today, count: 1 });
-      }
-    }
+    // H) Increment handled by WordPopup via /api/def-usage
 
     // I) Return result
     return NextResponse.json({ source: "api", result });

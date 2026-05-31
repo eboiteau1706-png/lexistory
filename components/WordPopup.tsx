@@ -8,6 +8,7 @@ interface Props {
   word: string;
   seenCount: number;
   storyId?: string;
+  onDefUsed?: (remaining: number) => void;
   onClose: () => void;
 }
 
@@ -58,7 +59,7 @@ function getVariants(word: string): string[] {
 }
 
 
-export default function WordPopup({ word, seenCount, storyId, onClose }: Props) {
+export default function WordPopup({ word, seenCount, storyId, onDefUsed, onClose }: Props) {
   const supabase = createClient();
   const [source, setSource]         = useState<Source>(null);
   const [senses, setSenses]         = useState<Sense[]>([]);
@@ -69,6 +70,7 @@ export default function WordPopup({ word, seenCount, storyId, onClose }: Props) 
   const [favLoading, setFavLoading] = useState(false);
 
   const key = normalizeToKey(word) ?? word.toLowerCase().trim();
+  const [defsRemaining, setDefsRemaining] = useState<number | null>(null);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -98,6 +100,26 @@ export default function WordPopup({ word, seenCount, storyId, onClose }: Props) 
     setLoading(true);
 
     const run = async () => {
+      // ── 0 : check + incrément limite quotidienne (toutes sources confondues)
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.access_token && storyId) {
+        const usageRes = await fetch("/api/def-usage", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Authorization: `Bearer ${session.access_token}` },
+          body: JSON.stringify({ story_id: storyId }),
+        });
+        const usage = await usageRes.json();
+        if (!usage.allowed) {
+          setSource("limit_free");
+          setLoading(false);
+          return;
+        }
+        if (usage.remaining >= 0) {
+          setDefsRemaining(usage.remaining);
+          onDefUsed?.(usage.remaining);
+        }
+      }
+
       // ── Étape 1a : dictionnaire statique local ──────────────────────────
       const local = lookup(key);
       if (local) {
@@ -275,6 +297,11 @@ export default function WordPopup({ word, seenCount, storyId, onClose }: Props) 
           </div>
         ) : null}
 
+        {defsRemaining !== null && defsRemaining >= 0 && (
+          <div style={{ fontSize: "0.72rem", color: defsRemaining === 0 ? "#e07070" : "var(--text-dim)", textAlign: "center", marginBottom: "8px", fontStyle: "italic" }}>
+            {defsRemaining === 0 ? "Plus de définitions disponibles aujourd'hui pour cette histoire" : `${defsRemaining} définition${defsRemaining > 1 ? "s" : ""} restante${defsRemaining > 1 ? "s" : ""} aujourd'hui`}
+          </div>
+        )}
         <div className={styles.footer}>
           <span className={styles.count}>Tu as consulté <strong>{seenCount}</strong> mot(s)</span>
           <button className={styles.btnGotIt} onClick={onClose}>Compris ! 👍</button>

@@ -32,6 +32,7 @@ export default function StoryCard({ story }: Props) {
   const [xpGained, setXpGained]                 = useState<number | null>(null);
   const [readPct, setReadPct]                   = useState(0);
   const [alreadyCompleted, setAlreadyCompleted] = useState(false);
+  const [defsRemaining, setDefsRemaining]       = useState<number | null>(null);
   const [showInfo, setShowInfo]                 = useState(false);
   const [showCategory, setShowCategory]         = useState(false);
   const [groupWords, setGroupWords]             = useState<Set<string>>(new Set());
@@ -62,7 +63,13 @@ export default function StoryCard({ story }: Props) {
         setUserId(session.user.id);
         setIsAdmin(session.user.id === ADMIN_ID);
         supabase.from("profiles").select("is_premium").eq("id", session.user.id).single()
-          .then(({ data }) => { if (data?.is_premium) setIsPremium(true); });
+          .then(({ data }) => {
+            if (data?.is_premium) { setIsPremium(true); return; }
+            // Fetch remaining defs for free users
+            fetch(`/api/def-usage?story_id=${story.slug}`, {
+              headers: { Authorization: `Bearer ${session.access_token}` },
+            }).then(r => r.json()).then(d => { if (d.remaining >= 0) setDefsRemaining(d.remaining); });
+          });
       }
     });
   }, []);
@@ -397,10 +404,17 @@ export default function StoryCard({ story }: Props) {
                : seenWords.size === 1 ? "1 mot consulté"
                : `${seenWords.size} mots consultés`}
             </span>
-            {alreadyCompleted
-              ? <span style={{ color: "var(--green)", fontWeight: 700 }}>✅ Complétée</span>
-              : <span>{readPct}%</span>
-            }
+            <span style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+              {defsRemaining !== null && (
+                <span style={{ fontSize: "0.72rem", color: defsRemaining === 0 ? "#e07070" : "var(--text-dim)", fontStyle: "italic" }}>
+                  🔍 {defsRemaining}/3
+                </span>
+              )}
+              {alreadyCompleted
+                ? <span style={{ color: "var(--green)", fontWeight: 700 }}>✅ Complétée</span>
+                : <span>{readPct}%</span>
+              }
+            </span>
           </div>
         </div>
 
@@ -454,7 +468,9 @@ export default function StoryCard({ story }: Props) {
       )}
 
       {activeWord && (
-        <WordPopup word={activeWord} seenCount={seenWords.size} storyId={story.slug} onClose={() => setActiveWord(null)} />
+        <WordPopup word={activeWord} seenCount={seenWords.size} storyId={story.slug}
+          onDefUsed={n => setDefsRemaining(n)}
+          onClose={() => setActiveWord(null)} />
       )}
 
       {/* ── Admin context menu ── */}
