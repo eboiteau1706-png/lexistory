@@ -2,13 +2,18 @@
 import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase";
 import { getLevel } from "@/lib/xp";
+import { getAvatarUrl } from "@/lib/avatar";
 import styles from "./amis.module.css";
+
+const AVATAR_COLORS = ["#d4a843","#6ba3be","#7ac97a","#e07070","#9b7fdb","#e09070"];
+function avatarBg(u: string) { let h=0; for(const c of u) h=c.charCodeAt(0)+h*31; return AVATAR_COLORS[Math.abs(h)%AVATAR_COLORS.length]; }
 
 interface Profile {
   id: string;
   username: string;
   xp: number;
   is_premium: boolean;
+  avatar_url?: string | null;
 }
 
 interface Friendship {
@@ -16,6 +21,15 @@ interface Friendship {
   user_id: string;
   friend_id: string;
   status: string;
+}
+
+function AvatarCircle({ profile, size }: { profile: Profile; size: number }) {
+  const url = getAvatarUrl(profile.avatar_url ?? null);
+  return (
+    <div style={{ width: size, height: size, borderRadius: "50%", flexShrink: 0, overflow: "hidden", background: url ? "var(--surface2)" : avatarBg(profile.username ?? "?"), display: "flex", alignItems: "center", justifyContent: "center", fontSize: "0.85rem", fontWeight: 700, color: "#fff" }}>
+      {url ? <img src={url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} /> : (profile.username?.[0] ?? "?").toUpperCase()}
+    </div>
+  );
 }
 
 export default function AmisPage() {
@@ -41,7 +55,7 @@ export default function AmisPage() {
   async function getProfile(id: string): Promise<Profile | null> {
     const { data } = await supabase
       .from("profiles")
-      .select("id, username, xp, is_premium")
+      .select("id, username, xp, is_premium, avatar_url")
       .eq("id", id)
       .single();
     return data as Profile | null;
@@ -95,7 +109,7 @@ export default function AmisPage() {
     // Recherche insensible à la casse + correspondance partielle
     const { data } = await supabase
       .from("profiles")
-      .select("id, username, xp, is_premium")
+      .select("id, username, xp, is_premium, avatar_url")
       .ilike("username", `%${search.trim()}%`)
       .neq("id", myId)
       .not("username", "is", null)
@@ -200,6 +214,7 @@ export default function AmisPage() {
             <div className={styles.sectionTitle}>Demandes reçues 🔔 {pending.length}</div>
             {pending.map(({ friendship, profile }) => (
               <div key={friendship.id} className={styles.friendRow}>
+                <AvatarCircle profile={profile} size={40} />
                 <div className={styles.playerInfo}>
                   <span className={styles.playerName}>{profile.username}</span>
                   <span className={styles.playerLevel}>{getLevel(profile.xp).emoji} {getLevel(profile.xp).name}</span>
@@ -219,6 +234,7 @@ export default function AmisPage() {
             <div className={styles.sectionTitle}>Demandes envoyées ⏳</div>
             {sent.map(({ friendship, profile }) => (
               <div key={friendship.id} className={styles.friendRow}>
+                <AvatarCircle profile={profile} size={40} />
                 <div className={styles.playerInfo}>
                   <span className={styles.playerName}>{profile.username}</span>
                   <span className={styles.playerLevel}>{getLevel(profile.xp).emoji} {getLevel(profile.xp).name}</span>
@@ -242,6 +258,7 @@ export default function AmisPage() {
               return (
                 <div key={f.id} className={styles.friendRow}>
                   <div className={styles.rank}>#{i + 1}</div>
+                  <AvatarCircle profile={f} size={40} />
                   <div className={styles.playerInfo}>
                     <a href={`/joueur/${f.username}`} className={styles.playerName} style={{ textDecoration: "none", color: "inherit" }}>
                       {f.username}
