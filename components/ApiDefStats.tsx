@@ -34,13 +34,18 @@ function Row({ label, value, sub }: { label: string; value: string; sub?: string
   );
 }
 
+const RESET_KEY = "apiDefStats_lastReset";
+
 export default function ApiDefStats() {
   const supabase   = createClient();
-  const [data, setData]   = useState<Data | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [data, setData]         = useState<Data | null>(null);
+  const [loading, setLoading]   = useState(true);
+  const [resetting, setResetting] = useState(false);
+  const [lastReset, setLastReset] = useState<string | null>(null);
 
-  useEffect(() => {
-    const month = new Date().toISOString().slice(0, 7);
+  const month = new Date().toISOString().slice(0, 7);
+
+  const loadData = () => {
     Promise.all([
       supabase.from("api_usage").select("call_count").eq("month", month).maybeSingle(),
       supabase.from("definitions_cache").select("word_key", { count: "exact", head: true }),
@@ -48,7 +53,22 @@ export default function ApiDefStats() {
       setData({ callCount: usage.data?.call_count ?? 0, cacheTotal: cache.count ?? 0 });
       setLoading(false);
     });
+  };
+
+  useEffect(() => {
+    setLastReset(localStorage.getItem(RESET_KEY));
+    loadData();
   }, []);
+
+  async function handleReset() {
+    setResetting(true);
+    await supabase.from("api_usage").upsert({ month, call_count: 0 }, { onConflict: "month" });
+    const today = new Date().toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" });
+    localStorage.setItem(RESET_KEY, today);
+    setLastReset(today);
+    loadData();
+    setResetting(false);
+  }
 
   const callCount      = data?.callCount  ?? 0;
   const cacheTotal     = data?.cacheTotal ?? 0;
@@ -58,9 +78,6 @@ export default function ApiDefStats() {
   const pct             = Math.min(100, (callCount / CAP) * 100);
   const barColor        = pct < 70 ? "#22c55e" : pct < 90 ? "#f97316" : "#ef4444";
 
-  const now       = new Date();
-  const resetDate = new Date(now.getFullYear(), now.getMonth() + 1, 1)
-    .toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" });
 
   const card: React.CSSProperties = {
     background: "var(--surface)",
@@ -123,13 +140,17 @@ export default function ApiDefStats() {
                 🗄️ Cache & réinitialisation
               </div>
               <Row label="Mots en cache"       value={`${cacheTotal}`} sub="définitions sauvegardées" />
-              <Row label="Réinitialisation"     value={`1er du mois`}  sub={resetDate} />
+              <Row label="Dernier reset"        value={lastReset ?? "Jamais"} />
               <Row label="Coût par appel"       value={`${(EUR_PER_CALL * 100).toFixed(1)} ¢`} sub="€ / définition" />
               <Row label="Budget total"         value={`${BUDGET_EUR} €`} sub="/ mois" />
 
               <div style={{ marginTop: 16, padding: "10px 14px", borderRadius: 10, background: "rgba(232,201,122,0.06)", border: "1px solid rgba(232,201,122,0.2)", fontSize: "0.78rem", color: "var(--text-muted)", lineHeight: 1.5 }}>
                 💡 Chaque définition en cache est <strong style={{ color: "var(--accent)" }}>gratuite</strong> aux prochaines consultations.
               </div>
+              <button onClick={handleReset} disabled={resetting}
+                style={{ marginTop: 12, width: "100%", padding: "8px", borderRadius: 8, background: "rgba(224,112,112,0.1)", border: "1px solid rgba(224,112,112,0.4)", color: "#e07070", cursor: "pointer", fontFamily: "inherit", fontSize: "0.82rem", fontWeight: 600 }}>
+                {resetting ? "Réinitialisation…" : "🗑️ Réinitialiser le compteur"}
+              </button>
             </div>
           </div>
         )}

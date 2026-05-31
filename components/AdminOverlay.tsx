@@ -83,9 +83,17 @@ export default function AdminOverlay({ story, date, level, dayOffset, todayOffse
     setMsg("✅ Sauvegardé !"); setEditing(false); router.refresh();
   }
 
+  // Date ISO côté client pour les jeux (UTC, correspond au format stocké en Supabase)
+  function getGameDate(): string {
+    const d = new Date();
+    d.setUTCDate(d.getUTCDate() + (dayOffset - todayOffset));
+    return d.toISOString().split("T")[0];
+  }
+
   async function openGameModal() {
     setGameLoading(true); setGameModal(true); setGameMsg("");
-    const res = await fetch(`/api/custom-game?date=${date}`);
+    const gameDate = getGameDate();
+    const res = await fetch(`/api/custom-game?date=${gameDate}`);
     const { game: g } = await res.json();
     if (g) setGame(Object.fromEntries(Object.keys(game).map(k => [k, g[k] ?? ""])));
     setGameLoading(false);
@@ -96,7 +104,7 @@ export default function AdminOverlay({ story, date, level, dayOffset, todayOffse
     const res = await fetch("/api/admin-game", {
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-      body: JSON.stringify({ game_date: date, ...game }),
+      body: JSON.stringify({ game_date: getGameDate(), ...game }),
     });
     const d = await res.json();
     setGameSaving(false);
