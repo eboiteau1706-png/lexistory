@@ -48,18 +48,19 @@ export default function AdminOverlay({ story, date, level, dayOffset, todayOffse
   const emptyGame = (): Record<string, string> => ({
     word_of_day: "", word_of_day_def: "", word_of_day_etym: "",
     def_word: "", def_word_def: "",
-    def_choice1: "", def_choice2: "", def_choice3: "", def_choice4: "",
+    def_wrong1: "", def_wrong2: "", def_wrong3: "",
     anag_word: "", anag_word_def: "",
     cit_text: "", cit_answer: "",
-    cit_choice1: "", cit_choice2: "", cit_choice3: "", cit_choice4: "",
+    cit_wrong1: "", cit_wrong2: "", cit_wrong3: "",
     p_word_of_day: "", p_word_of_day_def: "", p_word_of_day_etym: "",
     p_def_word: "", p_def_word_def: "",
-    p_def_choice1: "", p_def_choice2: "", p_def_choice3: "", p_def_choice4: "",
+    p_def_wrong1: "", p_def_wrong2: "", p_def_wrong3: "",
     p_anag_word: "", p_anag_word_def: "",
     p_cit_text: "", p_cit_answer: "",
-    p_cit_choice1: "", p_cit_choice2: "", p_cit_choice3: "", p_cit_choice4: "",
+    p_cit_wrong1: "", p_cit_wrong2: "", p_cit_wrong3: "",
   });
   const [game, setGame] = useState<Record<string, string>>(emptyGame());
+  const [gameTab, setGameTab] = useState<"edit" | "preview">("edit");
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -128,16 +129,17 @@ export default function AdminOverlay({ story, date, level, dayOffset, todayOffse
         setGame({
           word_of_day:    g.word_of_day    ?? "", word_of_day_def:  g.word_of_day_def  ?? "", word_of_day_etym: g.word_of_day_etym ?? "",
           def_word:       g.def_word       ?? "", def_word_def:     g.def_word_def     ?? "",
-          def_choice1:    g.def_choice1    ?? "", def_choice2:      g.def_choice2      ?? "", def_choice3: g.def_choice3 ?? "", def_choice4: g.def_choice4 ?? "",
+          // Wrong choices = toutes les choices qui ne sont pas le mot correct
+          ...(() => { const ws = [g.def_choice1,g.def_choice2,g.def_choice3,g.def_choice4].filter((c:string)=>c&&c!==g.def_word); return { def_wrong1: ws[0]??"", def_wrong2: ws[1]??"", def_wrong3: ws[2]??"" }; })(),
           anag_word:      g.anag_word      ?? "", anag_word_def:    g.anag_word_def    ?? "",
           cit_text:       g.cit_text       ?? "", cit_answer:       g.cit_answer       ?? "",
-          cit_choice1:    g.cit_choice1    ?? "", cit_choice2:      g.cit_choice2      ?? "", cit_choice3: g.cit_choice3 ?? "", cit_choice4: g.cit_choice4 ?? "",
+          ...(() => { const ws = [g.cit_choice1,g.cit_choice2,g.cit_choice3,g.cit_choice4].filter((c:string)=>c&&c!==g.cit_answer); return { cit_wrong1: ws[0]??"", cit_wrong2: ws[1]??"", cit_wrong3: ws[2]??"" }; })(),
           p_word_of_day:  g.p_word_of_day  ?? "", p_word_of_day_def: g.p_word_of_day_def ?? "", p_word_of_day_etym: g.p_word_of_day_etym ?? "",
           p_def_word:     g.p_def_word     ?? "", p_def_word_def:   g.p_def_word_def   ?? "",
-          p_def_choice1:  g.p_def_choice1  ?? "", p_def_choice2:    g.p_def_choice2    ?? "", p_def_choice3: g.p_def_choice3 ?? "", p_def_choice4: g.p_def_choice4 ?? "",
+          ...(() => { const ws = [g.p_def_choice1,g.p_def_choice2,g.p_def_choice3,g.p_def_choice4].filter((c:string)=>c&&c!==g.p_def_word); return { p_def_wrong1: ws[0]??"", p_def_wrong2: ws[1]??"", p_def_wrong3: ws[2]??"" }; })(),
           p_anag_word:    g.p_anag_word    ?? "", p_anag_word_def:  g.p_anag_word_def  ?? "",
           p_cit_text:     g.p_cit_text     ?? "", p_cit_answer:     g.p_cit_answer     ?? "",
-          p_cit_choice1:  g.p_cit_choice1  ?? "", p_cit_choice2:    g.p_cit_choice2    ?? "", p_cit_choice3: g.p_cit_choice3 ?? "", p_cit_choice4: g.p_cit_choice4 ?? "",
+          ...(() => { const ws = [g.p_cit_choice1,g.p_cit_choice2,g.p_cit_choice3,g.p_cit_choice4].filter((c:string)=>c&&c!==g.p_cit_answer); return { p_cit_wrong1: ws[0]??"", p_cit_wrong2: ws[1]??"", p_cit_wrong3: ws[2]??"" }; })(),
         });
       } else {
         setGame(emptyGame());
@@ -151,15 +153,41 @@ export default function AdminOverlay({ story, date, level, dayOffset, todayOffse
 
   async function saveGame() {
     setGameSaving(true); setGameMsg("");
+    // Build shuffled choices (correct mixed with wrongs randomly)
+    const dc  = shuffleChoices(game.def_word,    [game.def_wrong1,   game.def_wrong2,   game.def_wrong3]);
+    const cc  = shuffleChoices(game.cit_answer,  [game.cit_wrong1,   game.cit_wrong2,   game.cit_wrong3]);
+    const pdc = shuffleChoices(game.p_def_word,  [game.p_def_wrong1, game.p_def_wrong2, game.p_def_wrong3]);
+    const pcc = shuffleChoices(game.p_cit_answer,[game.p_cit_wrong1, game.p_cit_wrong2, game.p_cit_wrong3]);
+    const payload = {
+      game_date: getGameDate(),
+      ...game,
+      def_choice1: dc[0]??"", def_choice2: dc[1]??"", def_choice3: dc[2]??"", def_choice4: dc[3]??"",
+      cit_choice1: cc[0]??"", cit_choice2: cc[1]??"", cit_choice3: cc[2]??"", cit_choice4: cc[3]??"",
+      p_def_choice1: pdc[0]??"", p_def_choice2: pdc[1]??"", p_def_choice3: pdc[2]??"", p_def_choice4: pdc[3]??"",
+      p_cit_choice1: pcc[0]??"", p_cit_choice2: pcc[1]??"", p_cit_choice3: pcc[2]??"", p_cit_choice4: pcc[3]??"",
+    };
+    // Remove helper wrong fields (not in DB schema)
+    ["def_wrong1","def_wrong2","def_wrong3","cit_wrong1","cit_wrong2","cit_wrong3",
+     "p_def_wrong1","p_def_wrong2","p_def_wrong3","p_cit_wrong1","p_cit_wrong2","p_cit_wrong3"]
+      .forEach(k => delete (payload as any)[k]);
     const res = await fetch("/api/admin-game", {
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-      body: JSON.stringify({ game_date: getGameDate(), ...game }),
+      body: JSON.stringify(payload),
     });
     const d = await res.json();
     setGameSaving(false);
     if (d.error) { setGameMsg("❌ " + d.error); return; }
     setGameMsg("✅ Jeu sauvegardé !"); setTimeout(() => setGameModal(false), 800);
+  }
+
+  function shuffleChoices(correct: string, wrongs: string[]): string[] {
+    const all = [correct, ...wrongs.filter(Boolean)].filter(Boolean);
+    for (let i = all.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [all[i], all[j]] = [all[j], all[i]];
+    }
+    return all;
   }
 
   const navBtn: React.CSSProperties = {
@@ -243,39 +271,108 @@ export default function AdminOverlay({ story, date, level, dayOffset, todayOffse
         <div onClick={() => setGameModal(false)}
           style={{ position: "fixed", inset: 0, zIndex: 500, background: "rgba(0,0,0,0.6)", backdropFilter: "blur(4px)", display: "flex", alignItems: "center", justifyContent: "center", padding: "24px" }}>
           <div onClick={e => e.stopPropagation()}
-            style={{ background: "var(--surface)", border: "1.5px dashed rgba(212,168,67,0.5)", borderRadius: "16px", padding: "24px", maxWidth: "520px", width: "100%", maxHeight: "80vh", display: "flex", flexDirection: "column", gap: "0", overflow: "hidden" }}>
-            <div style={{ fontFamily: "var(--font-playfair)", fontSize: "1rem", fontWeight: 700, color: "var(--accent)", marginBottom: "12px", flexShrink: 0 }}>🎮 Jeux du {formatDateFr(getGameDate())}</div>
+            style={{ background: "var(--surface)", border: "1.5px dashed rgba(212,168,67,0.5)", borderRadius: "16px", padding: "24px", maxWidth: "800px", width: "100%", maxHeight: "90vh", display: "flex", flexDirection: "column", overflow: "hidden" }}>
+            {/* Header */}
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px", flexShrink: 0 }}>
+              <div style={{ fontFamily: "var(--font-playfair)", fontSize: "1rem", fontWeight: 700, color: "var(--accent)" }}>🎮 Jeux du {formatDateFr(getGameDate())}</div>
+              {/* Tabs */}
+              <div style={{ display: "flex", gap: "4px" }}>
+                {(["edit","preview"] as const).map(t => (
+                  <button key={t} onClick={() => setGameTab(t)} style={{ padding: "4px 12px", borderRadius: "6px", border: `1px solid ${gameTab===t?"rgba(212,168,67,0.5)":"var(--border)"}`, background: gameTab===t?"rgba(212,168,67,0.1)":"none", color: gameTab===t?"var(--accent)":"var(--text-dim)", cursor: "pointer", fontFamily: "inherit", fontSize: "0.78rem" }}>
+                    {t==="edit"?"✏️ Éditer":"👁 Prévisualiser"}
+                  </button>
+                ))}
+              </div>
+            </div>
+
             {gameLoading ? (
               <div style={{ textAlign: "center", padding: "24px", color: "var(--text-dim)" }}>Chargement…</div>
+            ) : gameTab === "preview" ? (
+              /* ── Onglet Prévisualisation ── */
+              <div style={{ overflowY: "auto", flex: 1, paddingRight: "4px", display: "flex", flexDirection: "column", gap: "14px" }}>
+                {[
+                  { title: "📖 Mot du jour", word: game.word_of_day, def: game.word_of_day_def, etym: game.word_of_day_etym },
+                ].map(s => s.word ? (
+                  <div key={s.title} style={{ background: "var(--surface2)", borderRadius: "10px", padding: "12px 14px" }}>
+                    <div style={{ fontSize: "0.68rem", fontWeight: 700, color: "var(--text-dim)", textTransform: "uppercase", marginBottom: "6px" }}>{s.title}</div>
+                    <div style={{ fontSize: "1.3rem", fontWeight: 700, color: "var(--accent)" }}>{s.word}</div>
+                    {s.etym && <div style={{ fontSize: "0.72rem", color: "var(--text-dim)", fontStyle: "italic" }}>{s.etym}</div>}
+                    {s.def && <div style={{ fontSize: "0.85rem", color: "var(--text-muted)", marginTop: "4px" }}>{s.def}</div>}
+                  </div>
+                ) : null)}
+                {/* Définition mystère */}
+                {game.def_word && (
+                  <div style={{ background: "var(--surface2)", borderRadius: "10px", padding: "12px 14px" }}>
+                    <div style={{ fontSize: "0.68rem", fontWeight: 700, color: "var(--text-dim)", textTransform: "uppercase", marginBottom: "6px" }}>🔍 Définition mystère</div>
+                    <div style={{ fontSize: "0.85rem", color: "var(--text-muted)", marginBottom: "8px" }}>{game.def_word_def}</div>
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
+                      {shuffleChoices(game.def_word, [game.def_wrong1, game.def_wrong2, game.def_wrong3]).map((c,i) => (
+                        <span key={i} style={{ padding: "4px 10px", borderRadius: "6px", background: c===game.def_word?"rgba(34,197,94,0.15)":"var(--surface)", border: `1px solid ${c===game.def_word?"#22c55e":"var(--border)"}`, color: c===game.def_word?"#22c55e":"var(--text-muted)", fontSize: "0.82rem" }}>{c}{c===game.def_word?" ✓":""}</span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {/* Anagramme */}
+                {game.anag_word && (
+                  <div style={{ background: "var(--surface2)", borderRadius: "10px", padding: "12px 14px" }}>
+                    <div style={{ fontSize: "0.68rem", fontWeight: 700, color: "var(--text-dim)", textTransform: "uppercase", marginBottom: "6px" }}>🔤 Anagramme</div>
+                    <div style={{ fontSize: "0.82rem", color: "var(--text-dim)", marginBottom: "4px" }}>{game.anag_word_def}</div>
+                    <div style={{ fontFamily: "monospace", fontSize: "1.1rem", letterSpacing: "4px", color: "var(--accent)" }}>{game.anag_word.split("").sort(()=>Math.random()-0.5).join(" ")}</div>
+                    <div style={{ fontSize: "0.72rem", color: "var(--text-dim)", marginTop: "4px" }}>→ réponse : <strong>{game.anag_word}</strong></div>
+                  </div>
+                )}
+                {/* Citation */}
+                {game.cit_text && (
+                  <div style={{ background: "var(--surface2)", borderRadius: "10px", padding: "12px 14px" }}>
+                    <div style={{ fontSize: "0.68rem", fontWeight: 700, color: "var(--text-dim)", textTransform: "uppercase", marginBottom: "6px" }}>💬 Citation</div>
+                    <div style={{ fontSize: "0.88rem", color: "var(--text-muted)", fontStyle: "italic", marginBottom: "8px" }}>"{game.cit_text.replace("***", "___")}"</div>
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
+                      {shuffleChoices(game.cit_answer, [game.cit_wrong1, game.cit_wrong2, game.cit_wrong3]).map((c,i) => (
+                        <span key={i} style={{ padding: "4px 10px", borderRadius: "6px", background: c===game.cit_answer?"rgba(34,197,94,0.15)":"var(--surface)", border: `1px solid ${c===game.cit_answer?"#22c55e":"var(--border)"}`, color: c===game.cit_answer?"#22c55e":"var(--text-muted)", fontSize: "0.82rem" }}>{c}{c===game.cit_answer?" ✓":""}</span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
             ) : (
+              /* ── Onglet Édition ── */
               <div style={{ overflowY: "auto", flex: 1, paddingRight: "4px" }}>
+                {/* Helper to render simple field */}
                 {[
                   ["📖 Mot du jour", ["word_of_day:Mot", "word_of_day_def:Définition simple", "word_of_day_etym:Étymologie"]],
-                  ["🔍 Définition mystère", ["def_word:Mot à trouver", "def_word_def:Définition à afficher", "def_choice1:Choix 1 (correct)", "def_choice2:Choix 2", "def_choice3:Choix 3", "def_choice4:Choix 4"]],
                   ["🔤 Anagramme", ["anag_word:Mot à anagrammer", "anag_word_def:Définition indice"]],
-                  ["💬 Citation (*** = mot manquant)", ["cit_text:Texte avec ***", "cit_answer:Réponse correcte", "cit_choice1:Choix 1 (correct)", "cit_choice2:Choix 2", "cit_choice3:Choix 3", "cit_choice4:Choix 4"]],
                   ["✨ Mot Premium", ["p_word_of_day:Mot", "p_word_of_day_def:Définition simple", "p_word_of_day_etym:Étymologie"]],
-                  ["✨ Définition mystère Premium", ["p_def_word:Mot à trouver", "p_def_word_def:Définition à afficher", "p_def_choice1:Choix 1 (correct)", "p_def_choice2:Choix 2", "p_def_choice3:Choix 3", "p_def_choice4:Choix 4"]],
                   ["✨ Anagramme Premium", ["p_anag_word:Mot", "p_anag_word_def:Définition indice"]],
-                  ["✨ Citation Premium", ["p_cit_text:Texte avec ***", "p_cit_answer:Réponse correcte", "p_cit_choice1:Choix 1 (correct)", "p_cit_choice2:Choix 2", "p_cit_choice3:Choix 3", "p_cit_choice4:Choix 4"]],
                 ].map(([section, fields]) => (
                   <div key={section as string} style={{ marginBottom: "12px" }}>
                     <div style={{ fontSize: "0.72rem", fontWeight: 700, color: "rgba(212,168,67,0.8)", marginBottom: "4px" }}>{section as string}</div>
                     {(fields as string[]).map(f => {
                       const [key, placeholder] = f.split(":");
-                      const isCorrect = placeholder.includes("correct");
+                      return <input key={key} style={inp} placeholder={placeholder} value={game[key]??""} onChange={e=>setGame(g=>({...g,[key]:e.target.value}))} />;
+                    })}
+                  </div>
+                ))}
+                {/* Sections avec bonne réponse séparée */}
+                {[
+                  { title: "🔍 Définition mystère", fields: ["def_word:Mot à trouver","def_word_def:Définition à afficher"], correct: "def_word", wrongs: ["def_wrong1","def_wrong2","def_wrong3"] },
+                  { title: "💬 Citation (*** = mot manquant)", fields: ["cit_text:Texte avec ***","cit_answer:✓ Réponse correcte"], correct: "cit_answer", wrongs: ["cit_wrong1","cit_wrong2","cit_wrong3"] },
+                  { title: "✨ Définition mystère Premium", fields: ["p_def_word:Mot à trouver","p_def_word_def:Définition à afficher"], correct: "p_def_word", wrongs: ["p_def_wrong1","p_def_wrong2","p_def_wrong3"] },
+                  { title: "✨ Citation Premium", fields: ["p_cit_text:Texte avec ***","p_cit_answer:✓ Réponse correcte"], correct: "p_cit_answer", wrongs: ["p_cit_wrong1","p_cit_wrong2","p_cit_wrong3"] },
+                ].map(sec => (
+                  <div key={sec.title} style={{ marginBottom: "14px", padding: "10px 12px", background: "rgba(0,0,0,0.15)", borderRadius: "8px" }}>
+                    <div style={{ fontSize: "0.72rem", fontWeight: 700, color: "rgba(212,168,67,0.8)", marginBottom: "6px" }}>{sec.title}</div>
+                    {sec.fields.map(f => {
+                      const [key, placeholder] = f.split(":");
+                      const isCorrectField = placeholder.startsWith("✓");
                       return (
-                        <div key={key} style={{ position: "relative" }}>
-                          {isCorrect && (
-                            <span style={{ position: "absolute", top: "50%", right: "8px", transform: "translateY(-50%)", fontSize: "0.7rem", fontWeight: 700, color: "#22c55e", pointerEvents: "none" }}>✓ Correct</span>
-                          )}
-                          <input style={{ ...inp, paddingRight: isCorrect ? "70px" : undefined, borderColor: isCorrect ? "rgba(34,197,94,0.4)" : undefined }}
-                            placeholder={placeholder}
-                            value={game[key] ?? ""}
-                            onChange={e => setGame(g => ({ ...g, [key]: e.target.value }))} />
-                        </div>
+                        <input key={key} style={{ ...inp, borderColor: isCorrectField?"rgba(34,197,94,0.5)":undefined, background: isCorrectField?"rgba(34,197,94,0.06)":undefined }}
+                          placeholder={placeholder} value={game[key]??""} onChange={e=>setGame(g=>({...g,[key]:e.target.value}))} />
                       );
                     })}
+                    <div style={{ fontSize: "0.68rem", color: "var(--text-dim)", margin: "4px 0 2px" }}>Mauvais choix (seront mélangés avec la bonne réponse) :</div>
+                    {sec.wrongs.map((k,i) => (
+                      <input key={k} style={{ ...inp, marginBottom: i<2?"6px":undefined }} placeholder={`Mauvais choix ${i+1}`} value={game[k]??""} onChange={e=>setGame(g=>({...g,[k]:e.target.value}))} />
+                    ))}
                   </div>
                 ))}
               </div>
