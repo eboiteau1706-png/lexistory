@@ -18,6 +18,16 @@ const LEVEL_EMOJI: Record<string, string> = {
   "Érudit":  "🎓",
 };
 
+const CATEGORY_EMOJI: Record<string, string> = {
+  Sport: "🏆", Histoire: "📜", Science: "🔬", Art: "🎨",
+  Gastronomie: "🍽️", Cinéma: "🎬", Musique: "🎵", Géographie: "🌍",
+  Économie: "💰", Littérature: "📚", Philosophie: "🤔", Nature: "🌿",
+  Technologie: "💻", Société: "👥", Psychologie: "🧠", Astronomie: "🔭",
+  Biologie: "🧬", Médecine: "🏥", Architecture: "🏛️", Religion: "✨",
+  Mathématiques: "📐", Politique: "🗳️",
+};
+const getCatEmoji = (cat: string) => CATEGORY_EMOJI[cat] ?? "📖";
+
 function getParisNow() {
   return new Date(new Date().toLocaleString("en-US", { timeZone: "Europe/Paris" }));
 }
@@ -109,7 +119,7 @@ export default function CategoryModal({ category: initialCategory, currentLevel,
           border: "1px solid var(--border)",
           borderRadius: "20px",
           padding: "28px 24px",
-          maxWidth: "520px",
+          maxWidth: showCategoryList && !expandedCategory ? "700px" : "520px",
           width: "100%",
           maxHeight: "85vh",
           display: "flex",
@@ -124,8 +134,10 @@ export default function CategoryModal({ category: initialCategory, currentLevel,
             <div style={{ fontSize: "0.68rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "1px", color: "var(--text-dim)", marginBottom: "4px" }}>
               {showCategoryList ? "Explorer" : "Catégorie"}
             </div>
-            <h2 style={{ fontFamily: "var(--font-playfair)", fontSize: "1.35rem", fontWeight: 700, color: "var(--accent)", margin: 0 }}>
-              {showCategoryList ? "📚 Catégories d'histoires" : initialCategory}
+            <h2 style={{ fontFamily: "var(--font-playfair)", fontSize: "1.35rem", fontWeight: 700, color: "var(--accent)", margin: 0, display: "flex", alignItems: "center", gap: "8px" }}>
+              {showCategoryList && expandedCategory
+                ? <><button onClick={() => setExpandedCategory(null)} style={{ background: "none", border: "none", color: "var(--text-dim)", cursor: "pointer", fontSize: "0.9rem", padding: "0 4px 0 0", fontFamily: "inherit" }}>←</button> {getCatEmoji(expandedCategory)} {expandedCategory}</>
+                : showCategoryList ? "📚 Catégories d'histoires" : initialCategory}
             </h2>
           </div>
           <button onClick={onClose} style={{ background: "var(--surface2)", border: "1px solid var(--border)", borderRadius: "50%", width: "32px", height: "32px", cursor: "pointer", color: "var(--text-muted)", fontSize: "1rem", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>✕</button>
@@ -133,73 +145,36 @@ export default function CategoryModal({ category: initialCategory, currentLevel,
 
         {/* Contenu scrollable — flex: 1 + minHeight: 0 = scroll correct */}
         <div style={{ overflowY: "auto", flex: 1, minHeight: 0, display: "flex", flexDirection: "column", gap: "8px", paddingRight: "4px" }}>
-          {showCategoryList ? (
-            allCategories.map(cat => {
-              const catStories = getStoriesForCategory(cat);
-              if (catStories.length === 0) return null;
-              const isOpen = expandedCategory === cat;
-
-              return (
-                <div key={cat} style={{ borderRadius: "12px", border: "1px solid var(--border)", overflow: "hidden", flexShrink: 0 }}>
-                  <button
-                    onClick={() => setExpandedCategory(isOpen ? null : cat)}
-                    style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 14px", background: isOpen ? "rgba(232,201,122,0.07)" : "var(--surface2)", border: "none", cursor: "pointer", color: "var(--text)", fontFamily: "inherit" }}
+          {showCategoryList && !expandedCategory ? (
+            /* ── Grille de catégories ── */
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(140px, 1fr))", gap: "10px" }}>
+              {allCategories.map(cat => {
+                const catStories = getStoriesForCategory(cat);
+                if (catStories.length === 0) return null;
+                const bestRating = catStories.reduce((m, s) => Math.max(m, s.avg_rating ?? 0), 0);
+                return (
+                  <button key={cat}
+                    onClick={() => setExpandedCategory(cat)}
+                    style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: "6px", padding: "18px 10px", borderRadius: "14px", background: "var(--surface2)", border: "1px solid var(--border)", cursor: "pointer", fontFamily: "inherit", transition: "border-color 0.15s, background 0.15s", textAlign: "center" }}
+                    onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = "var(--accent)"; (e.currentTarget as HTMLElement).style.background = "rgba(232,201,122,0.06)"; }}
+                    onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = "var(--border)"; (e.currentTarget as HTMLElement).style.background = "var(--surface2)"; }}
                   >
-                    <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                      <span style={{ fontWeight: 600, fontSize: "0.92rem" }}>{cat}</span>
-                      <span style={{ fontSize: "0.72rem", color: "var(--text-dim)", background: "var(--surface)", border: "1px solid var(--border)", borderRadius: "50px", padding: "1px 8px" }}>
-                        {catStories.length} histoire{catStories.length > 1 ? "s" : ""}
-                      </span>
-                    </div>
-                    <span style={{ color: "var(--text-dim)", fontSize: "0.85rem", display: "inline-block", transform: isOpen ? "rotate(90deg)" : "none", transition: "transform 0.2s" }}>→</span>
+                    <span style={{ fontSize: "32px", lineHeight: 1 }}>{getCatEmoji(cat)}</span>
+                    <span style={{ fontWeight: 600, fontSize: "0.82rem", color: "var(--text)", lineHeight: 1.3 }}>{cat}</span>
+                    <span style={{ fontSize: "0.68rem", color: "var(--text-dim)" }}>{catStories.length} histoire{catStories.length > 1 ? "s" : ""}</span>
+                    {bestRating > 0 && <span style={{ fontSize: "0.68rem", color: "#d4a843" }}>★ {bestRating.toFixed(1)}</span>}
                   </button>
-
-                  {isOpen && (
-                    <div style={{ display: "flex", flexDirection: "column", gap: "1px", background: "var(--border)" }}>
-                      {catStories.map(story => {
-                        const today = isToday(story);
-                        const locked = !today && !isPremium;
-                        return (
-                          <div
-                            key={story.slug}
-                            onClick={() => handleStoryClick(story)}
-                            style={{ display: "flex", alignItems: "center", gap: "10px", padding: "10px 14px", background: today ? "rgba(232,201,122,0.06)" : "var(--surface)", cursor: locked ? "default" : "pointer", opacity: locked ? 0.55 : 1 }}
-                          >
-                            <div style={{ flex: 1, minWidth: 0 }}>
-                              <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "3px", flexWrap: "wrap" }}>
-                                <span style={{ fontSize: "0.68rem", color: "var(--text-dim)" }}>{LEVEL_EMOJI[story.level]} {story.level}</span>
-                                {today && <span style={{ fontSize: "0.65rem", fontWeight: 700, color: "var(--accent)", padding: "1px 6px", borderRadius: "50px", background: "rgba(232,201,122,0.15)", border: "1px solid rgba(232,201,122,0.3)" }}>Aujourd'hui</span>}
-                                {locked && <span style={{ fontSize: "0.65rem", color: "var(--text-dim)" }}>🔒</span>}
-                              </div>
-                              <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                                <div style={{ fontSize: "0.85rem", fontWeight: 600, color: locked ? "var(--text-dim)" : "var(--text)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", flex: 1, minWidth: 0 }}>
-                                  {locked ? "Histoire Premium" : story.title}
-                                </div>
-                                <span style={{ fontSize: "13px", color: "#d4a843", flexShrink: 0 }}>
-                                  ★ {story.avg_rating && story.avg_rating > 0 ? story.avg_rating.toFixed(1) : "—"}
-                                </span>
-                              </div>
-                              {!locked && <div style={{ fontSize: "0.7rem", color: "var(--text-dim)" }}>{formatDate(story.date)}</div>}
-                            </div>
-                            {!locked && <span style={{ color: "var(--text-dim)", fontSize: "0.8rem", flexShrink: 0 }}>→</span>}
-                          </div>
-                        );
-                      })}
-                    </div>
-                  )}
-                </div>
-              );
-            })
-          ) : (
-            getStoriesForCategory(initialCategory!).map(story => {
+                );
+              })}
+            </div>
+          ) : showCategoryList && expandedCategory ? (
+            /* ── Liste d'histoires de la catégorie sélectionnée ── */
+            <>{getStoriesForCategory(expandedCategory).map(story => {
               const today = isToday(story);
               const locked = !today && !isPremium;
               return (
-                <div
-                  key={story.slug}
-                  onClick={() => handleStoryClick(story)}
-                  style={{ display: "flex", alignItems: "center", gap: "12px", padding: "12px 14px", borderRadius: "12px", background: today ? "rgba(232,201,122,0.07)" : "var(--surface2)", border: `1px solid ${today ? "rgba(232,201,122,0.3)" : "var(--border)"}`, cursor: locked ? "default" : "pointer", opacity: locked ? 0.55 : 1, flexShrink: 0 }}
-                >
+                <div key={story.slug} onClick={() => handleStoryClick(story)}
+                  style={{ display: "flex", alignItems: "center", gap: "12px", padding: "12px 14px", borderRadius: "12px", background: today ? "rgba(232,201,122,0.07)" : "var(--surface2)", border: `1px solid ${today ? "rgba(232,201,122,0.3)" : "var(--border)"}`, cursor: locked ? "default" : "pointer", opacity: locked ? 0.55 : 1, flexShrink: 0 }}>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "4px", flexWrap: "wrap" }}>
                       <span style={{ fontSize: "0.7rem", fontWeight: 700, padding: "2px 8px", borderRadius: "50px", background: today ? "rgba(232,201,122,0.18)" : "var(--surface)", border: "1px solid var(--border)", color: today ? "var(--accent)" : "var(--text-dim)" }}>
@@ -216,13 +191,43 @@ export default function CategoryModal({ category: initialCategory, currentLevel,
                         ★ {story.avg_rating && story.avg_rating > 0 ? story.avg_rating.toFixed(1) : "—"}
                       </span>
                     </div>
-                    {!locked && <div style={{ fontSize: "0.72rem", color: "var(--text-dim)", marginTop: "2px" }}>{formatDate(story.date)} · {story.readTime}</div>}
+                    {!locked && <div style={{ fontSize: "0.72rem", color: "var(--text-dim)", marginTop: "2px" }}>{story.readTime}</div>}
                   </div>
                   {!locked && <span style={{ color: "var(--text-dim)", fontSize: "0.85rem", flexShrink: 0 }}>→</span>}
                 </div>
               );
-            })
-          )}
+            })}</>
+          ) : !showCategoryList ? (
+            /* ── Vue catégorie fournie en prop ── */
+            <>{getStoriesForCategory(initialCategory!).map(story => {
+              const today = isToday(story);
+              const locked = !today && !isPremium;
+              return (
+                <div key={story.slug} onClick={() => handleStoryClick(story)}
+                  style={{ display: "flex", alignItems: "center", gap: "12px", padding: "12px 14px", borderRadius: "12px", background: today ? "rgba(232,201,122,0.07)" : "var(--surface2)", border: `1px solid ${today ? "rgba(232,201,122,0.3)" : "var(--border)"}`, cursor: locked ? "default" : "pointer", opacity: locked ? 0.55 : 1, flexShrink: 0 }}>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div key="badges" style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "4px", flexWrap: "wrap" }}>
+                      <span style={{ fontSize: "0.7rem", fontWeight: 700, padding: "2px 8px", borderRadius: "50px", background: today ? "rgba(232,201,122,0.18)" : "var(--surface)", border: "1px solid var(--border)", color: today ? "var(--accent)" : "var(--text-dim)" }}>
+                        {LEVEL_EMOJI[story.level]} {story.level}
+                      </span>
+                      {today && <span style={{ fontSize: "0.68rem", fontWeight: 700, color: "var(--accent)", padding: "2px 8px", borderRadius: "50px", background: "rgba(232,201,122,0.12)", border: "1px solid rgba(232,201,122,0.3)" }}>Aujourd'hui ✨</span>}
+                      {locked && <span style={{ fontSize: "0.68rem", color: "var(--text-dim)" }}>🔒 Premium</span>}
+                    </div>
+                    <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                      <div style={{ fontSize: "0.88rem", fontWeight: 600, color: locked ? "var(--text-dim)" : "var(--text)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", flex: 1, minWidth: 0 }}>
+                        {locked ? "Histoire Premium" : story.title}
+                      </div>
+                      <span style={{ fontSize: "13px", color: "#d4a843", flexShrink: 0 }}>
+                        ★ {story.avg_rating && story.avg_rating > 0 ? story.avg_rating.toFixed(1) : "—"}
+                      </span>
+                    </div>
+                    {!locked && <div style={{ fontSize: "0.72rem", color: "var(--text-dim)", marginTop: "2px" }}>{story.readTime}</div>}
+                  </div>
+                  {!locked && <span style={{ color: "var(--text-dim)", fontSize: "0.85rem", flexShrink: 0 }}>→</span>}
+                </div>
+              );
+            })}</>
+          ) : null}
         </div>
 
         {/* Footer Premium — fixe */}
