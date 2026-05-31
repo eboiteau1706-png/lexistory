@@ -62,17 +62,35 @@ export default function StoryRating({ storyId, initialAvg = 0, initialCount = 0 
   async function openVoters() {
     setShowVoters(true);
     setVotersLoading(true);
-    const { data } = await supabase
+
+    // Étape 1 : fetch ratings
+    const { data: ratings, error } = await supabase
       .from("story_ratings")
-      .select("rating, created_at, profiles(username)")
+      .select("rating, created_at, user_id")
       .eq("story_id", storyId)
       .order("created_at", { ascending: false });
-    if (data) {
-      setVoters(data.map((r: any) => ({
-        username: r.profiles?.username ?? "Anonyme",
+
+    console.log("[VotersModal] story_id:", storyId, "result:", ratings, "error:", error);
+
+    if (ratings && ratings.length > 0) {
+      // Étape 2 : fetch profiles pour chaque user_id (évite la dépendance à la FK PostgREST)
+      const userIds = ratings.map((r: any) => r.user_id);
+      const { data: profiles } = await supabase
+        .from("profiles")
+        .select("id, username, avatar_url")
+        .in("id", userIds);
+
+      const profileMap: Record<string, any> = Object.fromEntries(
+        (profiles ?? []).map((p: any) => [p.id, p])
+      );
+
+      setVoters(ratings.map((r: any) => ({
+        username: profileMap[r.user_id]?.username ?? "Anonyme",
         rating: r.rating,
         created_at: r.created_at,
       })));
+    } else {
+      setVoters([]);
     }
     setVotersLoading(false);
   }
