@@ -109,9 +109,16 @@ export default function AdminOverlay({ story, date, level, dayOffset, todayOffse
       const res  = await fetch(`/api/custom-game?date=${gameDate}`);
       const json = await res.json();
       const g    = json.game;
-      console.log("[AdminOverlay] game result:", g);
+      // ── LOGS EXPLICITES ─────────────────────────────────────────────────
+      console.log("[AdminOverlay] jeux normaux:", {
+        word_of_day: g?.word_of_day, def_word: g?.def_word, anag_word: g?.anag_word, cit_text: g?.cit_text,
+      }, "erreur:", json.error ?? null);
+      console.log("[AdminOverlay] jeux premium:", {
+        p_word_of_day: g?.p_word_of_day, p_def_word: g?.p_def_word, p_anag_word: g?.p_anag_word, p_cit_text: g?.p_cit_text,
+      }, "erreur:", json.error ?? null);
+      console.log("[AdminOverlay] row complet:", g);
+      // ────────────────────────────────────────────────────────────────────
       if (g) {
-        // Mapping explicite de chaque champ — pas de Object.keys() qui peut rater des champs
         setGame({
           word_of_day:    g.word_of_day    ?? "", word_of_day_def:  g.word_of_day_def  ?? "", word_of_day_etym: g.word_of_day_etym ?? "",
           def_word:       g.def_word       ?? "", def_word_def:     g.def_word_def     ?? "",
@@ -128,7 +135,7 @@ export default function AdminOverlay({ story, date, level, dayOffset, todayOffse
         });
       } else {
         setGame(emptyGame());
-        console.log("[AdminOverlay] no game found for date:", gameDate);
+        console.log("[AdminOverlay] AUCUN JEU trouvé pour la date:", gameDate, "— vérifie que games_custom a bien une ligne avec game_date =", gameDate);
       }
     } catch (e) {
       console.error("[AdminOverlay] fetch error:", e);
