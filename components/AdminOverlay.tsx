@@ -44,15 +44,22 @@ export default function AdminOverlay({ story, date, level, dayOffset, todayOffse
   const [readTime, setReadTime]     = useState(story.readTime);
   const [paragraphs, setParagraphs] = useState<string[]>(story.paragraphs.length ? story.paragraphs : [""]);
 
-  // Game form (free user fields)
-  const [game, setGame] = useState<Record<string, string>>({
+  // Tous les champs de games_custom (libres + premium)
+  const emptyGame = (): Record<string, string> => ({
     word_of_day: "", word_of_day_def: "", word_of_day_etym: "",
     def_word: "", def_word_def: "",
     def_choice1: "", def_choice2: "", def_choice3: "", def_choice4: "",
     anag_word: "", anag_word_def: "",
     cit_text: "", cit_answer: "",
     cit_choice1: "", cit_choice2: "", cit_choice3: "", cit_choice4: "",
+    p_word_of_day: "", p_word_of_day_def: "", p_word_of_day_etym: "",
+    p_def_word: "", p_def_word_def: "",
+    p_def_choice1: "", p_def_choice2: "", p_def_choice3: "", p_def_choice4: "",
+    p_anag_word: "", p_anag_word_def: "",
+    p_cit_text: "", p_cit_answer: "",
+    p_cit_choice1: "", p_cit_choice2: "", p_cit_choice3: "", p_cit_choice4: "",
   });
+  const [game, setGame] = useState<Record<string, string>>(emptyGame());
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -97,11 +104,35 @@ export default function AdminOverlay({ story, date, level, dayOffset, todayOffse
   async function openGameModal() {
     setGameLoading(true); setGameModal(true); setGameMsg("");
     const gameDate = getGameDate();
-    const res = await fetch(`/api/custom-game?date=${gameDate}`);
-    const json = await res.json();
-    console.log("[AdminOverlay] game fetch — date:", gameDate, "| result:", json.game, "| raw:", json);
-    const g = json.game;
-    if (g) setGame(Object.fromEntries(Object.keys(game).map(k => [k, g[k] ?? ""])));
+    console.log("[AdminOverlay] fetching game for date:", gameDate);
+    try {
+      const res  = await fetch(`/api/custom-game?date=${gameDate}`);
+      const json = await res.json();
+      const g    = json.game;
+      console.log("[AdminOverlay] game result:", g);
+      if (g) {
+        // Mapping explicite de chaque champ — pas de Object.keys() qui peut rater des champs
+        setGame({
+          word_of_day:    g.word_of_day    ?? "", word_of_day_def:  g.word_of_day_def  ?? "", word_of_day_etym: g.word_of_day_etym ?? "",
+          def_word:       g.def_word       ?? "", def_word_def:     g.def_word_def     ?? "",
+          def_choice1:    g.def_choice1    ?? "", def_choice2:      g.def_choice2      ?? "", def_choice3: g.def_choice3 ?? "", def_choice4: g.def_choice4 ?? "",
+          anag_word:      g.anag_word      ?? "", anag_word_def:    g.anag_word_def    ?? "",
+          cit_text:       g.cit_text       ?? "", cit_answer:       g.cit_answer       ?? "",
+          cit_choice1:    g.cit_choice1    ?? "", cit_choice2:      g.cit_choice2      ?? "", cit_choice3: g.cit_choice3 ?? "", cit_choice4: g.cit_choice4 ?? "",
+          p_word_of_day:  g.p_word_of_day  ?? "", p_word_of_day_def: g.p_word_of_day_def ?? "", p_word_of_day_etym: g.p_word_of_day_etym ?? "",
+          p_def_word:     g.p_def_word     ?? "", p_def_word_def:   g.p_def_word_def   ?? "",
+          p_def_choice1:  g.p_def_choice1  ?? "", p_def_choice2:    g.p_def_choice2    ?? "", p_def_choice3: g.p_def_choice3 ?? "", p_def_choice4: g.p_def_choice4 ?? "",
+          p_anag_word:    g.p_anag_word    ?? "", p_anag_word_def:  g.p_anag_word_def  ?? "",
+          p_cit_text:     g.p_cit_text     ?? "", p_cit_answer:     g.p_cit_answer     ?? "",
+          p_cit_choice1:  g.p_cit_choice1  ?? "", p_cit_choice2:    g.p_cit_choice2    ?? "", p_cit_choice3: g.p_cit_choice3 ?? "", p_cit_choice4: g.p_cit_choice4 ?? "",
+        });
+      } else {
+        setGame(emptyGame());
+        console.log("[AdminOverlay] no game found for date:", gameDate);
+      }
+    } catch (e) {
+      console.error("[AdminOverlay] fetch error:", e);
+    }
     setGameLoading(false);
   }
 
@@ -210,6 +241,10 @@ export default function AdminOverlay({ story, date, level, dayOffset, todayOffse
                   ["🔍 Définition mystère", ["def_word:Mot à trouver", "def_word_def:Définition à afficher", "def_choice1:Choix 1 (correct)", "def_choice2:Choix 2", "def_choice3:Choix 3", "def_choice4:Choix 4"]],
                   ["🔤 Anagramme", ["anag_word:Mot à anagrammer", "anag_word_def:Définition indice"]],
                   ["💬 Citation (*** = mot manquant)", ["cit_text:Texte avec ***", "cit_answer:Réponse correcte", "cit_choice1:Choix 1 (correct)", "cit_choice2:Choix 2", "cit_choice3:Choix 3", "cit_choice4:Choix 4"]],
+                  ["✨ Mot Premium", ["p_word_of_day:Mot", "p_word_of_day_def:Définition simple", "p_word_of_day_etym:Étymologie"]],
+                  ["✨ Définition mystère Premium", ["p_def_word:Mot à trouver", "p_def_word_def:Définition à afficher", "p_def_choice1:Choix 1 (correct)", "p_def_choice2:Choix 2", "p_def_choice3:Choix 3", "p_def_choice4:Choix 4"]],
+                  ["✨ Anagramme Premium", ["p_anag_word:Mot", "p_anag_word_def:Définition indice"]],
+                  ["✨ Citation Premium", ["p_cit_text:Texte avec ***", "p_cit_answer:Réponse correcte", "p_cit_choice1:Choix 1 (correct)", "p_cit_choice2:Choix 2", "p_cit_choice3:Choix 3", "p_cit_choice4:Choix 4"]],
                 ].map(([section, fields]) => (
                   <div key={section as string} style={{ marginBottom: "12px" }}>
                     <div style={{ fontSize: "0.72rem", fontWeight: 700, color: "rgba(212,168,67,0.8)", marginBottom: "4px" }}>{section as string}</div>
