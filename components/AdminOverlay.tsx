@@ -333,6 +333,45 @@ export default function AdminOverlay({ story, date, level, dayOffset, todayOffse
                     </div>
                   </div>
                 )}
+                {/* ── Sections Premium ── */}
+                {game.p_word_of_day && (
+                  <div style={{ background: "rgba(212,168,67,0.05)", border: "1px solid rgba(212,168,67,0.2)", borderRadius: "10px", padding: "12px 14px" }}>
+                    <div style={{ fontSize: "0.68rem", fontWeight: 700, color: "rgba(212,168,67,0.7)", textTransform: "uppercase", marginBottom: "6px" }}>✨ Mot Premium</div>
+                    <div style={{ fontSize: "1.3rem", fontWeight: 700, color: "var(--accent)" }}>{game.p_word_of_day}</div>
+                    {game.p_word_of_day_etym && <div style={{ fontSize: "0.72rem", color: "var(--text-dim)", fontStyle: "italic" }}>{game.p_word_of_day_etym}</div>}
+                    {game.p_word_of_day_def && <div style={{ fontSize: "0.85rem", color: "var(--text-muted)", marginTop: "4px" }}>{game.p_word_of_day_def}</div>}
+                  </div>
+                )}
+                {game.p_def_word && (
+                  <div style={{ background: "rgba(212,168,67,0.05)", border: "1px solid rgba(212,168,67,0.2)", borderRadius: "10px", padding: "12px 14px" }}>
+                    <div style={{ fontSize: "0.68rem", fontWeight: 700, color: "rgba(212,168,67,0.7)", textTransform: "uppercase", marginBottom: "6px" }}>✨ Définition mystère Premium</div>
+                    <div style={{ fontSize: "0.85rem", color: "var(--text-muted)", marginBottom: "8px" }}>{game.p_def_word_def}</div>
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
+                      {shuffleChoices(game.p_def_word, [game.p_def_wrong1, game.p_def_wrong2, game.p_def_wrong3]).map((c,i) => (
+                        <span key={i} style={{ padding: "4px 10px", borderRadius: "6px", background: c===game.p_def_word?"rgba(34,197,94,0.15)":"var(--surface)", border: `1px solid ${c===game.p_def_word?"#22c55e":"var(--border)"}`, color: c===game.p_def_word?"#22c55e":"var(--text-muted)", fontSize: "0.82rem" }}>{c}{c===game.p_def_word?" ✓":""}</span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {game.p_anag_word && (
+                  <div style={{ background: "rgba(212,168,67,0.05)", border: "1px solid rgba(212,168,67,0.2)", borderRadius: "10px", padding: "12px 14px" }}>
+                    <div style={{ fontSize: "0.68rem", fontWeight: 700, color: "rgba(212,168,67,0.7)", textTransform: "uppercase", marginBottom: "6px" }}>✨ Anagramme Premium</div>
+                    <div style={{ fontSize: "0.82rem", color: "var(--text-dim)", marginBottom: "4px" }}>{game.p_anag_word_def}</div>
+                    <div style={{ fontFamily: "monospace", fontSize: "1.1rem", letterSpacing: "4px", color: "var(--accent)" }}>{game.p_anag_word.split("").sort(()=>Math.random()-0.5).join(" ")}</div>
+                    <div style={{ fontSize: "0.72rem", color: "var(--text-dim)", marginTop: "4px" }}>→ réponse : <strong>{game.p_anag_word}</strong></div>
+                  </div>
+                )}
+                {game.p_cit_text && (
+                  <div style={{ background: "rgba(212,168,67,0.05)", border: "1px solid rgba(212,168,67,0.2)", borderRadius: "10px", padding: "12px 14px" }}>
+                    <div style={{ fontSize: "0.68rem", fontWeight: 700, color: "rgba(212,168,67,0.7)", textTransform: "uppercase", marginBottom: "6px" }}>✨ Citation Premium</div>
+                    <div style={{ fontSize: "0.88rem", color: "var(--text-muted)", fontStyle: "italic", marginBottom: "8px" }}>"{game.p_cit_text.replace("***", "___")}"</div>
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
+                      {shuffleChoices(game.p_cit_answer, [game.p_cit_wrong1, game.p_cit_wrong2, game.p_cit_wrong3]).map((c,i) => (
+                        <span key={i} style={{ padding: "4px 10px", borderRadius: "6px", background: c===game.p_cit_answer?"rgba(34,197,94,0.15)":"var(--surface)", border: `1px solid ${c===game.p_cit_answer?"#22c55e":"var(--border)"}`, color: c===game.p_cit_answer?"#22c55e":"var(--text-muted)", fontSize: "0.82rem" }}>{c}{c===game.p_cit_answer?" ✓":""}</span>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             ) : (
               /* ── Onglet Édition ── */
@@ -365,7 +404,7 @@ export default function AdminOverlay({ story, date, level, dayOffset, todayOffse
                       const [key, placeholder] = f.split(":");
                       const isCorrectField = placeholder.startsWith("✓");
                       return (
-                        <input key={key} style={{ ...inp, borderColor: isCorrectField?"rgba(34,197,94,0.5)":undefined, background: isCorrectField?"rgba(34,197,94,0.06)":undefined }}
+                        <input key={key} style={{ ...inp, ...(isCorrectField ? { background: "#ffffff", color: "#1a1a1a", border: "1px solid #d4a843" } : {}) }}
                           placeholder={placeholder} value={game[key]??""} onChange={e=>setGame(g=>({...g,[key]:e.target.value}))} />
                       );
                     })}
