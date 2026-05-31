@@ -2,6 +2,7 @@ import StoryCard from "@/components/StoryCard";
 import Sidebar from "@/components/Sidebar";
 import LevelSelector from "@/components/LevelSelector";
 import DateLabel from "@/components/DateLabel";
+import AdminOverlay from "@/components/AdminOverlay";
 import { STORIES } from "@/lib/stories";
 import { createClient } from "@supabase/supabase-js";
 import type { Story } from "@/lib/stories";
@@ -68,7 +69,16 @@ export default async function Home({
       <DateLabel />
       <LevelSelector current={level} />
       <div className="layout">
-        <StoryCard story={story} />
+        <div>
+          <AdminOverlay
+            story={story}
+            date={targetDateStr}
+            level={level}
+            dayOffset={dayParam ?? diffDays}
+            todayOffset={diffDays}
+          />
+          <StoryCard story={story} />
+        </div>
         <Sidebar />
       </div>
     </main>
