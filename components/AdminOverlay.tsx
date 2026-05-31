@@ -403,8 +403,18 @@ export default function AdminOverlay({ story, date, level, dayOffset, todayOffse
                     {sec.fields.map(f => {
                       const [key, placeholder] = f.split(":");
                       const isCorrectField = placeholder.startsWith("✓");
+                      if (isCorrectField) return (
+                        <div key={key}>
+                          <div style={{ fontSize: "0.72rem", fontWeight: 600, color: "#22c55e", marginBottom: "3px" }}>✓ Bonne réponse</div>
+                          <div style={{ position: "relative" }}>
+                            <input style={{ ...inp, background: "rgba(34,197,94,0.15)", border: "2px solid #22c55e", color: "#86efac", paddingRight: "32px" }}
+                              placeholder="La bonne réponse" value={game[key]??""} onChange={e=>setGame(g=>({...g,[key]:e.target.value}))} />
+                            <span style={{ position: "absolute", right: "10px", top: "50%", transform: "translateY(-50%)", color: "#22c55e", fontWeight: 700, fontSize: "0.9rem", pointerEvents: "none" }}>✓</span>
+                          </div>
+                        </div>
+                      );
                       return (
-                        <input key={key} style={{ ...inp, ...(isCorrectField ? { background: "#ffffff", color: "#1a1a1a", border: "1px solid #d4a843" } : {}) }}
+                        <input key={key} style={inp}
                           placeholder={placeholder} value={game[key]??""} onChange={e=>setGame(g=>({...g,[key]:e.target.value}))} />
                       );
                     })}
