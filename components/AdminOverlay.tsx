@@ -83,18 +83,24 @@ export default function AdminOverlay({ story, date, level, dayOffset, todayOffse
     setMsg("✅ Sauvegardé !"); setEditing(false); router.refresh();
   }
 
-  // Date ISO côté client pour les jeux (UTC, correspond au format stocké en Supabase)
+  // Même logique que getParisDateStr() dans app/jeux/page.tsx — date heure Paris
   function getGameDate(): string {
-    const d = new Date();
-    d.setUTCDate(d.getUTCDate() + (dayOffset - todayOffset));
-    return d.toISOString().split("T")[0];
+    const paris = new Date(new Date().toLocaleString("en-US", { timeZone: "Europe/Paris" }));
+    const diff  = dayOffset - todayOffset;
+    paris.setDate(paris.getDate() + diff);
+    const y = paris.getFullYear();
+    const m = String(paris.getMonth() + 1).padStart(2, "0");
+    const d = String(paris.getDate()).padStart(2, "0");
+    return `${y}-${m}-${d}`;
   }
 
   async function openGameModal() {
     setGameLoading(true); setGameModal(true); setGameMsg("");
     const gameDate = getGameDate();
     const res = await fetch(`/api/custom-game?date=${gameDate}`);
-    const { game: g } = await res.json();
+    const json = await res.json();
+    console.log("[AdminOverlay] game fetch — date:", gameDate, "| result:", json.game, "| raw:", json);
+    const g = json.game;
     if (g) setGame(Object.fromEntries(Object.keys(game).map(k => [k, g[k] ?? ""])));
     setGameLoading(false);
   }
