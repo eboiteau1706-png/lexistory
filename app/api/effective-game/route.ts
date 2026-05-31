@@ -73,6 +73,72 @@ const CITATIONS = [
   { text: "Aristote distinguait deux formes de bien-être : l'hédoné, le plaisir immédiat, et l'***, le bonheur comme épanouissement.", answer: "eudaimonia", choices: ["eudaimonia", "ataraxia", "aponia", "sophia"] },
 ];
 
+const PREMIUM_WORDS = [
+  { word: "apophtegme",    def: "Une courte parole mémorable d'un personnage célèbre, souvent pleine de sagesse.",                   etym: "Du grec apophthegma, sentence" },
+  { word: "bathyscaphe",   def: "Un engin submersible capable de plonger à de très grandes profondeurs océaniques.",                  etym: "Du grec bathys (profond) + skaphos (bateau)" },
+  { word: "chiasme",       def: "Une figure de style qui inverse l'ordre des éléments dans deux propositions parallèles.",             etym: "Du grec khiasmos, disposition en croix" },
+  { word: "diastole",      def: "La phase de relaxation du cœur pendant laquelle il se remplit de sang.",                             etym: "Du grec diastolê, dilatation" },
+  { word: "épistémologie", def: "La branche de la philosophie qui étudie la nature et les limites de la connaissance humaine.",        etym: "Du grec episteme (connaissance) + logos (discours)" },
+  { word: "funambule",     def: "Un acrobate qui marche et fait des exercices sur un fil tendu en hauteur.",                           etym: "Du latin funis (corde) + ambulare (marcher)" },
+  { word: "glossolalie",   def: "Le fait de parler une langue inconnue ou incompréhensible, souvent dans un contexte religieux.",      etym: "Du grec glossa (langue) + lalein (parler)" },
+  { word: "hégémonie",     def: "La domination politique, culturelle ou militaire d'un État ou d'un groupe sur les autres.",           etym: "Du grec hegemonia, commandement" },
+  { word: "iconoclaste",   def: "Quelqu'un qui remet en question les idées reçues et les conventions établies.",                       etym: "Du grec eikon (image) + klastes (briseur)" },
+  { word: "jactance",      def: "Une façon de parler de soi avec trop de fierté et de se vanter excessivement.",                      etym: "Du latin jactantia, arrogance" },
+  { word: "kénose",        def: "En théologie, l'acte par lequel Dieu s'est dépouillé de sa puissance divine en s'incarnant.",        etym: "Du grec kenosis, vidage" },
+  { word: "logorrhée",     def: "Un flux de paroles excessif et incontrôlé, souvent difficile à arrêter.",                            etym: "Du grec logos (parole) + rhein (couler)" },
+  { word: "mnémotechnique", def: "Une technique ou un procédé qui aide à mémoriser des informations plus facilement.",                etym: "Du grec mneme (mémoire) + tekhne (art)" },
+  { word: "néologisme",    def: "Un mot nouveau créé dans une langue pour désigner une réalité nouvelle.",                             etym: "Du grec neos (nouveau) + logos (mot)" },
+  { word: "ontologie",     def: "La branche de la philosophie qui étudie la nature de l'être et de l'existence.",                     etym: "Du grec ontos (être) + logos (discours)" },
+  { word: "palimpseste",   def: "Un manuscrit dont on a effacé l'écriture pour écrire à nouveau, mais dont des traces subsistent.",   etym: "Du grec palimpsestos, gratté de nouveau" },
+  { word: "quaternaire",   def: "La dernière période géologique, commençant il y a 2,6 millions d'années et incluant l'ère actuelle.", etym: "Du latin quaternarius, groupe de quatre" },
+  { word: "réification",   def: "Le fait de traiter une abstraction ou une personne comme si c'était une chose matérielle.",           etym: "Du latin res (chose) + facere (faire)" },
+  { word: "syllogisme",    def: "Un raisonnement logique en trois étapes : deux prémisses et une conclusion qui en découle.",          etym: "Du grec syllogismos, calcul" },
+  { word: "tautologie",    def: "Une répétition inutile de la même idée avec des mots différents, sans rien ajouter.",                etym: "Du grec tauto (même) + logos (parole)" },
+  { word: "ubiquité",      def: "La capacité d'être présent partout en même temps ou en de nombreux endroits simultanément.",          etym: "Du latin ubique, partout" },
+  { word: "véridique",     def: "Qui dit la vérité, qui est conforme à la réalité et aux faits réels.",                               etym: "Du latin veridicus, qui dit vrai" },
+  { word: "xénophilie",    def: "L'attrait et l'affection pour les étrangers, les cultures et les coutumes étrangères.",               etym: "Du grec xenos (étranger) + philos (ami)" },
+  { word: "zeugme",        def: "Une figure de style qui relie un verbe à deux compléments de nature ou de sens très différents.",     etym: "Du grec zeugma, lien" },
+  { word: "acméisme",      def: "Un mouvement poétique russe du début du XXe siècle prônant la clarté et la précision du langage.",   etym: "Du grec akme, sommet" },
+  { word: "bovarysme",     def: "La tendance à se percevoir autrement qu'on est réellement et à idéaliser sa propre existence.",       etym: "Du personnage Emma Bovary de Flaubert" },
+  { word: "catharsis",     def: "La purification émotionnelle que ressent le spectateur devant une œuvre tragique.",                   etym: "Du grec katharsis, purification" },
+  { word: "doxologie",     def: "Une formule liturgique de louange à Dieu, souvent chantée à la fin d'une prière.",                   etym: "Du grec doxa (gloire) + logos (parole)" },
+  { word: "eschatologie",  def: "La partie de la théologie qui traite des dernières fins de l'homme et de l'univers.",                 etym: "Du grec eskhatos (dernier) + logos (discours)" },
+  { word: "frugalité",     def: "La qualité de celui qui se contente de peu et évite les dépenses et les plaisirs excessifs.",         etym: "Du latin frugalitas, sobriété" },
+];
+
+const PREMIUM_CITATIONS = [
+  { text: "L'art est une *** qui nous permet de réaliser notre vérité.", answer: "mensonge", choices: ["mensonge", "vérité", "illusion", "réalité"] },
+  { text: "La conscience est le seul endroit au monde où la *** ne peut pas entrer.", answer: "médiocrité", choices: ["médiocrité", "beauté", "vérité", "douleur"] },
+  { text: "L'homme est condamné à être ***.", answer: "libre", choices: ["libre", "mortel", "seul", "heureux"] },
+  { text: "Ce qui ne me tue pas me rend ***.", answer: "plus fort", choices: ["plus fort", "plus sage", "plus calme", "différent"] },
+  { text: "La philosophie est un exercice pour la ***.", answer: "mort", choices: ["mort", "vie", "vérité", "raison"] },
+  { text: "Le doute est le commencement de la ***.", answer: "sagesse", choices: ["sagesse", "folie", "science", "vérité"] },
+  { text: "L'imagination est plus importante que la ***.", answer: "connaissance", choices: ["connaissance", "raison", "mémoire", "logique"] },
+  { text: "Les mots sont la forme la plus puissante de la *** humaine.", answer: "magie", choices: ["magie", "pensée", "communication", "violence"] },
+  { text: "La *** est le silence de la raison.", answer: "passion", choices: ["passion", "beauté", "folie", "création"] },
+  { text: "Penser, c'est déjà vouloir une *** du monde.", answer: "réforme", choices: ["réforme", "image", "copie", "description"] },
+  { text: "L'art de vivre consiste à savoir ce qu'on doit sacrifier et ce qu'on doit ***.", answer: "conserver", choices: ["conserver", "ignorer", "partager", "détruire"] },
+  { text: "La *** est la forme la plus haute de l'intelligence.", answer: "simplicité", choices: ["simplicité", "complexité", "créativité", "logique"] },
+  { text: "Toute grande vérité commence par être une ***.", answer: "hérésie", choices: ["hérésie", "erreur", "hypothèse", "utopie"] },
+  { text: "Le propre de l'homme est de penser sans en être ***.", answer: "conscient", choices: ["conscient", "capable", "sûr", "libre"] },
+  { text: "La *** est la politesse du désespoir.", answer: "ironie", choices: ["ironie", "beauté", "raison", "vertu"] },
+  { text: "On ne voit bien qu'avec le cœur. L'essentiel est *** pour les yeux.", answer: "invisible", choices: ["invisible", "visible", "lointain", "caché"] },
+  { text: "La liberté des uns s'arrête là où commence la *** des autres.", answer: "liberté", choices: ["liberté", "dignité", "souffrance", "volonté"] },
+  { text: "Le génie, c'est 1% d'inspiration et 99% de ***.", answer: "transpiration", choices: ["transpiration", "réflexion", "persévérance", "méthode"] },
+  { text: "L'enfer, c'est les ***.", answer: "autres", choices: ["autres", "vivants", "regrets", "illusions"] },
+  { text: "La *** est l'art de rendre supportable l'insupportable.", answer: "philosophie", choices: ["philosophie", "religion", "musique", "poésie"] },
+  { text: "Ce que nous savons est une goutte, ce que nous ignorons est un ***.", answer: "océan", choices: ["océan", "désert", "mystère", "abîme"] },
+  { text: "La *** est une chose trop sérieuse pour être laissée aux militaires.", answer: "guerre", choices: ["guerre", "paix", "politique", "nation"] },
+  { text: "Mieux vaut une tête bien faite qu'une tête bien ***.", answer: "pleine", choices: ["pleine", "vide", "formée", "savante"] },
+  { text: "La *** est la plus haute forme de la générosité.", answer: "gratitude", choices: ["gratitude", "bonté", "sagesse", "vertu"] },
+  { text: "L'éducation est l'arme la plus puissante qu'on puisse utiliser pour changer le ***.", answer: "monde", choices: ["monde", "système", "futur", "destin"] },
+  { text: "Le courage n'est pas l'absence de peur, mais le jugement que *** est plus important.", answer: "autre chose", choices: ["autre chose", "la victoire", "l'honneur", "la vérité"] },
+  { text: "La *** est le remède à tous les maux.", answer: "lecture", choices: ["lecture", "sagesse", "patience", "vertu"] },
+  { text: "Celui qui n'a pas de mémoire risque de *** ses erreurs.", answer: "répéter", choices: ["répéter", "oublier", "corriger", "vivre"] },
+  { text: "La *** commence là où finit la certitude.", answer: "pensée", choices: ["pensée", "science", "foi", "liberté"] },
+  { text: "Connais-toi *** et tu connaîtras l'univers et les dieux.", answer: "toi-même", choices: ["toi-même", "par l'étude", "par l'autre", "par l'expérience"] },
+];
+
 // ── Helpers (identiques à jeux/page.tsx) ─────────────────────────────────────
 function getDayIndex(arr: any[], dateStr: string): number {
   const paris = new Date(new Date(dateStr + "T12:00:00").toLocaleString("en-US", { timeZone: "Europe/Paris" }));
@@ -103,10 +169,9 @@ export async function GET(request: NextRequest) {
     .eq("game_date", date)
     .maybeSingle();
 
-  // Compute indices — same logic as jeux/page.tsx
+  // ── Free game indices (seeds 11111/22222/77777 — identiques à jeux/page.tsx) ─
   const dayIdx = getDayIndex(GAME_WORDS, date);
   const citIdx = getDayIndex(CITATIONS, date);
-
   const shuffledForWord = shuffle([...Array(GAME_WORDS.length).keys()], 11111);
   const shuffledForDef  = shuffle([...Array(GAME_WORDS.length).keys()], 22222);
   const shuffledForAnag = shuffle([...Array(GAME_WORDS.length).keys()], 77777);
@@ -116,52 +181,70 @@ export async function GET(request: NextRequest) {
   if (defIdx === wordIdx) defIdx = (defIdx + 1) % GAME_WORDS.length;
   if (anagIdx === wordIdx || anagIdx === defIdx) anagIdx = (anagIdx + 2) % GAME_WORDS.length;
 
-  // Static fallback game data
   const staticWord  = GAME_WORDS[wordIdx];
   const staticDef   = GAME_WORDS[defIdx];
   const staticAnag  = GAME_WORDS[anagIdx];
   const staticCit   = CITATIONS[citIdx];
-  const wrongChoices = GAME_WORDS.filter(w => w.word !== staticDef.word).slice(0, 3).map(w => w.word);
+  const wrongChoices       = GAME_WORDS.filter(w => w.word !== staticDef.word).slice(0, 3).map(w => w.word);
   const defChoicesFallback = shuffle([staticDef.word, ...wrongChoices], dayIdx * 99991);
+
+  // ── Premium game indices (seeds 44444/55555/88888 — identiques à jeux/page.tsx) ─
+  const pDayIdx = getDayIndex(PREMIUM_WORDS, date);
+  const pCitIdx = getDayIndex(PREMIUM_CITATIONS, date);
+  const pShuffledForWord = shuffle([...Array(PREMIUM_WORDS.length).keys()], 44444);
+  const pShuffledForDef  = shuffle([...Array(PREMIUM_WORDS.length).keys()], 55555);
+  const pShuffledForAnag = shuffle([...Array(PREMIUM_WORDS.length).keys()], 88888);
+  const pWordIdx = pShuffledForWord[pDayIdx % PREMIUM_WORDS.length];
+  let pDefIdx    = pShuffledForDef[pDayIdx % PREMIUM_WORDS.length];
+  let pAnagIdx   = pShuffledForAnag[pDayIdx % PREMIUM_WORDS.length];
+  if (pDefIdx === pWordIdx) pDefIdx = (pDefIdx + 1) % PREMIUM_WORDS.length;
+  if (pAnagIdx === pWordIdx || pAnagIdx === pDefIdx) pAnagIdx = (pAnagIdx + 2) % PREMIUM_WORDS.length;
+
+  const pStaticWord  = PREMIUM_WORDS[pWordIdx];
+  const pStaticDef   = PREMIUM_WORDS[pDefIdx];
+  const pStaticAnag  = PREMIUM_WORDS[pAnagIdx];
+  const pStaticCit   = PREMIUM_CITATIONS[pCitIdx];
+  const pWrongChoices       = PREMIUM_WORDS.filter(w => w.word !== pStaticDef.word).slice(0, 3).map(w => w.word);
+  const pDefChoicesFallback = shuffle([pStaticDef.word, ...pWrongChoices], pDayIdx * 11117);
 
   // Effective game = custom override when set, static fallback otherwise
   const effective = {
     // Free games
-    word_of_day:   (cg?.word_of_day  || "") || staticWord.word,
-    word_of_day_def: (cg?.word_of_day_def || "") || staticWord.def,
+    word_of_day:      (cg?.word_of_day      || "") || staticWord.word,
+    word_of_day_def:  (cg?.word_of_day_def  || "") || staticWord.def,
     word_of_day_etym: (cg?.word_of_day_etym || "") || staticWord.etym,
-    def_word:      (cg?.def_word     || "") || staticDef.word,
-    def_word_def:  (cg?.def_word_def || "") || staticDef.def,
-    def_choice1:   (cg?.def_choice1  || "") || defChoicesFallback[0] || "",
-    def_choice2:   (cg?.def_choice2  || "") || defChoicesFallback[1] || "",
-    def_choice3:   (cg?.def_choice3  || "") || defChoicesFallback[2] || "",
-    def_choice4:   (cg?.def_choice4  || "") || defChoicesFallback[3] || "",
-    anag_word:     (cg?.anag_word    || "") || staticAnag.word,
-    anag_word_def: (cg?.anag_word_def || "") || staticAnag.def,
-    cit_text:      (cg?.cit_text     || "") || staticCit.text,
-    cit_answer:    (cg?.cit_answer   || "") || staticCit.answer,
-    cit_choice1:   (cg?.cit_choice1  || "") || (staticCit.choices[0] || ""),
-    cit_choice2:   (cg?.cit_choice2  || "") || (staticCit.choices[1] || ""),
-    cit_choice3:   (cg?.cit_choice3  || "") || (staticCit.choices[2] || ""),
-    cit_choice4:   (cg?.cit_choice4  || "") || (staticCit.choices[3] || ""),
-    // Premium (custom only — no static fallback shown for now)
-    p_word_of_day:     cg?.p_word_of_day     ?? "",
-    p_word_of_day_def: cg?.p_word_of_day_def ?? "",
-    p_word_of_day_etym: cg?.p_word_of_day_etym ?? "",
-    p_def_word:        cg?.p_def_word        ?? "",
-    p_def_word_def:    cg?.p_def_word_def    ?? "",
-    p_def_choice1:     cg?.p_def_choice1     ?? "",
-    p_def_choice2:     cg?.p_def_choice2     ?? "",
-    p_def_choice3:     cg?.p_def_choice3     ?? "",
-    p_def_choice4:     cg?.p_def_choice4     ?? "",
-    p_anag_word:       cg?.p_anag_word       ?? "",
-    p_anag_word_def:   cg?.p_anag_word_def   ?? "",
-    p_cit_text:        cg?.p_cit_text        ?? "",
-    p_cit_answer:      cg?.p_cit_answer      ?? "",
-    p_cit_choice1:     cg?.p_cit_choice1     ?? "",
-    p_cit_choice2:     cg?.p_cit_choice2     ?? "",
-    p_cit_choice3:     cg?.p_cit_choice3     ?? "",
-    p_cit_choice4:     cg?.p_cit_choice4     ?? "",
+    def_word:         (cg?.def_word         || "") || staticDef.word,
+    def_word_def:     (cg?.def_word_def     || "") || staticDef.def,
+    def_choice1:      (cg?.def_choice1      || "") || defChoicesFallback[0] || "",
+    def_choice2:      (cg?.def_choice2      || "") || defChoicesFallback[1] || "",
+    def_choice3:      (cg?.def_choice3      || "") || defChoicesFallback[2] || "",
+    def_choice4:      (cg?.def_choice4      || "") || defChoicesFallback[3] || "",
+    anag_word:        (cg?.anag_word        || "") || staticAnag.word,
+    anag_word_def:    (cg?.anag_word_def    || "") || staticAnag.def,
+    cit_text:         (cg?.cit_text         || "") || staticCit.text,
+    cit_answer:       (cg?.cit_answer       || "") || staticCit.answer,
+    cit_choice1:      (cg?.cit_choice1      || "") || (staticCit.choices[0] || ""),
+    cit_choice2:      (cg?.cit_choice2      || "") || (staticCit.choices[1] || ""),
+    cit_choice3:      (cg?.cit_choice3      || "") || (staticCit.choices[2] || ""),
+    cit_choice4:      (cg?.cit_choice4      || "") || (staticCit.choices[3] || ""),
+    // Premium games — même logique
+    p_word_of_day:      (cg?.p_word_of_day      || "") || pStaticWord.word,
+    p_word_of_day_def:  (cg?.p_word_of_day_def  || "") || pStaticWord.def,
+    p_word_of_day_etym: (cg?.p_word_of_day_etym || "") || pStaticWord.etym,
+    p_def_word:         (cg?.p_def_word         || "") || pStaticDef.word,
+    p_def_word_def:     (cg?.p_def_word_def     || "") || pStaticDef.def,
+    p_def_choice1:      (cg?.p_def_choice1      || "") || pDefChoicesFallback[0] || "",
+    p_def_choice2:      (cg?.p_def_choice2      || "") || pDefChoicesFallback[1] || "",
+    p_def_choice3:      (cg?.p_def_choice3      || "") || pDefChoicesFallback[2] || "",
+    p_def_choice4:      (cg?.p_def_choice4      || "") || pDefChoicesFallback[3] || "",
+    p_anag_word:        (cg?.p_anag_word        || "") || pStaticAnag.word,
+    p_anag_word_def:    (cg?.p_anag_word_def    || "") || pStaticAnag.def,
+    p_cit_text:         (cg?.p_cit_text         || "") || pStaticCit.text,
+    p_cit_answer:       (cg?.p_cit_answer       || "") || pStaticCit.answer,
+    p_cit_choice1:      (cg?.p_cit_choice1      || "") || (pStaticCit.choices[0] || ""),
+    p_cit_choice2:      (cg?.p_cit_choice2      || "") || (pStaticCit.choices[1] || ""),
+    p_cit_choice3:      (cg?.p_cit_choice3      || "") || (pStaticCit.choices[2] || ""),
+    p_cit_choice4:      (cg?.p_cit_choice4      || "") || (pStaticCit.choices[3] || ""),
   };
 
   return NextResponse.json({ game: effective, hasCustom: !!cg });
