@@ -104,9 +104,10 @@ export default function AdminOverlay({ story, date, level, dayOffset, todayOffse
   async function openGameModal() {
     setGameLoading(true); setGameModal(true); setGameMsg("");
     const gameDate = getGameDate();
-    console.log("[AdminOverlay] fetching game for date:", gameDate);
+    console.log("[AdminOverlay] fetching effective game for date:", gameDate);
     try {
-      const res  = await fetch(`/api/custom-game?date=${gameDate}`);
+      // /api/effective-game returns static fallback merged with games_custom override
+      const res  = await fetch(`/api/effective-game?date=${gameDate}`);
       const json = await res.json();
       const g    = json.game;
       // ── LOGS EXPLICITES ─────────────────────────────────────────────────
