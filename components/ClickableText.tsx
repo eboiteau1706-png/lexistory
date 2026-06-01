@@ -27,9 +27,9 @@ export function toPhrase(raw: string): string {
     .toLowerCase();
 }
 
-// Non-cliquable : pas de lettre dans le token (ponctuation pure, chiffres purs, symboles)
+// Non-cliquable : pas de lettre (ni tiret inter-mots) dans le token
 function isInert(token: string): boolean {
-  return !/[a-zA-ZÀ-ÿ]/.test(token);
+  return !/[a-zA-ZÀ-ÿ\-]/.test(token);
 }
 
 export default function ClickableText({ text, seenWords, onWordClick, groupWords }: Props) {
@@ -57,6 +57,13 @@ export default function ClickableText({ text, seenWords, onWordClick, groupWords
 
     if (/^\s+$/.test(token)) {
       groups.push({ display: token, key: "", isSpace: true, isGroup: false, isInert: false });
+      i++;
+      continue;
+    }
+
+    // Tokens inertes (ponctuation, chiffres) : span neutre immédiat, pas de multi-word matching
+    if (isInert(token)) {
+      groups.push({ display: token, key: toKey(token), isSpace: false, isGroup: false, isInert: true });
       i++;
       continue;
     }

@@ -350,7 +350,7 @@ export default function StoryCard({ story }: Props) {
   const allGroupWords = useMemo(() => {
     const merged = new Set(groupWords);
     wordGroupsList.forEach(g => {
-      const normalized = g.group_text.trim().split(/\s+/).map(toPhrase).join(" ");
+      const normalized = g.group_text.trim().split(/\s+/).map(toPhrase).filter(Boolean).join(" ");
       merged.add(normalized);
     });
     return merged;
