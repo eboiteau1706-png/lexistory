@@ -75,7 +75,10 @@ export default function ClickableText({ text, seenWords, onWordClick, groupWords
     }
 
     const key = toKey(token);
-    groups.push({ display: token, key, isSpace: false, isGroup: false, isNumber: /\d/.test(token) });
+    // isNumber: clé normalisée composée UNIQUEMENT de chiffres (ex: "7", "1923")
+    // "1er" / "XVIe" / "7ème" restent cliquables car leur clé contient des lettres
+    const isNumber = /^\d+$/.test(key);
+    groups.push({ display: token, key, isSpace: false, isGroup: false, isNumber });
     i++;
   }
 
@@ -83,7 +86,7 @@ export default function ClickableText({ text, seenWords, onWordClick, groupWords
     <>
       {groups.map((g, idx) => {
         if (g.isSpace) return g.display;
-        if (g.isNumber) return <span key={idx}>{g.display}</span>;
+        if (g.isNumber) return <span key={idx} style={{ cursor: "default" }}>{g.display}</span>;
         const seen = seenWords.has(g.key);
         return (
           <span
