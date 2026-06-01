@@ -24,17 +24,17 @@ const dmSans = DM_Sans({
 
 export const metadata: Metadata = {
   title: "LexiStory — Apprends le français en lisant",
-  description: "Une histoire courte par jour pour enrichir ton vocabulaire en français. Clique sur n'importe quel mot pour voir sa définition, gagne des XP et monte de niveau !",
+  description: "Lexi Story — Apprends le français en lisant des histoires culturelles. Quiz, jeux de mots, classement et définitions pour enrichir ton vocabulaire chaque jour.",
   keywords: "lexistory, vocabulaire français, apprendre français, histoires quotidiennes, définitions",
   icons: {
     icon: "/favicon.png",
     apple: "/apple-touch-icon.png",
   },
   openGraph: {
-    title: "LexiStory — Apprends le français en lisant",
-    description: "Une histoire courte par jour pour enrichir ton vocabulaire en français. Gratuit, sans pub.",
+    title: "Lexi Story",
+    description: "Apprends le français en lisant des histoires culturelles. Quiz, jeux de mots et définitions pour enrichir ton vocabulaire chaque jour.",
     url: "https://lexistory.fr",
-    siteName: "LexiStory",
+    siteName: "Lexi Story",
     locale: "fr_FR",
     type: "website",
     images: [{ url: "https://lexistory.fr/favicon.png", width: 1080, height: 1080, alt: "LexiStory" }],
