@@ -32,14 +32,14 @@ export function toPhrase(raw: string): string {
 export default function ClickableText({ text, seenWords, onWordClick, groupWords }: Props) {
   const rawTokens = text.split(/(\s+)/);
 
-  const groups: { display: string; key: string; isSpace: boolean; isGroup: boolean }[] = [];
+  const groups: { display: string; key: string; isSpace: boolean; isGroup: boolean; isNumber: boolean }[] = [];
 
   let i = 0;
   while (i < rawTokens.length) {
     const token = rawTokens[i];
 
     if (/^\s+$/.test(token)) {
-      groups.push({ display: token, key: "", isSpace: true, isGroup: false });
+      groups.push({ display: token, key: "", isSpace: true, isGroup: false, isNumber: false });
       i++;
       continue;
     }
@@ -69,13 +69,13 @@ export default function ClickableText({ text, seenWords, onWordClick, groupWords
     }
 
     if (bestMatchKey) {
-      groups.push({ display: bestDisplay, key: bestMatchKey, isSpace: false, isGroup: true });
+      groups.push({ display: bestDisplay, key: bestMatchKey, isSpace: false, isGroup: true, isNumber: false });
       i = bestJ + 1;
       continue;
     }
 
     const key = toKey(token);
-    groups.push({ display: token, key, isSpace: false, isGroup: false });
+    groups.push({ display: token, key, isSpace: false, isGroup: false, isNumber: /\d/.test(token) });
     i++;
   }
 
@@ -83,6 +83,7 @@ export default function ClickableText({ text, seenWords, onWordClick, groupWords
     <>
       {groups.map((g, idx) => {
         if (g.isSpace) return g.display;
+        if (g.isNumber) return <span key={idx}>{g.display}</span>;
         const seen = seenWords.has(g.key);
         return (
           <span
