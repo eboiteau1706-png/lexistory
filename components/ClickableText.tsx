@@ -62,7 +62,7 @@ export default function ClickableText({ text, seenWords, onWordClick, groupWords
       wordCount++;
       combinedKey = combinedKey + " " + toPhrase(nextToken);
       displayCombined = displayCombined + space + nextToken;
-      if (lookup(combinedKey) || groupWords?.has(combinedKey)) {
+      if ((lookup(combinedKey) || groupWords?.has(combinedKey)) && !/\d/.test(displayCombined)) {
         bestMatchKey = combinedKey;
         bestDisplay = displayCombined;
         bestJ = j;
@@ -93,7 +93,7 @@ export default function ClickableText({ text, seenWords, onWordClick, groupWords
           <span
             key={idx}
             className={`${styles.word} ${seen ? styles.seen : ""} ${g.isGroup ? styles.wordGroup : ""}`}
-            onClick={() => g.key.length >= 2 && onWordClick(g.key)}
+            onClick={() => { if (/\d/.test(g.key)) return; g.key.length >= 2 && onWordClick(g.key); }}
           >
             {g.display}
           </span>
