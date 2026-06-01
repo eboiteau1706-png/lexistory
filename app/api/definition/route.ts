@@ -49,20 +49,16 @@ export async function POST(request: NextRequest) {
 
     // C) Free user limit is now handled by WordPopup via /api/def-usage before any lookup
 
-    // D) Monthly usage cap
-    const month = new Date().toISOString().slice(0, 7);
-
-    const { data: usage } = await supabaseAdmin
+    // D) Usage cap — persistent counter, no month-based reset
+    const { data: usageRow } = await supabaseAdmin
       .from("api_usage")
-      .select("call_count")
-      .eq("month", month)
+      .select("id, call_count")
+      .limit(1)
       .maybeSingle();
 
-    if (!usage) {
-      await supabaseAdmin
-        .from("api_usage")
-        .insert({ month, call_count: 0 });
-    } else if (usage.call_count >= 500) {
+    const currentCount = usageRow?.call_count ?? 0;
+
+    if (currentCount >= 500) {
       return NextResponse.json({ source: "limit", result: null });
     }
 
@@ -93,13 +89,17 @@ Format : { forme_base: string, type: string, etymologie: string, sens: [{ label:
       .from("definitions_cache")
       .insert({ word_key: key, raw, result });
 
-    // G) Increment monthly call count
-    await supabaseAdmin
-      .from("api_usage")
-      .upsert(
-        { month, call_count: (usage?.call_count ?? 0) + 1 },
-        { onConflict: "month" }
-      );
+    // G) Increment persistent counter (by ID — never auto-resets)
+    if (usageRow) {
+      await supabaseAdmin
+        .from("api_usage")
+        .update({ call_count: currentCount + 1 })
+        .eq("id", usageRow.id);
+    } else {
+      await supabaseAdmin
+        .from("api_usage")
+        .insert({ month: "global", call_count: 1 });
+    }
 
     // H) Increment handled by WordPopup via /api/def-usage
 

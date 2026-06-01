@@ -43,11 +43,10 @@ export default function ApiDefStats() {
   const [resetting, setResetting] = useState(false);
   const [lastReset, setLastReset] = useState<string | null>(null);
 
-  const month = new Date().toISOString().slice(0, 7);
-
   const loadData = () => {
     Promise.all([
-      supabase.from("api_usage").select("call_count").eq("month", month).maybeSingle(),
+      // Persistent counter — no month filter, never auto-resets
+      supabase.from("api_usage").select("id, call_count").limit(1).maybeSingle(),
       supabase.from("definitions_cache").select("word_key", { count: "exact", head: true }),
     ]).then(([usage, cache]) => {
       setData({ callCount: usage.data?.call_count ?? 0, cacheTotal: cache.count ?? 0 });
@@ -62,7 +61,9 @@ export default function ApiDefStats() {
 
   async function handleReset() {
     setResetting(true);
-    await supabase.from("api_usage").upsert({ month, call_count: 0 }, { onConflict: "month" });
+    // Reset by ID — fetch first to get the row id, then update
+    const { data: row } = await supabase.from("api_usage").select("id").limit(1).maybeSingle();
+    if (row) await supabase.from("api_usage").update({ call_count: 0 }).eq("id", row.id);
     const today = new Date().toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" });
     localStorage.setItem(RESET_KEY, today);
     setLastReset(today);
