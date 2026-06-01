@@ -81,7 +81,7 @@ export default function ClickableText({ text, seenWords, onWordClick, groupWords
       if (
         (lookup(combinedKey) || groupWords?.has(combinedKey)) &&
         !/\d/.test(displayCombined) &&
-        !isPunctuation(nextToken)
+        !isInert(nextToken)
       ) {
         bestMatchKey = combinedKey;
         bestDisplay = displayCombined;
