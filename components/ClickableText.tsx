@@ -27,18 +27,19 @@ export function toPhrase(raw: string): string {
     .toLowerCase();
 }
 
-// Vrai si le token ne contient QUE de la ponctuation/symboles (pas de lettre ni chiffre)
-function isPunctuation(token: string): boolean {
-  return /^[^\wÀ-ÿ]+$/.test(token.trim()) && token.trim().length > 0;
+// Non-cliquable : pas de lettre dans le token (ponctuation pure, chiffres purs, symboles)
+function isInert(token: string): boolean {
+  return !/[a-zA-ZÀ-ÿ]/.test(token);
 }
 
 export default function ClickableText({ text, seenWords, onWordClick, groupWords }: Props) {
   // 1) Split sur espaces, 2) pour chaque token sépare ponctuation/lettres adjacentes
   const rawTokens = text.split(/(\s+)/).flatMap(token => {
     if (/^\s+$/.test(token)) return [token];
-    // Sépare les séquences "mot" (lettres+chiffres+apostrophe) des séquences ponctuation
+    // Sépare les séquences "mot" (lettres+chiffres+apostrophe+tiret) des séquences ponctuation
+    // Le tiret entre des lettres (grand-mère) reste dans le mot — il est inclus dans les word-chars
     return token.split(
-      /(?<=[A-Za-zÀ-ÿ0-9'])(?=[^A-Za-zÀ-ÿ0-9'\s])|(?<=[^A-Za-zÀ-ÿ0-9'\s])(?=[A-Za-zÀ-ÿ0-9'])/
+      /(?<=[A-Za-zÀ-ÿ0-9'\-])(?=[^A-Za-zÀ-ÿ0-9'\-\s])|(?<=[^A-Za-zÀ-ÿ0-9'\-\s])(?=[A-Za-zÀ-ÿ0-9'\-])/
     );
   });
 
@@ -47,8 +48,7 @@ export default function ClickableText({ text, seenWords, onWordClick, groupWords
     key: string;
     isSpace: boolean;
     isGroup: boolean;
-    isNumber: boolean;
-    isPunct: boolean;
+    isInert: boolean;
   }[] = [];
 
   let i = 0;
@@ -56,7 +56,7 @@ export default function ClickableText({ text, seenWords, onWordClick, groupWords
     const token = rawTokens[i];
 
     if (/^\s+$/.test(token)) {
-      groups.push({ display: token, key: "", isSpace: true, isGroup: false, isNumber: false, isPunct: false });
+      groups.push({ display: token, key: "", isSpace: true, isGroup: false, isInert: false });
       i++;
       continue;
     }
@@ -91,15 +91,13 @@ export default function ClickableText({ text, seenWords, onWordClick, groupWords
     }
 
     if (bestMatchKey) {
-      groups.push({ display: bestDisplay, key: bestMatchKey, isSpace: false, isGroup: true, isNumber: false, isPunct: false });
+      groups.push({ display: bestDisplay, key: bestMatchKey, isSpace: false, isGroup: true, isInert: false });
       i = bestJ + 1;
       continue;
     }
 
     const key = toKey(token);
-    const isNumber = /\d/.test(token);
-    const isPunct = isPunctuation(token);
-    groups.push({ display: token, key, isSpace: false, isGroup: false, isNumber, isPunct });
+    groups.push({ display: token, key, isSpace: false, isGroup: false, isInert: isInert(token) });
     i++;
   }
 
@@ -107,8 +105,8 @@ export default function ClickableText({ text, seenWords, onWordClick, groupWords
     <>
       {groups.map((g, idx) => {
         if (g.isSpace) return g.display;
-        // Chiffres et ponctuation → span neutre sans aucune interaction
-        if (g.isNumber || g.isPunct) {
+        // Pas de lettre → span neutre (ponctuation pure, chiffres purs, symboles)
+        if (g.isInert) {
           return <span key={idx}>{g.display}</span>;
         }
         const seen = seenWords.has(g.key);
