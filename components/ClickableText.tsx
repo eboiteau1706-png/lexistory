@@ -30,7 +30,9 @@ export function toPhrase(raw: string): string {
 }
 
 export default function ClickableText({ text, seenWords, onWordClick, groupWords }: Props) {
-  const rawTokens = text.split(/(\s+)/);
+  const rawTokens = text.split(/(\s+)/).flatMap(token =>
+    /^\s+$/.test(token) ? [token] : token.split(/(?<=\D)(?=\d)|(?<=\d)(?=\D)/)
+  );
 
   const groups: { display: string; key: string; isSpace: boolean; isGroup: boolean; isNumber: boolean }[] = [];
 
@@ -75,9 +77,8 @@ export default function ClickableText({ text, seenWords, onWordClick, groupWords
     }
 
     const key = toKey(token);
-    // isNumber: clé normalisée composée UNIQUEMENT de chiffres (ex: "7", "1923")
-    // "1er" / "XVIe" / "7ème" restent cliquables car leur clé contient des lettres
-    const isNumber = /^\d+$/.test(key);
+    // Tout token contenant un chiffre → non interactif (après split lettre/chiffre)
+    const isNumber = /\d/.test(token);
     groups.push({ display: token, key, isSpace: false, isGroup: false, isNumber });
     i++;
   }
