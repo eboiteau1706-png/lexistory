@@ -9,8 +9,8 @@ interface Props {
   groupWords?: Set<string>;
 }
 
-const PUNCT = /^[«».,;:!?()'"…—–’“”'\-]+|[«».,;:!?()'"…—–’“”'\-]+$/g;
-const CONTRACTION = /^[ldmjnstcLDMJNSTC]['’']/i;
+const PUNCT = /^[«».,;:!?()'"…—–'""'\-]+|[«».,;:!?()'"…—–'""'\-]+$/g;
+const CONTRACTION = /^[ldmjnstcLDMJNSTC][''']/i;
 
 export function toKey(raw: string): string {
   return raw
@@ -20,8 +20,6 @@ export function toKey(raw: string): string {
     .toLowerCase();
 }
 
-// Like toKey but preserves contractions — used for multi-word group keys so
-// "piraha d'amazonie" stays "piraha d'amazonie" instead of "piraha amazonie".
 export function toPhrase(raw: string): string {
   return raw
     .replace(PUNCT, "")
@@ -29,24 +27,41 @@ export function toPhrase(raw: string): string {
     .toLowerCase();
 }
 
-export default function ClickableText({ text, seenWords, onWordClick, groupWords }: Props) {
-  const rawTokens = text.split(/(\s+)/).flatMap(token =>
-    /^\s+$/.test(token) ? [token] : token.split(/(?<=\D)(?=\d)|(?<=\d)(?=\D)/)
-  );
+// Vrai si le token ne contient QUE de la ponctuation/symboles (pas de lettre ni chiffre)
+function isPunctuation(token: string): boolean {
+  return /^[^\wÀ-ÿ]+$/.test(token.trim()) && token.trim().length > 0;
+}
 
-  const groups: { display: string; key: string; isSpace: boolean; isGroup: boolean; isNumber: boolean }[] = [];
+export default function ClickableText({ text, seenWords, onWordClick, groupWords }: Props) {
+  // 1) Split sur espaces, 2) pour chaque token sépare ponctuation/lettres adjacentes
+  const rawTokens = text.split(/(\s+)/).flatMap(token => {
+    if (/^\s+$/.test(token)) return [token];
+    // Sépare les séquences "mot" (lettres+chiffres+apostrophe) des séquences ponctuation
+    return token.split(
+      /(?<=[A-Za-zÀ-ÿ0-9'])(?=[^A-Za-zÀ-ÿ0-9'\s])|(?<=[^A-Za-zÀ-ÿ0-9'\s])(?=[A-Za-zÀ-ÿ0-9'])/
+    );
+  });
+
+  const groups: {
+    display: string;
+    key: string;
+    isSpace: boolean;
+    isGroup: boolean;
+    isNumber: boolean;
+    isPunct: boolean;
+  }[] = [];
 
   let i = 0;
   while (i < rawTokens.length) {
     const token = rawTokens[i];
 
     if (/^\s+$/.test(token)) {
-      groups.push({ display: token, key: "", isSpace: true, isGroup: false, isNumber: false });
+      groups.push({ display: token, key: "", isSpace: true, isGroup: false, isNumber: false, isPunct: false });
       i++;
       continue;
     }
 
-    // Essaie de former une expression multi-mots (jusqu'à 4 mots) pour tout token
+    // Essaie de former une expression multi-mots
     let combinedKey = toPhrase(token);
     let displayCombined = token;
     let j = i + 1;
@@ -62,7 +77,12 @@ export default function ClickableText({ text, seenWords, onWordClick, groupWords
       wordCount++;
       combinedKey = combinedKey + " " + toPhrase(nextToken);
       displayCombined = displayCombined + space + nextToken;
-      if ((lookup(combinedKey) || groupWords?.has(combinedKey)) && !/\d/.test(displayCombined)) {
+      // Ne pas grouper si le résultat contient des chiffres ou de la ponctuation pure
+      if (
+        (lookup(combinedKey) || groupWords?.has(combinedKey)) &&
+        !/\d/.test(displayCombined) &&
+        !isPunctuation(nextToken)
+      ) {
         bestMatchKey = combinedKey;
         bestDisplay = displayCombined;
         bestJ = j;
@@ -71,15 +91,15 @@ export default function ClickableText({ text, seenWords, onWordClick, groupWords
     }
 
     if (bestMatchKey) {
-      groups.push({ display: bestDisplay, key: bestMatchKey, isSpace: false, isGroup: true, isNumber: false });
+      groups.push({ display: bestDisplay, key: bestMatchKey, isSpace: false, isGroup: true, isNumber: false, isPunct: false });
       i = bestJ + 1;
       continue;
     }
 
     const key = toKey(token);
-    // Tout token contenant un chiffre → non interactif (après split lettre/chiffre)
     const isNumber = /\d/.test(token);
-    groups.push({ display: token, key, isSpace: false, isGroup: false, isNumber });
+    const isPunct = isPunctuation(token);
+    groups.push({ display: token, key, isSpace: false, isGroup: false, isNumber, isPunct });
     i++;
   }
 
@@ -87,7 +107,10 @@ export default function ClickableText({ text, seenWords, onWordClick, groupWords
     <>
       {groups.map((g, idx) => {
         if (g.isSpace) return g.display;
-        if (g.isNumber) return <span key={idx} style={{ cursor: "default" }}>{g.display}</span>;
+        // Chiffres et ponctuation → span neutre sans aucune interaction
+        if (g.isNumber || g.isPunct) {
+          return <span key={idx}>{g.display}</span>;
+        }
         const seen = seenWords.has(g.key);
         return (
           <span
