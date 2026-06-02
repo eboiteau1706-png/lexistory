@@ -187,11 +187,17 @@ function getLocalKeys(date: string) {
   };
 }
 
+const ADMIN_ID      = "0450c58e-35b2-47e6-9600-13db5626e96d";
+const ADMIN_DAY_KEY = "lx_admin_dayOverride";
+
 export default function JeuxPage() {
   const supabase = createClient();
 
   const [userId, setUserId]             = useState<string | null | undefined>(undefined);
   const [isPremium, setIsPremium]       = useState(false);
+  const [isAdmin, setIsAdmin]           = useState(false);
+  const [adminDay, setAdminDay]         = useState<number | null>(null); // 1-30, null = auto
+  const [adminDayInput, setAdminDayInput] = useState("");
   const [xpGained, setXpGained]         = useState<number | null>(null);
   const [initialized, setInitialized]   = useState(false);
   const [defPopupWord, setDefPopupWord] = useState<PopupWord | null>(null);
@@ -211,8 +217,9 @@ export default function JeuxPage() {
   const [pCitAnswer, setPCitAnswer]       = useState<string | null>(null);
 
   const todayStr = getParisDateStr();
-  const dayIdx   = getDayIndex(GAME_WORDS);
-  const pDayIdx  = getDayIndex(PREMIUM_WORDS);
+  // Admin peut overrider le jour (1-30) → converti en index 0-29
+  const dayIdx   = adminDay !== null ? adminDay - 1 : getDayIndex(GAME_WORDS);
+  const pDayIdx  = adminDay !== null ? adminDay - 1 : getDayIndex(PREMIUM_WORDS);
 
   const shuffledForWord = shuffle([...Array(GAME_WORDS.length).keys()], 11111);
   const shuffledForDef  = shuffle([...Array(GAME_WORDS.length).keys()], 22222);
@@ -257,10 +264,17 @@ export default function JeuxPage() {
       .catch(() => setCustomLoaded(true));
   }, []);
 
+  // Charge l'override admin depuis localStorage
+  useEffect(() => {
+    const saved = localStorage.getItem(ADMIN_DAY_KEY);
+    if (saved) { const n = parseInt(saved); if (n >= 1 && n <= 30) { setAdminDay(n); setAdminDayInput(String(n)); } }
+  }, []);
+
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       const uid = session?.user?.id ?? null;
       setUserId(uid);
+      if (uid === ADMIN_ID) setIsAdmin(true);
       if (uid) {
         supabase.from("profiles").select("is_premium").eq("id", uid).single()
           .then(({ data }) => { if (data?.is_premium) setIsPremium(true); });
@@ -490,7 +504,31 @@ if (data.p_anag_done === true) {
     <div className={styles.page}>
       <div className={styles.header}>
         <h1 className={styles.title}>🎮 Jeux du jour</h1>
-        <p className={styles.subtitle}>Renouvelés chaque jour à minuit — heure de Paris · Jour {dayIdx + 1}/30</p>
+        <p className={styles.subtitle}>
+          Renouvelés chaque jour à minuit — heure de Paris · Jour {dayIdx + 1}/30
+          {isAdmin && (
+            <span style={{ marginLeft: "10px", display: "inline-flex", alignItems: "center", gap: "6px" }}>
+              <button
+                onClick={() => { setAdminDay(null); setAdminDayInput(""); localStorage.removeItem(ADMIN_DAY_KEY); }}
+                style={{ fontSize: "0.7rem", padding: "1px 7px", borderRadius: "4px", background: "rgba(212,168,67,0.12)", border: "1px solid rgba(212,168,67,0.35)", color: "rgba(212,168,67,0.8)", cursor: "pointer", fontFamily: "inherit" }}>
+                ↺ Reset
+              </button>
+              <input
+                type="number" min={1} max={30}
+                value={adminDayInput}
+                onChange={e => setAdminDayInput(e.target.value)}
+                onKeyDown={e => {
+                  if (e.key === "Enter") {
+                    const n = parseInt(adminDayInput);
+                    if (n >= 1 && n <= 30) { setAdminDay(n); localStorage.setItem(ADMIN_DAY_KEY, String(n)); }
+                  }
+                }}
+                placeholder="J"
+                style={{ width: "44px", fontSize: "0.7rem", padding: "1px 5px", borderRadius: "4px", background: "rgba(212,168,67,0.08)", border: "1px solid rgba(212,168,67,0.3)", color: "rgba(212,168,67,0.85)", fontFamily: "inherit", textAlign: "center" }}
+              />
+            </span>
+          )}
+        </p>
       </div>
 
       <div className={styles.sectionTitle}>📚 Jeux du jour</div>
