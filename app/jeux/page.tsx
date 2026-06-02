@@ -198,7 +198,7 @@ export default function JeuxPage() {
   const [isPremium, setIsPremium]       = useState(false);
   const [isAdmin, setIsAdmin]           = useState(false);
   const [adminDay, setAdminDay]         = useState<number | null>(null); // 1-30, null = auto
-  const [adminDayInput, setAdminDayInput] = useState("");
+  const [adminDayInput, setAdminDayInput] = useState<string>("");
   const [xpGained, setXpGained]         = useState<number | null>(null);
   const [initialized, setInitialized]   = useState(false);
   const [defPopupWord, setDefPopupWord] = useState<PopupWord | null>(null);
@@ -265,10 +265,16 @@ export default function JeuxPage() {
       .catch(() => setCustomLoaded(true));
   }, []);
 
-  // Charge l'override admin depuis localStorage
+  // Charge l'override admin depuis localStorage — ou affiche le jour auto
   useEffect(() => {
-    const saved = localStorage.getItem(ADMIN_DAY_KEY);
-    if (saved) { const n = parseInt(saved); if (n >= 1 && n <= 30) { setAdminDay(n); setAdminDayInput(String(n)); } }
+    const autoDay = getDayIndex(GAME_WORDS) + 1; // jour courant 1-30
+    const saved   = localStorage.getItem(ADMIN_DAY_KEY);
+    if (saved) {
+      const n = parseInt(saved);
+      if (n >= 1 && n <= 30) { setAdminDay(n); setAdminDayInput(String(n)); return; }
+    }
+    // Pas d'override : afficher le jour automatique dans l'input
+    setAdminDayInput(String(autoDay));
   }, []);
 
   useEffect(() => {
@@ -510,11 +516,17 @@ if (data.p_anag_done === true) {
           Renouvelés chaque jour à minuit — heure de Paris · Jour {dayIdx + 1}/30
           {isAdmin && (
             <span style={{ marginLeft: "10px", display: "inline-flex", alignItems: "center", gap: "6px" }}>
+              {/* Reset : supprime l'override et remet le jour auto */}
               <button
-                onClick={() => { setAdminDay(null); setAdminDayInput(""); localStorage.removeItem(ADMIN_DAY_KEY); }}
+                onClick={() => {
+                  localStorage.removeItem(ADMIN_DAY_KEY);
+                  setAdminDay(null);
+                  setAdminDayInput(String(getDayIndex(GAME_WORDS) + 1));
+                }}
                 style={{ fontSize: "0.7rem", padding: "1px 7px", borderRadius: "4px", background: "rgba(212,168,67,0.12)", border: "1px solid rgba(212,168,67,0.35)", color: "rgba(212,168,67,0.8)", cursor: "pointer", fontFamily: "inherit" }}>
                 ↺ Reset
               </button>
+              {/* Input : affiche le jour actif, modifiable */}
               <input
                 type="number" min={1} max={30}
                 value={adminDayInput}
@@ -525,9 +537,20 @@ if (data.p_anag_done === true) {
                     if (n >= 1 && n <= 30) { setAdminDay(n); localStorage.setItem(ADMIN_DAY_KEY, String(n)); }
                   }
                 }}
-                placeholder="J"
-                style={{ width: "44px", fontSize: "0.7rem", padding: "1px 5px", borderRadius: "4px", background: "rgba(212,168,67,0.08)", border: "1px solid rgba(212,168,67,0.3)", color: "rgba(212,168,67,0.85)", fontFamily: "inherit", textAlign: "center" }}
+                style={{ width: "44px", fontSize: "0.7rem", padding: "1px 5px", borderRadius: "4px", background: adminDay !== null ? "rgba(212,168,67,0.18)" : "rgba(212,168,67,0.08)", border: `1px solid ${adminDay !== null ? "rgba(212,168,67,0.6)" : "rgba(212,168,67,0.3)"}`, color: "rgba(212,168,67,0.9)", fontFamily: "inherit", textAlign: "center" }}
               />
+              {/* Bouton ✓ pour confirmer */}
+              <button
+                onClick={() => {
+                  const n = parseInt(adminDayInput);
+                  if (n >= 1 && n <= 30) { setAdminDay(n); localStorage.setItem(ADMIN_DAY_KEY, String(n)); }
+                }}
+                style={{ fontSize: "0.7rem", padding: "1px 7px", borderRadius: "4px", background: "rgba(34,197,94,0.12)", border: "1px solid rgba(34,197,94,0.35)", color: "rgba(34,197,94,0.85)", cursor: "pointer", fontFamily: "inherit" }}>
+                ✓
+              </button>
+              {adminDay !== null && (
+                <span style={{ fontSize: "0.65rem", color: "rgba(212,168,67,0.6)", fontStyle: "italic" }}>override</span>
+              )}
             </span>
           )}
         </p>
