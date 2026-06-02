@@ -421,8 +421,8 @@ export default function ProfileClient({ user }: { user: User }) {
                     contentStyle={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: "8px", fontSize: "0.78rem" }}
                     labelStyle={{ color: "var(--text-dim)" }}
                     itemStyle={{ color: "#d4a843" }}
-                    formatter={(v: number) => [`${v} XP`, ""]}
-                    labelFormatter={(l: string) => l}
+                    formatter={(v) => [`${v} XP`, ""]}
+                    labelFormatter={(l) => String(l)}
                   />
                   <Line type="monotone" dataKey="xp" stroke="#d4a843" strokeWidth={2} dot={false} />
                 </LineChart>
