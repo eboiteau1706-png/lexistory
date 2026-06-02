@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase";
 import styles from "./jeux.module.css";
 import { lookup } from "@/lib/dictionary";
+import AdminJeuxOverlay from "@/components/AdminJeuxOverlay";
 
 const GAME_WORDS = [
   { word: "amygdale", def: "Petite partie du cerveau en forme d'amande qui gère nos émotions, surtout la peur.", etym: "Du grec amygdalê, amande" },
@@ -502,6 +503,7 @@ if (data.p_anag_done === true) {
 
   return (
     <div className={styles.page}>
+      <AdminJeuxOverlay />
       <div className={styles.header}>
         <h1 className={styles.title}>🎮 Jeux du jour</h1>
         <p className={styles.subtitle}>
