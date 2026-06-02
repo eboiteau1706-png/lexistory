@@ -106,12 +106,20 @@ export default function Rangs() {
           <h2 className={styles.sectionTitle}>Les 21 rangs</h2>
           <div className={styles.levels}>
             {LEVELS.map((lvl, i) => (
-              <div key={lvl.level} className={styles.levelRow}>
-                <div className={styles.levelNum} style={{ color: lvl.color, fontWeight: lvl.tier === "I" ? 700 : 400 }}>
-                  {lvl.tier === "I" && <span style={{ marginRight: "4px" }}>{lvl.emoji}</span>}{lvl.name}
+              <div key={lvl.level} className={styles.levelRow}
+                style={{ borderColor: lvl.tier === "I" ? lvl.color + "44" : "var(--border)", background: lvl.tier === "I" ? lvl.color + "0d" : "var(--surface2)" }}>
+                <div className={styles.levelNum} style={{ color: lvl.color, fontWeight: lvl.tier === "I" ? 700 : 500 }}>
+                  {lvl.tier === "I" ? (
+                    <span style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}>
+                      <span style={{ fontSize: "1.1rem" }}>{lvl.emoji}</span>
+                      <span>{lvl.name}</span>
+                    </span>
+                  ) : (
+                    <span style={{ paddingLeft: "28px" }}>{lvl.name}</span>
+                  )}
                 </div>
                 <div className={styles.levelXp} style={{ color: lvl.color + "cc" }}>
-                  {lvl.minXp} XP{i < LEVELS.length - 1 ? ` – ${lvl.maxXp - 1} XP` : "+"}
+                  {lvl.minXp} – {i < LEVELS.length - 1 ? lvl.maxXp - 1 : "∞"} XP
                 </div>
               </div>
             ))}

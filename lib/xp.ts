@@ -1,4 +1,4 @@
-// lib/xp.ts
+// lib/xp.ts — seuils v2 (Novice→Légende, 21 sous-rangs)
 
 export interface Level {
   level:  number;   // 1-21
