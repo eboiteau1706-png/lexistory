@@ -103,16 +103,15 @@ export default function Rangs() {
         </div>
 
         <div className={styles.section}>
-          <h2 className={styles.sectionTitle}>Les 10 rangs</h2>
+          <h2 className={styles.sectionTitle}>Les 21 rangs</h2>
           <div className={styles.levels}>
             {LEVELS.map((lvl, i) => (
               <div key={lvl.level} className={styles.levelRow}>
-                <div className={styles.levelNum}>Niv. {lvl.level}</div>
-                <div className={styles.levelEmoji}>{lvl.emoji}</div>
-                <div className={styles.levelName}>{lvl.name}</div>
-                <div className={styles.levelXp}>
-                  {lvl.minXp} XP
-                  {i < LEVELS.length - 1 && <span className={styles.levelXpMax}> → {lvl.maxXp} XP</span>}
+                <div className={styles.levelNum} style={{ color: lvl.color, fontWeight: lvl.tier === "I" ? 700 : 400 }}>
+                  {lvl.tier === "I" && <span style={{ marginRight: "4px" }}>{lvl.emoji}</span>}{lvl.name}
+                </div>
+                <div className={styles.levelXp} style={{ color: lvl.color + "cc" }}>
+                  {lvl.minXp} XP{i < LEVELS.length - 1 ? ` – ${lvl.maxXp - 1} XP` : "+"}
                 </div>
               </div>
             ))}

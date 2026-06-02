@@ -339,13 +339,16 @@ export default function ProfileClient({ user }: { user: User }) {
 
         <div className={styles.xpCard}>
           <div className={styles.xpHeader}>
-            <div className={styles.xpLevel}>{level.emoji} Niveau {level.level} — {level.name}</div>
+            <div className={styles.xpLevel}>{level.emoji} {level.name}</div>
             <div className={styles.xpTotal}>{xp} XP{isPremium ? " ✨" : ""}</div>
           </div>
-          <div className={styles.xpBarWrap}><div className={styles.xpBarFill} style={{ width: `${pct}%` }} /></div>
+          <div className={styles.xpBarWrap}>
+            <div className={styles.xpBarFill} style={{ width: `${pct}%`, background: level.color }} />
+          </div>
           <div className={styles.xpFooter}>
-            <span>{current} / {needed} XP</span>
-            {nextLevel ? <span>Prochain : {nextLevel.emoji} {nextLevel.name}</span> : <span>👑 Niveau maximum !</span>}
+            {level.level < 21
+              ? <span>{current} / {needed} XP vers {nextLevel?.name}</span>
+              : <span>👑 Rang maximum atteint — {current} XP au-delà</span>}
           </div>
           {isPremium && <div className={styles.xpBoost}>⚡ Boost Premium x1.5 actif</div>}
         </div>

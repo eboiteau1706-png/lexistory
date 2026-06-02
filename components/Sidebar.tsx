@@ -143,7 +143,7 @@ export default function Sidebar() {
                 <span className={`${styles.statVal} ${styles.gold}`}>{lvl.emoji} {lvl.name}</span>
               </div>
               <div className={styles.xpBarSidebar}>
-                <div className={styles.xpBarFillSidebar} style={{ width: `${pct}%` }} />
+                <div className={styles.xpBarFillSidebar} style={{ width: `${pct}%`, background: lvl.color }} />
               </div>
               <div className={styles.xpLabelSidebar}>{xp} XP · {current}/{needed}</div>
             </div>
