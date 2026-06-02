@@ -7,6 +7,8 @@ import { lookup } from "@/lib/dictionary";
 import type { User } from "@supabase/supabase-js";
 import styles from "./profile.module.css";
 import { AVATAR_SEEDS, getAvatarUrl } from "@/lib/avatar";
+import { LineChart, Line, XAxis, Tooltip, ResponsiveContainer } from "recharts";
+import WordPopup from "@/components/WordPopup";
 
 interface FavWord {
   word: string;
@@ -34,6 +36,11 @@ export default function ProfileClient({ user }: { user: User }) {
   const [myRank, setMyRank]                     = useState<number | null>(null);
   const [topWords, setTopWords]                 = useState<string[]>([]);
   const [levelBreakdown, setLevelBreakdown]     = useState<Record<string, number>>({});
+  const [activityData, setActivityData]         = useState<{ date: string; xp: number }[]>([]);
+  const [totalDefs, setTotalDefs]               = useState(0);
+  const [bestDay, setBestDay]                   = useState<{ date: string; xp: number } | null>(null);
+  const [clickedWord, setClickedWord]           = useState<string | null>(null);
+  const [statsLoading, setStatsLoading]         = useState(true);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
   const [deleting, setDeleting]                 = useState(false);
@@ -145,6 +152,29 @@ export default function ProfileClient({ user }: { user: User }) {
       .then(({ data }) => {
         if (data) setFavorites(data.map((d: any) => ({ word: d.word, def_orig: d.def_orig ?? null })));
       });
+
+    // ── Stats avancées premium ─────────────────────────────────────────────
+    const thirtyDaysAgo = new Date(Date.now() - 30 * 86400_000).toISOString();
+    supabase.from("stories_read").select("read_at").eq("user_id", user.id)
+      .gte("read_at", thirtyDaysAgo).order("read_at", { ascending: true })
+      .then(({ data: reads }) => {
+        if (!reads) return;
+        const byDate: Record<string, number> = {};
+        reads.forEach((r: any) => {
+          const d = r.read_at.slice(0, 10);
+          byDate[d] = (byDate[d] ?? 0) + 3; // 3 XP par histoire
+        });
+        const sorted = Object.entries(byDate).map(([date, xp]) => ({ date, xp })).sort((a, b) => a.date.localeCompare(b.date));
+        setActivityData(sorted);
+        if (sorted.length > 0) {
+          const best = sorted.reduce((m, c) => c.xp > m.xp ? c : m);
+          setBestDay(best);
+        }
+        setStatsLoading(false);
+      });
+
+    supabase.from("definition_usage").select("count", { count: "exact", head: true }).eq("user_id", user.id)
+      .then(({ count }) => setTotalDefs(count ?? 0));
   }, []);
 
   async function removeFav(word: string) {
@@ -364,13 +394,46 @@ export default function ProfileClient({ user }: { user: User }) {
             📊 Stats détaillées
             {!isPremium && <span className={styles.premiumTag}>Premium</span>}
           </div>
+
+          {/* ── Grille de stats ── */}
           <div className={styles.statGrid}>
             <div className={styles.statGridBox}><div className={styles.statGridNum}>#{myRank ?? "—"}</div><div className={styles.statGridLabel}>🏆 Classement</div></div>
             <div className={styles.statGridBox}><div className={styles.statGridNum}>{streakRecord}j</div><div className={styles.statGridLabel}>🔥 Record série</div></div>
             <div className={styles.statGridBox}><div className={styles.statGridNum}>+{xpThisWeek}</div><div className={styles.statGridLabel}>⚡ XP cette semaine</div></div>
             <div className={styles.statGridBox}><div className={styles.statGridNum}>{completionRate}%</div><div className={styles.statGridLabel}>✅ Assiduité</div></div>
+            <div className={styles.statGridBox}><div className={styles.statGridNum}>{totalDefs}</div><div className={styles.statGridLabel}>💡 Définitions</div></div>
+            <div className={styles.statGridBox}>
+              <div className={styles.statGridNum} style={{ fontSize: "0.85rem" }}>{bestDay ? bestDay.date.slice(5) : "—"}</div>
+              <div className={styles.statGridLabel}>📅 Meilleur jour</div>
+            </div>
           </div>
-          <div className={styles.breakdown}>
+
+          {/* ── Courbe d'activité ── */}
+          <div style={{ marginTop: "16px" }}>
+            <div className={styles.breakdownTitle}>Activité XP — 30 derniers jours</div>
+            {statsLoading ? (
+              <div style={{ height: "80px", background: "var(--surface2)", borderRadius: "8px", animation: "shimmer 1.4s infinite", backgroundSize: "200% 100%", backgroundImage: "linear-gradient(90deg,var(--surface2) 25%,var(--border) 50%,var(--surface2) 75%)" }} />
+            ) : activityData.length > 0 ? (
+              <ResponsiveContainer width="100%" height={90}>
+                <LineChart data={activityData} margin={{ top: 4, right: 4, bottom: 0, left: -30 }}>
+                  <XAxis dataKey="date" tick={{ fontSize: 9, fill: "var(--text-dim)" }} tickFormatter={v => v.slice(5)} interval="preserveStartEnd" />
+                  <Tooltip
+                    contentStyle={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: "8px", fontSize: "0.78rem" }}
+                    labelStyle={{ color: "var(--text-dim)" }}
+                    itemStyle={{ color: "#d4a843" }}
+                    formatter={(v: number) => [`${v} XP`, ""]}
+                    labelFormatter={(l: string) => l}
+                  />
+                  <Line type="monotone" dataKey="xp" stroke="#d4a843" strokeWidth={2} dot={false} />
+                </LineChart>
+              </ResponsiveContainer>
+            ) : (
+              <div style={{ fontSize: "0.8rem", color: "var(--text-dim)", padding: "16px 0", textAlign: "center" }}>Aucune activité sur 30 jours</div>
+            )}
+          </div>
+
+          {/* ── Répartition par niveau ── */}
+          <div className={styles.breakdown} style={{ marginTop: "12px" }}>
             <div className={styles.breakdownTitle}>Histoires lues par niveau</div>
             {["Curieux", "Lecteur", "Érudit"].map(lvl => (
               <div key={lvl} className={styles.breakdownRow}>
@@ -380,15 +443,30 @@ export default function ProfileClient({ user }: { user: User }) {
               </div>
             ))}
           </div>
+
+          {/* ── Derniers mots cliquables ── */}
           {topWords.length > 0 && (
             <div className={styles.topWords}>
-              <div className={styles.breakdownTitle}>Derniers mots consultés</div>
+              <div className={styles.breakdownTitle}>Derniers mots consultés (cliquez pour la définition)</div>
               <div className={styles.wordChips}>
-                {topWords.map(w => <span key={w} className={styles.wordChip}>{w}</span>)}
+                {topWords.map(w => (
+                  <button key={w} className={styles.wordChip}
+                    onClick={() => setClickedWord(w)}
+                    style={{ cursor: "pointer", background: "none", border: "1px solid var(--border)", borderRadius: "50px", padding: "3px 10px", fontFamily: "inherit", fontSize: "0.8rem", color: "var(--text-muted)", transition: "border-color 0.15s, color 0.15s" }}
+                    onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = "var(--accent)"; (e.currentTarget as HTMLElement).style.color = "var(--accent)"; }}
+                    onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = "var(--border)"; (e.currentTarget as HTMLElement).style.color = "var(--text-muted)"; }}>
+                    {w}
+                  </button>
+                ))}
               </div>
             </div>
           )}
         </div>
+
+        {/* WordPopup pour les mots cliqués dans les stats */}
+        {clickedWord && (
+          <WordPopup word={clickedWord} seenCount={0} onClose={() => setClickedWord(null)} />
+        )}
 
         {/* ── MOTS FAVORIS ── */}
         <div className={styles.favSection}>
