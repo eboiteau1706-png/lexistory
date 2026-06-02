@@ -73,6 +73,39 @@ export default function AdminOverlay({ story, date, level, dayOffset, todayOffse
 
   if (!isAdmin) return null;
 
+  const STORY_CATEGORIES = [
+    "Sport","Histoire","Science","Art","Gastronomie","Cinéma","Musique",
+    "Géographie","Économie","Littérature","Philosophie","Nature","Technologie","Société",
+  ];
+
+  function getTodayDate(): string {
+    const paris = new Date(new Date().toLocaleString("en-US", { timeZone: "Europe/Paris" }));
+    return `${paris.getFullYear()}-${String(paris.getMonth()+1).padStart(2,"0")}-${String(paris.getDate()).padStart(2,"0")}`;
+  }
+
+  // Ouvre l'édition — cherche l'histoire custom pour ce jour ET ce niveau
+  // Si trouvée → pré-remplit, sinon → formulaire vide
+  async function handleOpenEdit() {
+    setMsg("");
+    const { data: custom } = await supabase
+      .from("stories_custom")
+      .select("*")
+      .eq("date", date)
+      .eq("level", level)
+      .maybeSingle();
+    if (custom) {
+      setTitle(custom.title ?? "");
+      setCategory(custom.category ?? "");
+      setSource(custom.source ?? "");
+      setReadTime(custom.read_time ?? "3 min de lecture");
+      setParagraphs(Array.isArray(custom.paragraphs) ? custom.paragraphs : [""]);
+    } else {
+      // Aucune histoire pour ce jour/niveau → formulaire vide
+      setTitle(""); setCategory(""); setSource(""); setReadTime("3 min de lecture"); setParagraphs([""]);
+    }
+    setEditing(true);
+  }
+
   const formatDateFr = (dateStr: string) => {
     const d = new Date(dateStr + "T12:00:00");
     return d.toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
