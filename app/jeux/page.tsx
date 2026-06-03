@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase";
 import styles from "./jeux.module.css";
 import { lookup } from "@/lib/dictionary";
 import AdminJeuxOverlay from "@/components/AdminJeuxOverlay";
+import WordPopup from "@/components/WordPopup";
 
 const GAME_WORDS = [
   { word: "amygdale", def: "Petite partie du cerveau en forme d'amande qui gère nos émotions, surtout la peur.", etym: "Du grec amygdalê, amande" },
@@ -201,7 +202,7 @@ export default function JeuxPage() {
   const [adminDayInput, setAdminDayInput] = useState<string>("");
   const [xpGained, setXpGained]         = useState<number | null>(null);
   const [initialized, setInitialized]   = useState(false);
-  const [defPopupWord, setDefPopupWord] = useState<PopupWord | null>(null);
+  const [defPopupWord, setDefPopupWord] = useState<string | null>(null);
   const [customGame, setCustomGame]     = useState<any>(null);
   const [customLoaded, setCustomLoaded] = useState(false);
 
@@ -265,15 +266,37 @@ export default function JeuxPage() {
       .catch(() => setCustomLoaded(true));
   }, []);
 
-  // Charge l'override admin depuis localStorage — ou affiche le jour auto
+  // Charge l'override admin depuis localStorage avec auto-increment quotidien
   useEffect(() => {
-    const autoDay = getDayIndex(GAME_WORDS) + 1; // jour courant 1-30
-    const saved   = localStorage.getItem(ADMIN_DAY_KEY);
+    const autoDay   = getDayIndex(GAME_WORDS) + 1; // jour courant 1-31
+    const todayParis = getParisDateStr();
+    const saved = localStorage.getItem(ADMIN_DAY_KEY);
     if (saved) {
-      const n = parseInt(saved);
-      if (n >= 1 && n <= 30) { setAdminDay(n); setAdminDayInput(String(n)); return; }
+      let savedDay: number;
+      let savedDate: string;
+      try {
+        const parsed = JSON.parse(saved);
+        savedDay  = parsed.day;
+        savedDate = parsed.date ?? todayParis;
+      } catch {
+        // Ancien format : juste un nombre
+        savedDay  = parseInt(saved);
+        savedDate = todayParis;
+        if (isNaN(savedDay) || savedDay < 1 || savedDay > 31) {
+          setAdminDayInput(String(autoDay)); return;
+        }
+      }
+      // Auto-increment selon les jours écoulés depuis la pose de l'override
+      const savedMs = new Date(savedDate + "T12:00:00Z").getTime();
+      const todayMs = new Date(todayParis + "T12:00:00Z").getTime();
+      const daysDiff = Math.round((todayMs - savedMs) / 86400000);
+      let newDay = savedDay + daysDiff;
+      while (newDay > 31) newDay -= 31;
+      if (daysDiff > 0) {
+        localStorage.setItem(ADMIN_DAY_KEY, JSON.stringify({ day: newDay, date: todayParis }));
+      }
+      setAdminDay(newDay); setAdminDayInput(String(newDay)); return;
     }
-    // Pas d'override : afficher le jour automatique dans l'input
     setAdminDayInput(String(autoDay));
   }, []);
 
@@ -485,15 +508,9 @@ if (data.p_anag_done === true) {
     if (choice === pCitation.answer) addXpNoBoost(3);
   }
 
-  function handleChoiceClick(choice: string, wordList: typeof GAME_WORDS, answered: string | null, correctWord: string, handler: (c: string) => void) {
+  function handleChoiceClick(choice: string, _wordList: typeof GAME_WORDS, answered: string | null, _correctWord: string, handler: (c: string) => void) {
     if (!answered) { handler(choice); return; }
-    const localDef = lookup(choice);
-    if (localDef) {
-      setDefPopupWord({ word: choice, def: localDef.defSimple || localDef.defOrig, etym: localDef.etym });
-    } else {
-      const wordData = wordList.find(w => w.word === choice);
-      if (wordData) setDefPopupWord({ word: wordData.word, def: wordData.def, etym: wordData.etym });
-    }
+    setDefPopupWord(choice);
   }
 
   const citParts  = citation.text.split("***");
@@ -534,7 +551,7 @@ if (data.p_anag_done === true) {
                 onKeyDown={e => {
                   if (e.key === "Enter") {
                     const n = parseInt(adminDayInput);
-                    if (n >= 1 && n <= 30) { setAdminDay(n); localStorage.setItem(ADMIN_DAY_KEY, String(n)); }
+                    if (n >= 1 && n <= 31) { setAdminDay(n); localStorage.setItem(ADMIN_DAY_KEY, JSON.stringify({ day: n, date: getParisDateStr() })); }
                   }
                 }}
                 style={{ width: "44px", fontSize: "0.7rem", padding: "1px 5px", borderRadius: "4px", background: adminDay !== null ? "rgba(212,168,67,0.18)" : "rgba(212,168,67,0.08)", border: `1px solid ${adminDay !== null ? "rgba(212,168,67,0.6)" : "rgba(212,168,67,0.3)"}`, color: "rgba(212,168,67,0.9)", fontFamily: "inherit", textAlign: "center" }}
@@ -543,7 +560,7 @@ if (data.p_anag_done === true) {
               <button
                 onClick={() => {
                   const n = parseInt(adminDayInput);
-                  if (n >= 1 && n <= 30) { setAdminDay(n); localStorage.setItem(ADMIN_DAY_KEY, String(n)); }
+                  if (n >= 1 && n <= 31) { setAdminDay(n); localStorage.setItem(ADMIN_DAY_KEY, JSON.stringify({ day: n, date: getParisDateStr() })); }
                 }}
                 style={{ fontSize: "0.7rem", padding: "1px 7px", borderRadius: "4px", background: "rgba(34,197,94,0.12)", border: "1px solid rgba(34,197,94,0.35)", color: "rgba(34,197,94,0.85)", cursor: "pointer", fontFamily: "inherit" }}>
                 ✓
@@ -700,13 +717,7 @@ if (data.p_anag_done === true) {
                 className={`${styles.choiceBtn} ${pDefAnswer ? choice === pDefWord.word ? styles.correct : choice === pDefAnswer ? styles.wrong : styles.disabled : ""}`}
                 onClick={() => {
                   if (!pDefAnswer) { handlePDefAnswer(choice); return; }
-                  const localDef = lookup(choice);
-                  if (localDef) {
-                    setDefPopupWord({ word: choice, def: localDef.defSimple || localDef.defOrig, etym: localDef.etym });
-                  } else {
-                    const w = PREMIUM_WORDS.find(w => w.word === choice);
-                    if (w) setDefPopupWord({ word: w.word, def: w.def, etym: w.etym });
-                  }
+                  setDefPopupWord(choice);
                 }}>
                 {choice}
               </button>
@@ -805,17 +816,7 @@ if (data.p_anag_done === true) {
       <a href="/" className={styles.back}>← Retour aux histoires</a>
 
       {defPopupWord && (
-        <div style={{ position: "fixed", inset: 0, zIndex: 300, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(0,0,0,0.6)", backdropFilter: "blur(4px)", padding: "24px" }}
-          onClick={() => setDefPopupWord(null)}>
-          <div onClick={e => e.stopPropagation()} style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: "16px", padding: "24px", maxWidth: "380px", width: "100%", display: "flex", flexDirection: "column", gap: "12px" }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <span style={{ fontFamily: "var(--font-playfair)", fontSize: "1.3rem", fontWeight: 700, color: "var(--accent)" }}>{defPopupWord.word}</span>
-              <button onClick={() => setDefPopupWord(null)} style={{ background: "none", border: "none", color: "var(--text-dim)", cursor: "pointer", fontSize: "1rem" }}>✕</button>
-            </div>
-            <div style={{ fontSize: "0.75rem", color: "var(--text-dim)", fontStyle: "italic" }}>{defPopupWord.etym}</div>
-            <div style={{ fontSize: "0.9rem", color: "var(--text-muted)", lineHeight: 1.6, padding: "10px 14px", background: "var(--surface2)", borderRadius: "10px", borderLeft: "3px solid var(--border)" }}>{defPopupWord.def}</div>
-          </div>
-        </div>
+        <WordPopup word={defPopupWord} seenCount={0} onClose={() => setDefPopupWord(null)} />
       )}
     </div>
   );
