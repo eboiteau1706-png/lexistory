@@ -76,6 +76,7 @@ export default function AdminOverlay({ story, date, level, dayOffset, todayOffse
   const STORY_CATEGORIES = [
     "Sport","Histoire","Science","Art","Gastronomie","Cinéma","Musique",
     "Géographie","Économie","Littérature","Philosophie","Nature","Technologie","Société",
+    "Insolite","Psychologie","Architecture",
   ];
 
   function getTodayDate(): string {
@@ -266,7 +267,10 @@ export default function AdminOverlay({ story, date, level, dayOffset, todayOffse
           <label style={lbl}>Titre</label>
           <input style={inp} value={title} onChange={e => setTitle(e.target.value)} />
           <label style={lbl}>Catégorie</label>
-          <input style={inp} value={category} onChange={e => setCategory(e.target.value)} />
+          <select style={inp} value={category} onChange={e => setCategory(e.target.value)}>
+            <option value="">— Sélectionner —</option>
+            {STORY_CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
+          </select>
           <label style={lbl}>Source</label>
           <input style={inp} value={source} onChange={e => setSource(e.target.value)} />
           <label style={lbl}>Temps de lecture</label>
@@ -285,7 +289,7 @@ export default function AdminOverlay({ story, date, level, dayOffset, todayOffse
           ))}
           <button onClick={() => setParagraphs(prev => [...prev, ""])}
             style={{ ...editBtn, marginBottom: "12px", fontSize: "0.75rem" }}>+ Paragraphe</button>
-          <div style={{ display: "flex", gap: "8px", marginTop: "4px" }}>
+          <div style={{ display: "flex", gap: "8px", marginTop: "4px", flexWrap: "wrap" }}>
             <button onClick={saveStory} disabled={saving}
               style={{ padding: "8px 18px", borderRadius: "8px", background: "var(--accent)", border: "none", color: "var(--bg)", fontFamily: "inherit", fontWeight: 700, cursor: "pointer", fontSize: "0.85rem" }}>
               {saving ? "Sauvegarde…" : "💾 Sauvegarder"}
@@ -294,8 +298,34 @@ export default function AdminOverlay({ story, date, level, dayOffset, todayOffse
               style={{ padding: "8px 14px", borderRadius: "8px", background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text-muted)", fontFamily: "inherit", cursor: "pointer", fontSize: "0.85rem" }}>
               ✕ Annuler
             </button>
+            <button onClick={() => { setTitle(""); setCategory(""); setSource(""); setReadTime("3 min de lecture"); setParagraphs([""]); setMsg(""); }}
+              style={{ padding: "8px 14px", borderRadius: "8px", background: "var(--surface2)", border: "1px solid #e07070", color: "#e07070", fontFamily: "inherit", cursor: "pointer", fontSize: "0.85rem" }}>
+              🗑 Tout effacer
+            </button>
+            <button onClick={handleOpenEdit}
+              style={{ padding: "8px 14px", borderRadius: "8px", background: "var(--surface2)", border: "1px solid rgba(212,168,67,0.4)", color: "rgba(212,168,67,0.9)", fontFamily: "inherit", cursor: "pointer", fontSize: "0.85rem" }}>
+              ↩ Remettre l'original
+            </button>
           </div>
           {msg && <div style={{ marginTop: "8px", fontSize: "0.82rem", color: msg.startsWith("✅") ? "var(--green)" : "#e07070" }}>{msg}</div>}
+          {/* ── Référence : histoire actuellement affichée ── */}
+          <div style={{ marginTop: "16px", borderTop: "1px solid rgba(212,168,67,0.15)", paddingTop: "12px" }}>
+            <div style={{ fontSize: "0.65rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.8px", color: "rgba(212,168,67,0.45)", marginBottom: "8px" }}>
+              📖 Histoire actuellement affichée (référence)
+            </div>
+            <div style={{ fontSize: "0.82rem", fontWeight: 700, color: "var(--text-muted)", marginBottom: "4px" }}>{story.title}</div>
+            <div style={{ fontSize: "0.7rem", color: "rgba(212,168,67,0.5)", marginBottom: "8px", fontStyle: "italic" }}>{story.category} · {story.readTime}</div>
+            {story.paragraphs.slice(0, 2).map((p, i) => (
+              <p key={i} style={{ fontSize: "0.75rem", color: "var(--text-dim)", lineHeight: 1.5, margin: "0 0 4px", fontStyle: "italic" }}>
+                {p.length > 200 ? p.substring(0, 200) + "…" : p}
+              </p>
+            ))}
+            {story.paragraphs.length > 2 && (
+              <div style={{ fontSize: "0.7rem", color: "var(--text-dim)", fontStyle: "italic", marginTop: "2px" }}>
+                … ({story.paragraphs.length - 2} paragraphe{story.paragraphs.length - 2 > 1 ? "s" : ""} de plus)
+              </div>
+            )}
+          </div>
         </div>
       )}
 
