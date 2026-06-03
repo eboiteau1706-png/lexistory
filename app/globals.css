@@ -91,6 +91,10 @@ body::before {
   border-radius: 6px;
 }
 
+/* ── ADSENSE Z-INDEX ── */
+.adsbygoogle { z-index: 1 !important; }
+ins.adsbygoogle { z-index: 1 !important; }
+
 /* ── RESPONSIVE ── */
 @media (max-width: 680px) {
   .layout { grid-template-columns: 1fr; }

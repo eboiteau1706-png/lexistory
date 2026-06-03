@@ -1,9 +1,11 @@
 "use client";
 import { useState, useEffect } from "react";
+import { usePathname } from "next/navigation";
 import { createClient } from "@/lib/supabase";
 import styles from "./UsernameModal.module.css";
 
 export default function UsernameModal() {
+  const pathname = usePathname();
   const [show, setShow]         = useState(false);
   const [username, setUsername] = useState("");
   const [saving, setSaving]     = useState(false);
@@ -11,6 +13,7 @@ export default function UsernameModal() {
   const supabase = createClient();
 
   useEffect(() => {
+    if (pathname === "/compte-confirme" || pathname === "/login") return;
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (!session?.user) return;
       supabase.from("profiles").select("username").eq("id", session.user.id).single()
@@ -18,7 +21,7 @@ export default function UsernameModal() {
           if (!data?.username) setShow(true);
         });
     });
-  }, []);
+  }, [pathname]);
 
   // Bloque la barre de progression en arrière-plan
   useEffect(() => {

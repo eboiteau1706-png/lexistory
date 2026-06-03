@@ -189,14 +189,6 @@ export default function LandingPage() {
         <a href="/login" className={styles.btnPrimary}>Rejoindre Lexi Story →</a>
       </section>
 
-      {/* ── Footer ── */}
-      <footer className={styles.footer}>
-        <a href="/cgu" className={styles.footerLink}>CGU</a>
-        <a href="/confidentialite" className={styles.footerLink}>Confidentialité</a>
-        <a href="/mentions-legales" className={styles.footerLink}>Mentions légales</a>
-        <a href="mailto:lexistory.fr@gmail.com" className={styles.footerLink}>Contact</a>
-      </footer>
-
     </div>
   );
 }
