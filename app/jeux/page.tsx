@@ -535,7 +535,7 @@ if (data.p_anag_done === true) {
       <div className={styles.header}>
         <h1 className={styles.title}>🎮 Jeux du jour</h1>
         <p className={styles.subtitle}>
-          Renouvelés chaque jour à minuit — heure de Paris · Jour {dayIdx + 1}/30
+          Renouvelés chaque jour à minuit — heure de Paris · Jour {dayIdx + 1}/31
           {isAdmin && (
             <span style={{ marginLeft: "10px", display: "inline-flex", alignItems: "center", gap: "6px" }}>
               {/* Reset : supprime l'override et remet le jour auto */}
@@ -550,7 +550,7 @@ if (data.p_anag_done === true) {
               </button>
               {/* Input : affiche le jour actif, modifiable */}
               <input
-                type="number" min={1} max={30}
+                type="number" min={1} max={31}
                 value={adminDayInput}
                 onChange={e => setAdminDayInput(e.target.value)}
                 onKeyDown={e => {
