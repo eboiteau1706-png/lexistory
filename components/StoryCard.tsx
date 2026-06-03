@@ -43,6 +43,10 @@ export default function StoryCard({ story }: Props) {
   const [defModal, setDefModal]                 = useState<{word:string;etym:string;defOrig:string;defSimple:string}|null>(null);
   const [defSaving, setDefSaving]               = useState(false);
   const [toast, setToast]                       = useState<string|null>(null);
+  const [showReport, setShowReport]             = useState(false);
+  const [reportType, setReportType]             = useState("🐛 Bug technique");
+  const [reportMessage, setReportMessage]       = useState("");
+  const [reportSending, setReportSending]       = useState(false);
   const doneRef        = useRef(false);
   const intervalRef    = useRef<NodeJS.Timeout | null>(null);
   const userReadyRef   = useRef(false); // true only when the logged-in user's own timer reached 100
@@ -282,6 +286,36 @@ export default function StoryCard({ story }: Props) {
     }
   }, [userId, wordGroupsList]);
 
+  // ── Report ───────────────────────────────────────────────────────────────
+  async function handleReport() {
+    setReportSending(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      let username: string | null = null;
+      if (session?.user) {
+        const { data: p } = await supabase.from("profiles").select("username").eq("id", session.user.id).single();
+        username = p?.username ?? null;
+      }
+      await fetch("/api/report-story", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          storySlug:  story.slug,
+          storyTitle: story.title,
+          storyLevel: story.level,
+          reportType,
+          message: reportMessage,
+          username,
+        }),
+      });
+      setShowReport(false);
+      setReportType("🐛 Bug technique");
+      setReportMessage("");
+      showToast("Merci pour ton signalement ! 🙏");
+    } catch { showToast("Erreur lors de l'envoi."); }
+    setReportSending(false);
+  }
+
   // ── Admin helpers ─────────────────────────────────────────────────────────
   function showToast(msg: string) {
     setToast(msg);
@@ -475,7 +509,58 @@ export default function StoryCard({ story }: Props) {
           💡 Clique sur un mot pour voir sa définition — les mots consultés passent en{" "}
           <span style={{ color: "var(--green)", fontWeight: 600 }}>vert</span>.
         </div>
+
+        <div style={{ textAlign: "right", marginTop: "8px" }}>
+          <button
+            onClick={() => setShowReport(true)}
+            style={{ background: "none", border: "none", color: "var(--text-dim)", cursor: "pointer", fontSize: "0.72rem", fontFamily: "inherit", opacity: 0.6, padding: "4px 0" }}
+          >
+            🚩 Signaler
+          </button>
+        </div>
       </div>
+
+      {/* ── Modale signalement ── */}
+      {showReport && (
+        <div onClick={() => setShowReport(false)} style={{ position: "fixed", inset: 0, zIndex: 400, background: "rgba(0,0,0,0.55)", backdropFilter: "blur(4px)", display: "flex", alignItems: "center", justifyContent: "center", padding: "24px" }}>
+          <div onClick={e => e.stopPropagation()} style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: "16px", padding: "24px", maxWidth: "400px", width: "100%", display: "flex", flexDirection: "column", gap: "14px" }}>
+            <div style={{ fontFamily: "var(--font-playfair)", fontSize: "1rem", fontWeight: 700, color: "var(--text)" }}>🚩 Signaler un problème</div>
+            <div style={{ fontSize: "0.8rem", color: "var(--text-dim)", background: "var(--surface2)", borderRadius: "8px", padding: "8px 12px" }}>
+              {story.title}
+            </div>
+            <div>
+              <label style={{ fontSize: "0.7rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.8px", color: "var(--text-dim)", display: "block", marginBottom: "6px" }}>Type de problème</label>
+              <select
+                value={reportType}
+                onChange={e => setReportType(e.target.value)}
+                style={{ width: "100%", background: "var(--surface2)", border: "1px solid var(--border)", borderRadius: "8px", padding: "8px 10px", color: "var(--text)", fontFamily: "inherit", fontSize: "0.88rem" }}
+              >
+                <option>🐛 Bug technique</option>
+                <option>📝 Erreur dans le texte</option>
+                <option>📚 Lexique incorrect</option>
+                <option>ℹ️ Information incorrecte</option>
+                <option>💬 Autre</option>
+              </select>
+            </div>
+            <div>
+              <label style={{ fontSize: "0.7rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.8px", color: "var(--text-dim)", display: "block", marginBottom: "6px" }}>Décris le problème <span style={{ fontWeight: 400, textTransform: "none" }}>(optionnel)</span></label>
+              <textarea
+                value={reportMessage}
+                onChange={e => setReportMessage(e.target.value)}
+                rows={3}
+                placeholder="Détails supplémentaires…"
+                style={{ width: "100%", background: "var(--surface2)", border: "1px solid var(--border)", borderRadius: "8px", padding: "8px 10px", color: "var(--text)", fontFamily: "inherit", fontSize: "0.85rem", resize: "vertical", boxSizing: "border-box" }}
+              />
+            </div>
+            <div style={{ display: "flex", gap: "8px", justifyContent: "flex-end" }}>
+              <button onClick={() => setShowReport(false)} style={{ padding: "8px 18px", borderRadius: "8px", background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text-muted)", cursor: "pointer", fontFamily: "inherit", fontSize: "0.85rem" }}>Annuler</button>
+              <button onClick={handleReport} disabled={reportSending} style={{ padding: "8px 18px", borderRadius: "8px", background: "var(--accent)", border: "none", color: "var(--bg)", fontFamily: "inherit", fontWeight: 700, cursor: "pointer", fontSize: "0.85rem", opacity: reportSending ? 0.6 : 1 }}>
+                {reportSending ? "Envoi…" : "Envoyer"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {xpGained !== null && (
         <div className={styles.xpPopup}>
