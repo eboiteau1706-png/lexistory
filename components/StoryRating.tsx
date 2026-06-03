@@ -127,6 +127,11 @@ export default function StoryRating({ storyId, initialAvg = 0, initialCount = 0 
           })}
         </div>
 
+        {/* Phrase explicative */}
+        <div style={{ fontSize: "12px", color: "rgba(255,255,255,0.35)", textAlign: "center", fontStyle: "italic", marginTop: "4px", marginBottom: "4px" }}>
+          Ta note aide à trier les histoires dans Explorer par catégorie.
+        </div>
+
         {/* Note */}
         <div style={{ fontSize: "13px", color: "#888" }}>
           {count > 0 ? (
