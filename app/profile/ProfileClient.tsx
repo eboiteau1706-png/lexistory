@@ -223,7 +223,7 @@ export default function ProfileClient({ user }: { user: User }) {
       const res = await fetch("/api/portal", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ cancel: true }) });
       const data = await res.json();
       if (data.success) { setCancelDone(true); setShowCancelConfirm(false); }
-      else alert("Erreur, réessaie ou contacte e.boiteau1706@gmail.com");
+      else alert("Erreur, réessaie ou contacte lexistory.fr@gmail.com");
     } catch { alert("Erreur, réessaie."); }
     finally { setCancelling(false); }
   }
@@ -234,7 +234,7 @@ export default function ProfileClient({ user }: { user: User }) {
       const res = await fetch("/api/delete-account", { method: "POST" });
       const data = await res.json();
       if (data.success) { await supabase.auth.signOut(); router.push("/"); }
-      else alert("Erreur lors de la suppression. Contacte-nous à e.boiteau1706@gmail.com");
+      else alert("Erreur lors de la suppression. Contacte-nous à lexistory.fr@gmail.com");
     } catch { alert("Erreur lors de la suppression."); }
     finally { setDeleting(false); }
   }

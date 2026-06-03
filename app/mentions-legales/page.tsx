@@ -18,7 +18,7 @@ export default function MentionsLegales() {
             <li><strong>Nom :</strong> Enzo Boiteau</li>
             <li><strong>Statut :</strong> Particulier</li>
             <li><strong>Ville :</strong> Osny, Val-d&apos;Oise, France</li>
-            <li><strong>Email :</strong> e.boiteau1706@gmail.com</li>
+            <li><strong>Email :</strong> lexistory.fr@gmail.com</li>
             <li><strong>Site :</strong> https://lexistory.fr</li>
           </ul>
         </section>
@@ -72,7 +72,7 @@ export default function MentionsLegales() {
 
         <section className={styles.section}>
           <h2>Contact</h2>
-          <p>Pour toute question : <a href="mailto:e.boiteau1706@gmail.com">e.boiteau1706@gmail.com</a></p>
+          <p>Pour toute question : <a href="mailto:lexistory.fr@gmail.com">lexistory.fr@gmail.com</a></p>
         </section>
 
         <a href="/" className={styles.back}>← Retour à l&apos;accueil</a>

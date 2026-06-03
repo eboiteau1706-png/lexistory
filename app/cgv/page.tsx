@@ -17,7 +17,7 @@ export default function CGV() {
             <li><strong>Nom :</strong> Enzo Boiteau</li>
             <li><strong>Statut :</strong> Particulier</li>
             <li><strong>Ville :</strong> Osny, Val-d&apos;Oise, France</li>
-            <li><strong>Email :</strong> e.boiteau1706@gmail.com</li>
+            <li><strong>Email :</strong> lexistory.fr@gmail.com</li>
             <li><strong>Site :</strong> https://lexistory.fr</li>
           </ul>
         </section>
@@ -47,13 +47,13 @@ export default function CGV() {
         <section className={styles.section}>
           <h2>5. Résiliation</h2>
           <p>L&apos;abonnement peut être résilié à tout moment depuis votre profil via le bouton <strong>&ldquo;Gérer mon abonnement&rdquo;</strong>, accessible après connexion. La résiliation prend effet à la fin de la période en cours déjà payée — vous conservez l&apos;accès Premium jusqu&apos;à cette date.</p>
-          <p>En cas de difficulté, contactez-nous à <a href="mailto:e.boiteau1706@gmail.com">e.boiteau1706@gmail.com</a>.</p>
+          <p>En cas de difficulté, contactez-nous à <a href="mailto:lexistory.fr@gmail.com">lexistory.fr@gmail.com</a>.</p>
         </section>
 
         <section className={styles.section}>
           <h2>6. Droit de rétractation</h2>
           <p>Conformément à l&apos;article L221-18 du Code de la consommation, vous disposez d&apos;un délai de <strong>14 jours</strong> à compter de la souscription pour exercer votre droit de rétractation, sans avoir à justifier de motifs.</p>
-          <p>Pour exercer ce droit, envoyez un email à <a href="mailto:e.boiteau1706@gmail.com">e.boiteau1706@gmail.com</a> en indiquant votre adresse email et votre demande de remboursement. Le remboursement sera effectué dans les 14 jours suivant la demande.</p>
+          <p>Pour exercer ce droit, envoyez un email à <a href="mailto:lexistory.fr@gmail.com">lexistory.fr@gmail.com</a> en indiquant votre adresse email et votre demande de remboursement. Le remboursement sera effectué dans les 14 jours suivant la demande.</p>
           <p><strong>Exception :</strong> Si vous avez expressément demandé l&apos;exécution immédiate du service et que vous avez commencé à utiliser les fonctionnalités Premium avant la fin du délai de 14 jours, le remboursement sera calculé au prorata du temps non consommé.</p>
         </section>
 
@@ -75,7 +75,7 @@ export default function CGV() {
 
         <section className={styles.section}>
           <h2>10. Contact</h2>
-          <p>Pour toute question relative à votre abonnement : <a href="mailto:e.boiteau1706@gmail.com">e.boiteau1706@gmail.com</a></p>
+          <p>Pour toute question relative à votre abonnement : <a href="mailto:lexistory.fr@gmail.com">lexistory.fr@gmail.com</a></p>
         </section>
 
         <a href="/" className={styles.back}>← Retour à l&apos;accueil</a>

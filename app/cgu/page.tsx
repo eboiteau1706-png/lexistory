@@ -82,7 +82,7 @@ export default function CGU() {
 
         <section className={styles.section}>
           <h2>11. Contact</h2>
-          <p>Pour toute question : <a href="/support">page Support</a> ou <a href="mailto:e.boiteau1706@gmail.com">e.boiteau1706@gmail.com</a></p>
+          <p>Pour toute question : <a href="/support">page Support</a> ou <a href="mailto:lexistory.fr@gmail.com">lexistory.fr@gmail.com</a></p>
         </section>
 
         <a href="/" className={styles.back}>← Retour à l&apos;accueil</a>

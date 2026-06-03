@@ -8,7 +8,7 @@ export default function Support() {
 
   function handleSubmit() {
     if (!form.email || !form.message) return;
-    const mailto = `mailto:e.boiteau1706@gmail.com?subject=${encodeURIComponent("[LexiStory] " + (form.subject || "Support"))}&body=${encodeURIComponent(`Nom: ${form.name}\nEmail: ${form.email}\n\n${form.message}`)}`;
+    const mailto = `mailto:lexistory.fr@gmail.com?subject=${encodeURIComponent("[LexiStory] " + (form.subject || "Support"))}&body=${encodeURIComponent(`Nom: ${form.name}\nEmail: ${form.email}\n\n${form.message}`)}`;
     window.location.href = mailto;
     setSent(true);
   }

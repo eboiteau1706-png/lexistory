@@ -60,7 +60,7 @@ export default function Abonnement() {
 
         <section className={styles.section}>
           <h2>Contact</h2>
-          <p>Pour toute question relative à votre abonnement : <a href="mailto:e.boiteau1706@gmail.com">e.boiteau1706@gmail.com</a></p>
+          <p>Pour toute question relative à votre abonnement : <a href="mailto:lexistory.fr@gmail.com">lexistory.fr@gmail.com</a></p>
           <p>Réponse sous 48h ouvrées.</p>
         </section>
 

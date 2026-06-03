@@ -78,7 +78,7 @@ export default function Confidentialite() {
             <li><strong>Droit à la portabilité</strong> : récupérer vos données dans un format lisible</li>
             <li><strong>Droit d&apos;opposition</strong> : vous opposer au traitement de vos données</li>
           </ul>
-          <p>Pour exercer ces droits : <a href="mailto:e.boiteau1706@gmail.com">e.boiteau1706@gmail.com</a></p>
+          <p>Pour exercer ces droits : <a href="mailto:lexistory.fr@gmail.com">lexistory.fr@gmail.com</a></p>
         </section>
 
         <section className={styles.section}>
