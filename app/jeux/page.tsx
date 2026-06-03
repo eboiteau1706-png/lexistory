@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase";
 import styles from "./jeux.module.css";
-import { lookup } from "@/lib/dictionary";
+
 import AdminJeuxOverlay from "@/components/AdminJeuxOverlay";
 import WordPopup from "@/components/WordPopup";
 
@@ -139,7 +139,7 @@ const PREMIUM_CITATIONS = [
 ];
 
 type Letter = { char: string; id: number };
-type PopupWord = { word: string; def: string; etym: string };
+
 
 function getParisDateStr() {
   const paris = new Date(new Date().toLocaleString("en-US", { timeZone: "Europe/Paris" }));
@@ -276,15 +276,20 @@ export default function JeuxPage() {
       let savedDate: string;
       try {
         const parsed = JSON.parse(saved);
-        savedDay  = parsed.day;
-        savedDate = parsed.date ?? todayParis;
+        if (parsed && typeof parsed === "object" && typeof parsed.day === "number") {
+          savedDay  = parsed.day;
+          savedDate = parsed.date ?? todayParis;
+        } else {
+          // JSON valide mais pas notre format (ex : "2" → nombre brut)
+          savedDay  = typeof parsed === "number" ? parsed : parseInt(saved);
+          savedDate = todayParis;
+        }
       } catch {
-        // Ancien format : juste un nombre
         savedDay  = parseInt(saved);
         savedDate = todayParis;
-        if (isNaN(savedDay) || savedDay < 1 || savedDay > 31) {
-          setAdminDayInput(String(autoDay)); return;
-        }
+      }
+      if (isNaN(savedDay) || savedDay < 1 || savedDay > 31) {
+        setAdminDayInput(String(autoDay)); return;
       }
       // Auto-increment selon les jours écoulés depuis la pose de l'override
       const savedMs = new Date(savedDate + "T12:00:00Z").getTime();
