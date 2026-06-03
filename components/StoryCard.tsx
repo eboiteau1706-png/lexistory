@@ -63,16 +63,21 @@ export default function StoryCard({ story }: Props) {
         setUserId(session.user.id);
         setIsAdmin(session.user.id === ADMIN_ID);
         supabase.from("profiles").select("is_premium").eq("id", session.user.id).single()
-          .then(({ data }) => {
-            if (data?.is_premium) { setIsPremium(true); return; }
-            // Fetch remaining defs for free users
-            fetch(`/api/def-usage?story_id=${story.slug}`, {
-              headers: { Authorization: `Bearer ${session.access_token}` },
-            }).then(r => r.json()).then(d => { if (d.remaining >= 0) setDefsRemaining(d.remaining); });
-          });
+          .then(({ data }) => { if (data?.is_premium) setIsPremium(true); });
       }
     });
   }, []);
+
+  // Re-fetch def count whenever the story or user changes
+  useEffect(() => {
+    if (!userId || isPremium) return;
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!session) return;
+      fetch(`/api/def-usage?story_id=${story.slug}`, {
+        headers: { Authorization: `Bearer ${session.access_token}` },
+      }).then(r => r.json()).then(d => { if (d.remaining >= 0) setDefsRemaining(d.remaining); });
+    });
+  }, [story.slug, userId, isPremium]);
 
   // Load word groups for this story
   const loadWordGroups = async () => {
@@ -95,6 +100,7 @@ export default function StoryCard({ story }: Props) {
     setActiveWord(null);
     setXpGained(null);
     setAlreadyCompleted(false);
+    setDefsRemaining(null);
     doneRef.current = false;
     userReadyRef.current = false;
     if (intervalRef.current) {
