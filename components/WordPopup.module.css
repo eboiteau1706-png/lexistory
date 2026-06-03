@@ -297,3 +297,54 @@
   0%, 100% { opacity: 0.4; }
   50%      { opacity: 1; }
 }
+
+/* ── Scrollable body ─────────────────────────────────────────────────────── */
+.body {
+  /* desktop: normal flow */
+}
+
+/* ── Mobile bottom sheet ─────────────────────────────────────────────────── */
+@media (max-width: 767px) {
+  .overlay {
+    align-items: flex-end;
+    padding: 0;
+  }
+
+  .popup {
+    border-radius: 16px 16px 0 0;
+    max-height: 80vh;
+    max-width: 100%;
+    width: 100%;
+    padding: 20px 20px 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    animation: slideUp 0.3s cubic-bezier(0.32, 0.72, 0, 1);
+  }
+
+  @keyframes slideUp {
+    from { transform: translateY(100%); }
+    to   { transform: translateY(0); }
+  }
+
+  .wordRow {
+    flex-shrink: 0;
+    padding-right: 40px;
+    margin-bottom: 8px;
+  }
+
+  .body {
+    overflow-y: auto;
+    flex: 1;
+    min-height: 0;
+    padding-bottom: 8px;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .footer {
+    flex-shrink: 0;
+    margin-top: 0;
+    padding: 12px 0 24px;
+    background: var(--surface);
+  }
+}

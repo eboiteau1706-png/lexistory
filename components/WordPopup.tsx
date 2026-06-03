@@ -217,91 +217,94 @@ export default function WordPopup({ word, seenCount, storyId, onDefUsed, onClose
           )}
         </div>
 
-        {userId && (
-          <div className={`${styles.favHint} ${isFav ? styles.favHintActive : ""}`}>
-            {isFav ? "⭐ Favori ajouté — retrouve-le dans ton profil" : "Clique sur ⭐ pour mettre en favori"}
-          </div>
-        )}
-
-        {multipleSenses && (
-          <div style={{ display: "flex", gap: "6px", flexWrap: "wrap", marginBottom: "12px" }}>
-            {senses.map((s, i) => (
-              <button key={i} onClick={() => setActiveSense(i)}
-                style={{ padding: "4px 12px", borderRadius: "20px", border: `1px solid ${activeSense === i ? "var(--accent)" : "var(--border)"}`, background: activeSense === i ? "rgba(232,201,122,0.15)" : "var(--surface2)", color: activeSense === i ? "var(--accent)" : "var(--text-muted)", cursor: "pointer", fontFamily: "inherit", fontSize: "0.75rem", fontWeight: activeSense === i ? 700 : 400 }}>
-                {s.label || `Sens ${i + 1}`}
-              </button>
-            ))}
-          </div>
-        )}
-
-        {etym && <div className={styles.etym}>{etym}</div>}
-
-        {loading ? (
-          <div className={styles.loading}>
-            <div className={styles.bookWrap}>
-              <div className={styles.spine} />
-              <div className={styles.coverLeft} />
-              <div className={styles.coverRight} />
-              <div className={`${styles.page} ${styles.page1}`} />
-              <div className={`${styles.page} ${styles.page2}`} />
-              <div className={`${styles.page} ${styles.page3}`} />
+        <div className={styles.body}>
+          {userId && (
+            <div className={`${styles.favHint} ${isFav ? styles.favHintActive : ""}`}>
+              {isFav ? "⭐ Favori ajouté — retrouve-le dans ton profil" : "Clique sur ⭐ pour mettre en favori"}
             </div>
-            <p className={styles.loadingText}>Claude feuillette les définitions…</p>
-          </div>
-        ) : source === "limit_free" ? (
-          <div className={styles.contentFadeIn}>
-            <div className={styles.section}>
-              <div className={styles.defOrig} style={{ color: "var(--text-muted)", fontSize: "0.88rem", lineHeight: 1.6 }}>
-                Tu as atteint ta limite de 3 définitions pour cette histoire aujourd&apos;hui.<br />
-                Passe au Premium pour un accès illimité !
+          )}
+
+          {multipleSenses && (
+            <div style={{ display: "flex", gap: "6px", flexWrap: "wrap", marginBottom: "12px" }}>
+              {senses.map((s, i) => (
+                <button key={i} onClick={() => setActiveSense(i)}
+                  style={{ padding: "4px 12px", borderRadius: "20px", border: `1px solid ${activeSense === i ? "var(--accent)" : "var(--border)"}`, background: activeSense === i ? "rgba(232,201,122,0.15)" : "var(--surface2)", color: activeSense === i ? "var(--accent)" : "var(--text-muted)", cursor: "pointer", fontFamily: "inherit", fontSize: "0.75rem", fontWeight: activeSense === i ? 700 : 400 }}>
+                  {s.label || `Sens ${i + 1}`}
+                </button>
+              ))}
+            </div>
+          )}
+
+          {etym && <div className={styles.etym}>{etym}</div>}
+
+          {loading ? (
+            <div className={styles.loading}>
+              <div className={styles.bookWrap}>
+                <div className={styles.spine} />
+                <div className={styles.coverLeft} />
+                <div className={styles.coverRight} />
+                <div className={`${styles.page} ${styles.page1}`} />
+                <div className={`${styles.page} ${styles.page2}`} />
+                <div className={`${styles.page} ${styles.page3}`} />
+              </div>
+              <p className={styles.loadingText}>Claude feuillette les définitions…</p>
+            </div>
+          ) : source === "limit_free" ? (
+            <div className={styles.contentFadeIn}>
+              <div className={styles.section}>
+                <div className={styles.defOrig} style={{ color: "var(--text-muted)", fontSize: "0.88rem", lineHeight: 1.6 }}>
+                  Tu as atteint ta limite de 3 définitions pour cette histoire aujourd&apos;hui.<br />
+                  Passe au Premium pour un accès illimité !
+                </div>
+              </div>
+              <a href="/profile" style={{ display: "block", marginTop: "12px", padding: "10px 20px", borderRadius: "50px", background: "var(--accent)", color: "var(--bg)", fontFamily: "inherit", fontSize: "0.88rem", fontWeight: 700, textAlign: "center", textDecoration: "none", transition: "opacity 0.2s" }}>
+                ✨ Découvrir le Premium
+              </a>
+            </div>
+          ) : source === "limit" ? (
+            <div className={styles.contentFadeIn}>
+              <div className={styles.section}>
+                <div className={styles.defOrig} style={{ color: "var(--text-muted)", fontSize: "0.88rem" }}>
+                  Budget mensuel atteint.{" "}
+                  <a href={`https://fr.wiktionary.org/wiki/${encodeURIComponent(key)}`} target="_blank" rel="noopener noreferrer" style={{ color: "var(--accent)" }}>
+                    Voir sur Wiktionnaire →
+                  </a>
+                </div>
               </div>
             </div>
-            <a href="/profile" style={{ display: "block", marginTop: "12px", padding: "10px 20px", borderRadius: "50px", background: "var(--accent)", color: "var(--bg)", fontFamily: "inherit", fontSize: "0.88rem", fontWeight: 700, textAlign: "center", textDecoration: "none", transition: "opacity 0.2s" }}>
-              ✨ Découvrir le Premium
-            </a>
-          </div>
-        ) : source === "limit" ? (
-          <div className={styles.contentFadeIn}>
-            <div className={styles.section}>
-              <div className={styles.defOrig} style={{ color: "var(--text-muted)", fontSize: "0.88rem" }}>
-                Budget mensuel atteint.{" "}
-                <a href={`https://fr.wiktionary.org/wiki/${encodeURIComponent(key)}`} target="_blank" rel="noopener noreferrer" style={{ color: "var(--accent)" }}>
-                  Voir sur Wiktionnaire →
-                </a>
+          ) : defOrig ? (
+            <div className={styles.contentFadeIn}>
+              <div className={styles.section}>
+                <div className={styles.label}>Définition</div>
+                <div className={styles.defOrig}>{defOrig}</div>
               </div>
+              {defSimple && (
+                <div className={styles.section}>
+                  <div className={styles.label}>En clair 💡</div>
+                  <div className={styles.defSimple}>{defSimple}</div>
+                </div>
+              )}
             </div>
-          </div>
-        ) : defOrig ? (
-          <div className={styles.contentFadeIn}>
-            <div className={styles.section}>
-              <div className={styles.label}>Définition</div>
-              <div className={styles.defOrig}>{defOrig}</div>
-            </div>
-            {defSimple && (
+          ) : !loading && source !== null ? (
+            <div className={styles.contentFadeIn}>
+              <div className={styles.section}>
+                <div className={styles.label}>Définition</div>
+                <div className={styles.defOrig}>Ce mot n&apos;est pas encore dans notre dictionnaire.</div>
+              </div>
               <div className={styles.section}>
                 <div className={styles.label}>En clair 💡</div>
-                <div className={styles.defSimple}>{defSimple}</div>
+                <div className={styles.defSimple}>Nous ajoutons de nouveaux mots régulièrement ! 📚</div>
               </div>
-            )}
-          </div>
-        ) : !loading && source !== null ? (
-          <div className={styles.contentFadeIn}>
-            <div className={styles.section}>
-              <div className={styles.label}>Définition</div>
-              <div className={styles.defOrig}>Ce mot n&apos;est pas encore dans notre dictionnaire.</div>
             </div>
-            <div className={styles.section}>
-              <div className={styles.label}>En clair 💡</div>
-              <div className={styles.defSimple}>Nous ajoutons de nouveaux mots régulièrement ! 📚</div>
-            </div>
-          </div>
-        ) : null}
+          ) : null}
 
-        {defsRemaining !== null && defsRemaining >= 0 && (
-          <div style={{ fontSize: "0.72rem", color: defsRemaining === 0 ? "#e07070" : "var(--text-dim)", textAlign: "center", marginBottom: "8px", fontStyle: "italic" }}>
-            {defsRemaining === 0 ? "Plus de définitions disponibles aujourd'hui pour cette histoire" : `${defsRemaining} définition${defsRemaining > 1 ? "s" : ""} restante${defsRemaining > 1 ? "s" : ""} aujourd'hui`}
-          </div>
-        )}
+          {defsRemaining !== null && defsRemaining >= 0 && (
+            <div style={{ fontSize: "0.72rem", color: defsRemaining === 0 ? "#e07070" : "var(--text-dim)", textAlign: "center", marginBottom: "8px", fontStyle: "italic" }}>
+              {defsRemaining === 0 ? "Plus de définitions disponibles aujourd'hui pour cette histoire" : `${defsRemaining} définition${defsRemaining > 1 ? "s" : ""} restante${defsRemaining > 1 ? "s" : ""} aujourd'hui`}
+            </div>
+          )}
+        </div>
+
         <div className={styles.footer}>
           <span className={styles.count}>Tu as consulté <strong>{seenCount}</strong> mot(s)</span>
           <button className={styles.btnGotIt} onClick={onClose}>Compris ! 👍</button>
