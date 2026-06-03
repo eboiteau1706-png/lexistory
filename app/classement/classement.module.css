@@ -45,6 +45,14 @@
 }
 .myRank strong { color: var(--accent); }
 
+.rankSeparator {
+  text-align: center;
+  color: var(--text-dim);
+  font-size: 1rem;
+  letter-spacing: 4px;
+  padding: 8px 0;
+}
+
 .loading {
   text-align: center;
   color: var(--text-dim);

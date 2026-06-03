@@ -110,7 +110,9 @@ export default function ClassementPage() {
   }
 
   const list = tab === "global" ? players : friends;
-  const myRank = list.findIndex(p => p.id === myId) + 1;
+  const myRankIndex = list.findIndex(p => p.id === myId);
+  const myRank = myRankIndex + 1;
+  const isInTop10 = myRankIndex >= 0 && myRankIndex < 10;
 
   return (
     <div className={styles.page}>
@@ -127,11 +129,16 @@ export default function ClassementPage() {
         ) : (
           <>
             {myId && myRank > 0 && (
-              <div className={styles.myRank}>Tu es classé <strong>#{myRank}</strong> sur {list.length} joueurs</div>
+              <div className={styles.myRank}>
+                <strong>{list[myRankIndex]?.username ?? "Toi"}</strong>
+                {" · "}
+                <strong>#{myRank}</strong>
+                {!isInTop10 && <span style={{ color: "var(--text-dim)", fontWeight: 400 }}> sur {list.length} joueurs</span>}
+              </div>
             )}
 
             <div className={styles.list}>
-              {list.map((player, i) => {
+              {list.slice(0, 10).map((player, i) => {
                 const level = getLevel(player.xp);
                 const isMe  = player.id === myId;
                 const medal = i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : null;
@@ -183,6 +190,57 @@ export default function ClassementPage() {
                   </div>
                 );
               })}
+
+              {/* Séparateur + voisins si hors top 10 */}
+              {myId && !isInTop10 && myRankIndex >= 0 && (
+                <>
+                  <div className={styles.rankSeparator}>· · ·</div>
+                  {[myRankIndex - 1, myRankIndex, myRankIndex + 1]
+                    .filter((idx): idx is number => idx >= 0 && idx < list.length)
+                    .map(idx => {
+                      const player = list[idx];
+                      const level   = getLevel(player.xp);
+                      const isMe    = player.id === myId;
+                      const isFriend  = friendIds.includes(player.id);
+                      const isPending = pendingIds.includes(player.id);
+                      return (
+                        <div key={`nbr-${player.id}`} className={`${styles.row} ${isMe ? styles.rowMe : ""}`}>
+                          <div className={styles.rank}><span className={styles.rankNum}>#{idx + 1}</span></div>
+                          <div style={{ width: 40, height: 40, minWidth: 40, minHeight: 40, borderRadius: "50%", flexShrink: 0, overflow: "hidden", background: avatarBg(player.username ?? "?"), display: "flex", alignItems: "center", justifyContent: "center", fontSize: "0.9rem", fontWeight: 700, color: "#fff", alignSelf: "center" }}>
+                            {getAvatarUrl(player.avatar_url ?? null)
+                              ? <img src={getAvatarUrl(player.avatar_url ?? null)!} alt="" style={{ width: 40, height: 40, objectFit: "cover", display: "block" }} />
+                              : (player.username?.[0] ?? "?").toUpperCase()}
+                          </div>
+                          <div className={styles.playerInfo}>
+                            <a href={player.username ? `/joueur/${player.username}` : "#"} className={styles.playerName} style={{ textDecoration: "none", color: "inherit" }}>
+                              {player.username ?? <span style={{ color: "var(--text-dim)", fontStyle: "italic" }}>Sans pseudo</span>}
+                              {player.is_premium && <span className={styles.premiumTag}>✨</span>}
+                              {isMe && <span className={styles.meTag}>toi</span>}
+                            </a>
+                            <div className={styles.playerLevel}>{level.emoji} {level.name}</div>
+                          </div>
+                          <div style={{ display: "flex", alignItems: "center", gap: "8px", flexShrink: 0, minWidth: "120px", justifyContent: "flex-end" }}>
+                            <div className={styles.xp}>{player.xp} XP</div>
+                            {isMe ? (
+                              <div style={{ width: "52px", visibility: "hidden" }} />
+                            ) : myId ? (
+                              isFriend ? (
+                                <span style={{ fontSize: "0.72rem", color: "var(--text-dim)", width: "52px", textAlign: "center" }}>✓ Ami</span>
+                              ) : isPending ? (
+                                <span style={{ fontSize: "0.72rem", color: "var(--text-dim)", fontStyle: "italic", width: "52px", textAlign: "center" }}>…</span>
+                              ) : (
+                                <button onClick={() => sendFriendRequest(player.id, player.username)} disabled={addingId === player.id}
+                                  style={{ width: "52px", padding: "3px 0", borderRadius: "20px", border: "1px solid var(--accent)", background: "transparent", color: "var(--accent)", cursor: "pointer", fontFamily: "inherit", fontSize: "0.72rem", textAlign: "center" }}>
+                                  {addingId === player.id ? "..." : "+ Ami"}
+                                </button>
+                              )
+                            ) : <div style={{ width: "52px" }} />}
+                          </div>
+                        </div>
+                      );
+                    })}
+                </>
+              )}
 
               {list.length === 0 && (
                 <div className={styles.empty}>

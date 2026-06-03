@@ -389,10 +389,17 @@ export default function ProfileClient({ user }: { user: User }) {
           <div className={styles.statBox}><div className={styles.statNum}>{wordsCount}</div><div className={styles.statLabel}>✨ Mots</div></div>
         </div>
 
-        <div className={`${styles.advancedStats} ${!isPremium ? styles.blurred : ""}`}>
+        {!isPremium ? (
+          <div style={{ margin: "8px 0", padding: "28px 20px", background: "rgba(232,201,122,0.05)", border: "1px solid rgba(232,201,122,0.2)", borderRadius: "14px", display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center", gap: "10px" }}>
+            <div style={{ fontSize: "2rem" }}>🔒</div>
+            <div style={{ fontSize: "1rem", fontWeight: 700, color: "var(--text)" }}>Stats avancées disponibles avec Premium</div>
+            <p style={{ fontSize: "0.85rem", color: "var(--text-muted)", margin: 0 }}>Courbe XP 30j, assiduité, meilleur jour, mots consultés</p>
+            <a href="/profile" style={{ marginTop: "4px", padding: "8px 20px", borderRadius: "10px", background: "var(--accent)", color: "var(--bg)", fontWeight: 700, textDecoration: "none", fontSize: "0.88rem" }}>Découvrir Premium →</a>
+          </div>
+        ) : (
+        <div className={styles.advancedStats}>
           <div className={styles.advancedTitle}>
             📊 Stats détaillées
-            {!isPremium && <span className={styles.premiumTag}>Premium</span>}
           </div>
 
           {/* ── Grille de stats ── */}
@@ -462,6 +469,7 @@ export default function ProfileClient({ user }: { user: User }) {
             </div>
           )}
         </div>
+        )}
 
         {/* WordPopup pour les mots cliqués dans les stats */}
         {clickedWord && (
