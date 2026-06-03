@@ -51,21 +51,19 @@ export default function Nav() {
       .eq("user_id", userId).order("read_at", { ascending: false });
     if (!reads || reads.length === 0) { setStreak(0); }
     else {
-      // ✅ FIX streak : on compare les dates en heure de Paris
-      const toParisDate = (dateStr: string) => {
-        return new Date(dateStr).toLocaleDateString("fr-FR", { timeZone: "Europe/Paris" });
+      const toParisDateISO = (d: Date) => {
+        const p = new Date(d.toLocaleString("en-US", { timeZone: "Europe/Paris" }));
+        return `${p.getFullYear()}-${String(p.getMonth()+1).padStart(2,"0")}-${String(p.getDate()).padStart(2,"0")}`;
       };
-      const dates = [...new Set(reads.map((d: any) => toParisDate(d.read_at)))];
-      const today = new Date().toLocaleDateString("fr-FR", { timeZone: "Europe/Paris" });
-      const yesterday = new Date(Date.now() - 86400000).toLocaleDateString("fr-FR", { timeZone: "Europe/Paris" });
+      const dates = [...new Set(reads.map((d: any) => toParisDateISO(new Date(d.read_at))))];
+      const today = toParisDateISO(new Date());
+      const yesterday = toParisDateISO(new Date(Date.now() - 86400000));
       if (dates[0] !== today && dates[0] !== yesterday) { setStreak(0); }
       else {
         let s = 1;
         for (let i = 1; i < dates.length; i++) {
-          const a = new Date(reads[i-1].read_at);
-          const b = new Date(reads[i].read_at);
-          const diffDays = Math.round((a.getTime() - b.getTime()) / 86400000);
-          if (diffDays === 1) s++; else break;
+          const diff = (new Date(dates[i-1]).getTime() - new Date(dates[i]).getTime()) / 86400000;
+          if (Math.round(diff) === 1) s++; else break;
         }
         setStreak(s);
       }
