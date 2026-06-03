@@ -116,7 +116,7 @@ export default function ApiDefStats() {
             {/* Colonne gauche — budget */}
             <div style={card}>
               <div style={{ fontSize: "0.72rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.8px", color: "var(--text-dim)", marginBottom: 12 }}>
-                💰 Budget ce mois
+                💰 Budget cumulatif
               </div>
               <Row label="Dépensé"       value={`${costEur.toFixed(3)} €`} />
               <Row label="Restant"       value={`${remainingBudget.toFixed(3)} €`} sub={`/ ${BUDGET_EUR} €`} />
@@ -126,7 +126,7 @@ export default function ApiDefStats() {
               {/* Barre de progression */}
               <div style={{ marginTop: 16 }}>
                 <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.72rem", color: "var(--text-dim)", marginBottom: 6 }}>
-                  <span>Consommation mensuelle</span>
+                  <span>Consommation totale</span>
                   <span style={{ color: barColor, fontWeight: 700 }}>{pct.toFixed(1)} %</span>
                 </div>
                 <div style={{ height: 8, borderRadius: 4, background: "var(--surface2)", overflow: "hidden" }}>
@@ -143,7 +143,7 @@ export default function ApiDefStats() {
               <Row label="Mots en cache"       value={`${cacheTotal}`} sub="définitions sauvegardées" />
               <Row label="Dernier reset"        value={lastReset ?? "Jamais"} />
               <Row label="Coût par appel"       value={`${(EUR_PER_CALL * 100).toFixed(1)} ¢`} sub="€ / définition" />
-              <Row label="Budget total"         value={`${BUDGET_EUR} €`} sub="/ mois" />
+              <Row label="Budget total"         value={`${BUDGET_EUR} €`} />
 
               <div style={{ marginTop: 16, padding: "10px 14px", borderRadius: 10, background: "rgba(232,201,122,0.06)", border: "1px solid rgba(232,201,122,0.2)", fontSize: "0.78rem", color: "var(--text-muted)", lineHeight: 1.5 }}>
                 💡 Chaque définition en cache est <strong style={{ color: "var(--accent)" }}>gratuite</strong> aux prochaines consultations.
