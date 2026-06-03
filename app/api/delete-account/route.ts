@@ -37,13 +37,13 @@ export async function POST() {
       }
     }
 
+    await supabaseAdmin.from("definition_usage").delete().eq("user_id", user.id);
+    await supabaseAdmin.from("story_ratings").delete().eq("user_id", user.id);
+    await supabaseAdmin.from("word_favorites").delete().eq("user_id", user.id);
     await supabaseAdmin.from("words_seen").delete().eq("user_id", user.id);
     await supabaseAdmin.from("stories_read").delete().eq("user_id", user.id);
     await supabaseAdmin.from("friendships").delete().or(`user_id.eq.${user.id},friend_id.eq.${user.id}`);
     await supabaseAdmin.from("profiles").delete().eq("id", user.id);
-    await supabaseAdmin.auth.admin.updateUserById(user.id, {
-      email: `deleted_${user.id}@deleted.lexistory`,
-    });
     await supabaseAdmin.auth.admin.deleteUser(user.id);
 
     return NextResponse.json({ success: true });
