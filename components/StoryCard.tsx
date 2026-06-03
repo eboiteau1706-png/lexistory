@@ -510,11 +510,8 @@ export default function StoryCard({ story }: Props) {
           <span style={{ color: "var(--green)", fontWeight: 600 }}>vert</span>.
         </div>
 
-        <div style={{ textAlign: "right", marginTop: "8px" }}>
-          <button
-            onClick={() => setShowReport(true)}
-            style={{ background: "none", border: "none", color: "var(--text-dim)", cursor: "pointer", fontSize: "0.72rem", fontFamily: "inherit", opacity: 0.6, padding: "4px 0" }}
-          >
+        <div style={{ display: "flex", justifyContent: "flex-end", marginTop: "8px" }}>
+          <button onClick={() => setShowReport(true)} className={styles.reportBtn}>
             🚩 Signaler
           </button>
         </div>
