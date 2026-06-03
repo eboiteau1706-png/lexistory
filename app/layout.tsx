@@ -4,7 +4,6 @@ import Nav from "@/components/Nav";
 import Footer from "@/components/Footer";
 import AdBanner from "@/components/AdBanner";
 import UsernameModal from "@/components/UsernameModal";
-import OnboardingPopup from "@/components/OnboardingPopup";
 import AnnouncementBanner from "@/components/Announcement";
 import CookieBanner from "@/components/CookieBanner";
 import "./globals.css";
@@ -68,7 +67,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className={`${playfair.variable} ${dmSans.variable}`}>
         <Nav />
         <AnnouncementBanner />
-        <OnboardingPopup />
         <UsernameModal />
         {children}
         <AdBanner />

@@ -135,7 +135,92 @@
   margin-bottom: 56px;
 }
 
-/* ── Feature cards ── */
+/* ── How it works grid (6 cards) ── */
+.howGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+}
+
+.howCard {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 24px 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  transition: border-color 0.2s, transform 0.2s;
+}
+
+.howCard:hover {
+  border-color: rgba(232,201,122,0.3);
+  transform: translateY(-2px);
+}
+
+.howIcon { font-size: 1.8rem; }
+
+.howTitle {
+  font-family: var(--font-playfair), serif;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.howDesc {
+  font-size: 0.86rem;
+  color: var(--text-muted);
+  line-height: 1.65;
+  margin: 0;
+}
+
+.limit {
+  display: block;
+  margin-top: 6px;
+  font-size: 0.78rem;
+  color: var(--text-dim);
+  font-style: italic;
+}
+
+/* ── Ranks row ── */
+.ranksRow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-bottom: 20px;
+}
+
+.rankItem {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.rankEmoji { font-size: 1.4rem; }
+
+.rankName {
+  font-size: 0.88rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.rankArrow {
+  font-size: 0.85rem;
+  color: var(--text-dim);
+  margin: 0 4px;
+}
+
+.rankSub {
+  text-align: center;
+  font-size: 0.82rem;
+  color: var(--text-dim);
+  font-style: italic;
+  margin: 0;
+}
+
+/* ── Feature cards (kept for compatibility) ── */
 .grid3 {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -158,9 +243,7 @@
   transform: translateY(-2px);
 }
 
-.cardIcon {
-  font-size: 2rem;
-}
+.cardIcon { font-size: 2rem; }
 
 .cardTitle {
   font-family: var(--font-playfair), serif;
@@ -350,13 +433,16 @@
 @media (max-width: 768px) {
   .hero { padding: 120px 20px 72px; }
   .heroTitle { font-size: 1.85rem; }
+  .howGrid { grid-template-columns: 1fr; }
   .grid3 { grid-template-columns: 1fr; }
   .levelsGrid { grid-template-columns: 1fr; }
   .premiumGrid { grid-template-columns: 1fr; }
   .section { padding: 60px 20px; }
   .heroCtas { flex-direction: column; align-items: center; }
+  .ranksRow { gap: 8px; }
 }
 
 @media (min-width: 769px) and (max-width: 1024px) {
+  .howGrid { grid-template-columns: repeat(2, 1fr); }
   .grid3 { grid-template-columns: repeat(2, 1fr); }
 }
