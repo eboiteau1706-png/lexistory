@@ -251,7 +251,7 @@ export default function AdminOverlay({ story, date, level, dayOffset, todayOffse
           <button style={{ ...navBtn, marginLeft: "4px", fontSize: "0.7rem" }} onClick={() => router.push(`/?level=${level}`)}>↩ Revenir</button>
         )}
         <div style={{ flex: 1 }} />
-        <button style={editBtn} onClick={() => { setEditing(e => !e); setMsg(""); }}>
+        <button style={editBtn} onClick={() => { if (editing) { setEditing(false); setMsg(""); } else { handleOpenEdit(); } }}>
           {editing ? "✕ Fermer" : "✏️ Éditer histoire"}
         </button>
         <button style={editBtn} onClick={openGameModal}>🎮 Éditer jeu</button>
@@ -301,9 +301,8 @@ export default function AdminOverlay({ story, date, level, dayOffset, todayOffse
 
       {/* ── Modale édition jeu ── */}
       {gameModal && (
-        <div onClick={() => setGameModal(false)}
-          style={{ position: "fixed", inset: 0, zIndex: 500, background: "rgba(0,0,0,0.6)", backdropFilter: "blur(4px)", display: "flex", alignItems: "center", justifyContent: "center", padding: "24px" }}>
-          <div onClick={e => e.stopPropagation()}
+        <div style={{ position: "fixed", inset: 0, zIndex: 500, background: "rgba(0,0,0,0.6)", backdropFilter: "blur(4px)", display: "flex", alignItems: "center", justifyContent: "center", padding: "24px" }}>
+          <div
             style={{ background: "var(--surface)", border: "1.5px dashed rgba(212,168,67,0.5)", borderRadius: "16px", padding: "24px", maxWidth: "800px", width: "100%", maxHeight: "90vh", display: "flex", flexDirection: "column", overflow: "hidden" }}>
             {/* Header */}
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px", flexShrink: 0 }}>
