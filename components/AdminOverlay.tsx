@@ -84,24 +84,22 @@ export default function AdminOverlay({ story, date, level, dayOffset, todayOffse
     return `${paris.getFullYear()}-${String(paris.getMonth()+1).padStart(2,"0")}-${String(paris.getDate()).padStart(2,"0")}`;
   }
 
-  // Ouvre l'édition — cherche l'histoire custom pour ce jour ET ce niveau
-  // Si trouvée → pré-remplit, sinon → formulaire vide
+  // Ouvre l'édition — charge l'histoire effective (override Supabase ou rotation statique)
   async function handleOpenEdit() {
     setMsg("");
-    const { data: custom } = await supabase
-      .from("stories_custom")
-      .select("*")
-      .eq("date", date)
-      .eq("level", level)
-      .maybeSingle();
-    if (custom) {
-      setTitle(custom.title ?? "");
-      setCategory(custom.category ?? "");
-      setSource(custom.source ?? "");
-      setReadTime(custom.read_time ?? "3 min de lecture");
-      setParagraphs(Array.isArray(custom.paragraphs) ? custom.paragraphs : [""]);
-    } else {
-      // Aucune histoire pour ce jour/niveau → formulaire vide
+    try {
+      const res = await fetch(`/api/effective-story?date=${date}&level=${encodeURIComponent(level)}`);
+      const data = await res.json();
+      if (data.story) {
+        setTitle(data.story.title);
+        setCategory(data.story.category);
+        setSource(data.story.source);
+        setReadTime(data.story.readTime);
+        setParagraphs(data.story.paragraphs.length ? data.story.paragraphs : [""]);
+      } else {
+        setTitle(""); setCategory(""); setSource(""); setReadTime("3 min de lecture"); setParagraphs([""]);
+      }
+    } catch {
       setTitle(""); setCategory(""); setSource(""); setReadTime("3 min de lecture"); setParagraphs([""]);
     }
     setEditing(true);
