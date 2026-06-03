@@ -136,7 +136,7 @@ export default function Nav() {
   }
 
   const level = getLevel(xp);
-  const { pct, current, needed } = getXpProgress(xp);
+  const { pct } = getXpProgress(xp);
 
   const premiumBadge = isPremium ? (
     <div className={styles.premiumBadge}>
@@ -193,7 +193,7 @@ export default function Nav() {
                   <div className={styles.xpBar}>
                     <div className={styles.xpFill} style={{ width: `${pct}%` }} />
                   </div>
-                  <span className={styles.xpText}>{current}/{needed}</span>
+                  <span className={styles.xpText}>{level.level < 21 ? `${xp}/${level.maxXp - 1}` : `${xp} XP`}</span>
                 </div>
               </div>
             </div>
@@ -218,7 +218,7 @@ export default function Nav() {
               <div className={styles.mobileUserInfo}>
                 <div className={styles.mobileUserLeft}>
                   <div className={styles.mobileUserName}>{level.emoji} {level.name}</div>
-                  <div className={styles.mobileUserXp}>{xp} XP · {current}/{needed}</div>
+                  <div className={styles.mobileUserXp}>{level.level < 21 ? `${xp} / ${level.maxXp - 1} XP` : `${xp} XP — rang max 👑`}</div>
                   <div className={styles.mobileXpBar}>
                     <div className={styles.mobileXpFill} style={{ width: `${pct}%` }} />
                   </div>
