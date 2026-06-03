@@ -3,8 +3,10 @@ import Sidebar from "@/components/Sidebar";
 import LevelSelector from "@/components/LevelSelector";
 import DateLabel from "@/components/DateLabel";
 import AdminOverlay from "@/components/AdminOverlay";
+import LandingPage from "@/components/LandingPage";
 import { STORIES } from "@/lib/stories";
 import { createClient } from "@supabase/supabase-js";
+import { createServerSupabaseClient } from "@/lib/supabase-server";
 import type { Story } from "@/lib/stories";
 
 const supabaseAdmin = createClient(
@@ -17,6 +19,11 @@ export default async function Home({
 }: {
   searchParams: Promise<{ level?: string; day?: string }>;
 }) {
+  // Show landing page for unauthenticated visitors
+  const serverClient = await createServerSupabaseClient();
+  const { data: { session } } = await serverClient.auth.getSession();
+  if (!session) return <LandingPage />;
+
   const params = await searchParams;
   const level  = (params.level as Story["level"]) ?? "Lecteur";
   const dayParam = params.day ? parseInt(params.day) : null;

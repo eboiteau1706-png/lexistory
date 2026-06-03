@@ -54,7 +54,7 @@ export default function OnboardingPopup() {
   const supabase = createClient();
 
   useEffect(() => {
-    if (pathname === "/login" || pathname === "/compte-confirme") return;
+    if (pathname === "/login" || pathname === "/compte-confirme" || pathname === "/") return;
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null);
       if (!session?.user) setShow(true);
