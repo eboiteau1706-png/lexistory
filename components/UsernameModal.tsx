@@ -2,14 +2,16 @@
 import { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
 import { createClient } from "@/lib/supabase";
+import { AVATAR_SEEDS, getAvatarUrl } from "@/lib/avatar";
 import styles from "./UsernameModal.module.css";
 
 export default function UsernameModal() {
   const pathname = usePathname();
-  const [show, setShow]         = useState(false);
-  const [username, setUsername] = useState("");
-  const [saving, setSaving]     = useState(false);
-  const [error, setError]       = useState("");
+  const [show, setShow]                 = useState(false);
+  const [username, setUsername]         = useState("");
+  const [selectedAvatar, setSelectedAvatar] = useState<string>(AVATAR_SEEDS[0]);
+  const [saving, setSaving]             = useState(false);
+  const [error, setError]               = useState("");
   const supabase = createClient();
 
   useEffect(() => {
@@ -23,13 +25,8 @@ export default function UsernameModal() {
     });
   }, [pathname]);
 
-  // Bloque la barre de progression en arrière-plan
   useEffect(() => {
-    if (show) {
-      document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "";
-    }
+    document.body.style.overflow = show ? "hidden" : "";
     return () => { document.body.style.overflow = ""; };
   }, [show]);
 
@@ -43,7 +40,7 @@ export default function UsernameModal() {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session?.user) return;
     const { error } = await supabase.from("profiles")
-      .upsert({ id: session.user.id, username: username.trim() });
+      .upsert({ id: session.user.id, username: username.trim(), avatar_url: selectedAvatar });
     setSaving(false);
     if (error) {
       setError(error.message.includes("unique") ? "Ce pseudo est déjà pris !" : "Erreur, réessaie.");
@@ -59,7 +56,27 @@ export default function UsernameModal() {
       <div className={styles.modal}>
         <div className={styles.emoji}>👋</div>
         <h2 className={styles.title}>Bienvenue sur LexiStory !</h2>
-        <p className={styles.subtitle}>Choisis un pseudo pour apparaître dans le classement.</p>
+        <p className={styles.subtitle}>Choisis ton avatar et ton pseudo.</p>
+
+        {/* Avatar sélectionné en grand */}
+        <div className={styles.avatarPreview}>
+          <img src={getAvatarUrl(selectedAvatar)!} alt="avatar" className={styles.avatarPreviewImg} />
+        </div>
+
+        {/* Grille de sélection */}
+        <div className={styles.avatarGrid}>
+          {AVATAR_SEEDS.map(seed => (
+            <button
+              key={seed}
+              className={`${styles.avatarItem} ${selectedAvatar === seed ? styles.avatarSelected : ""}`}
+              onClick={() => setSelectedAvatar(seed)}
+              type="button"
+            >
+              <img src={getAvatarUrl(seed)!} alt={seed} />
+            </button>
+          ))}
+        </div>
+
         <input
           className={styles.input}
           placeholder="Ton pseudo..."
@@ -71,7 +88,7 @@ export default function UsernameModal() {
         />
         {error && <p className={styles.error}>{error}</p>}
         <button className={styles.btn} onClick={handleSave} disabled={saving || !username.trim()}>
-          {saving ? "Sauvegarde..." : "Choisir ce pseudo →"}
+          {saving ? "Sauvegarde..." : "C'est parti →"}
         </button>
       </div>
     </div>
