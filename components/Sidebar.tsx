@@ -111,7 +111,7 @@ export default function Sidebar() {
   }
 
   const lvl  = getLevel(xp);
-  const { pct, current, needed } = getXpProgress(xp);
+  const { pct } = getXpProgress(xp);
 
   if (!ready) return null;
 
@@ -145,7 +145,11 @@ export default function Sidebar() {
               <div className={styles.xpBarSidebar}>
                 <div className={styles.xpBarFillSidebar} style={{ width: `${pct}%`, background: lvl.color }} />
               </div>
-              <div className={styles.xpLabelSidebar}>{xp} XP · {current}/{needed}</div>
+              <div className={styles.xpLabelSidebar}>
+                {lvl.level < 21
+                  ? `${xp} / ${lvl.maxXp - 1} XP`
+                  : `${xp} XP — rang max 👑`}
+              </div>
             </div>
           </>
         ) : (
