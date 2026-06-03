@@ -7,6 +7,7 @@ interface Props {
   seenWords: Set<string>;
   onWordClick: (word: string) => void;
   groupWords?: Set<string>;
+  disabledWords?: Set<string>;
 }
 
 const PUNCT = /^[«».,;:!?()'"…—–'""'\-]+|[«».,;:!?()'"…—–'""'\-]+$/g;
@@ -32,7 +33,7 @@ function isInert(token: string): boolean {
   return !/[a-zA-ZÀ-ÿ\-]/.test(token);
 }
 
-export default function ClickableText({ text, seenWords, onWordClick, groupWords }: Props) {
+export default function ClickableText({ text, seenWords, onWordClick, groupWords, disabledWords }: Props) {
   // 1) Split sur espaces, 2) pour chaque token sépare ponctuation/lettres adjacentes
   const rawTokens = text.split(/(\s+)/).flatMap(token => {
     if (/^\s+$/.test(token)) return [token];
@@ -114,6 +115,9 @@ export default function ClickableText({ text, seenWords, onWordClick, groupWords
         if (g.isSpace) return g.display;
         // Pas de lettre → span neutre (ponctuation pure, chiffres purs, symboles)
         if (g.isInert) {
+          return <span key={idx}>{g.display}</span>;
+        }
+        if (disabledWords?.has(g.key)) {
           return <span key={idx}>{g.display}</span>;
         }
         const seen = seenWords.has(g.key);

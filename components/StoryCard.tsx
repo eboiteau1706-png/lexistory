@@ -3,7 +3,7 @@ import { useState, useCallback, useEffect, useRef, useMemo } from "react";
 import { createClient } from "@/lib/supabase";
 import { getStoryXp, getStreakBonus } from "@/lib/xp";
 import WordPopup from "./WordPopup";
-import ClickableText, { toPhrase } from "./ClickableText";
+import ClickableText, { toPhrase, toKey } from "./ClickableText";
 import StoryRating from "./StoryRating";
 import { lookup } from "@/lib/dictionary";
 import CategoryModal from "./CategoryModal";
@@ -38,6 +38,7 @@ export default function StoryCard({ story }: Props) {
   const [groupWords, setGroupWords]             = useState<Set<string>>(new Set());
   const [isAdmin, setIsAdmin]                   = useState(false);
   const [wordGroupsList, setWordGroupsList]     = useState<WGroup[]>([]);
+  const [disabledWords, setDisabledWords]       = useState<Set<string>>(new Set());
   const [ctxMenu, setCtxMenu]                   = useState<{x:number;y:number;sel:string}|null>(null);
   const [defModal, setDefModal]                 = useState<{word:string;etym:string;defOrig:string;defSimple:string}|null>(null);
   const [defSaving, setDefSaving]               = useState(false);
@@ -86,7 +87,13 @@ export default function StoryCard({ story }: Props) {
     if (Array.isArray(d.groups)) setWordGroupsList(d.groups);
   };
 
-  useEffect(() => { loadWordGroups(); }, [story.slug]);
+  const loadDisabledWords = async () => {
+    const r = await fetch(`/api/disabled-words?story_id=${story.slug}`);
+    const d = await r.json();
+    if (Array.isArray(d.words)) setDisabledWords(new Set(d.words));
+  };
+
+  useEffect(() => { loadWordGroups(); loadDisabledWords(); }, [story.slug]);
 
   // Pause timer when tab is hidden
   useEffect(() => {
@@ -321,6 +328,32 @@ export default function StoryCard({ story }: Props) {
     showToast("Groupe supprimé ✓");
   }
 
+  async function adminDisableWord(sel: string) {
+    const wordKey = toKey(sel);
+    const token = await getToken();
+    await fetch("/api/disabled-words", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ story_id: story.slug, word_key: wordKey }),
+    });
+    await loadDisabledWords();
+    setCtxMenu(null);
+    showToast("Mot désactivé ✓");
+  }
+
+  async function adminEnableWord(sel: string) {
+    const wordKey = toKey(sel);
+    const token = await getToken();
+    await fetch("/api/disabled-words", {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ story_id: story.slug, word_key: wordKey }),
+    });
+    await loadDisabledWords();
+    setCtxMenu(null);
+    showToast("Mot réactivé ✓");
+  }
+
   async function openDefModal(sel: string) {
     const wordKey = sel.toLowerCase();
     const local = lookup(wordKey);
@@ -429,7 +462,7 @@ export default function StoryCard({ story }: Props) {
         <div className={styles.body} onContextMenu={handleContextMenu}>
           {story.paragraphs.map((p, i) => (
             <p key={i}>
-              <ClickableText text={p} seenWords={seenWords} onWordClick={handleWordClick} groupWords={allGroupWords} />
+              <ClickableText text={p} seenWords={seenWords} onWordClick={handleWordClick} groupWords={allGroupWords} disabledWords={disabledWords} />
             </p>
           ))}
         </div>
@@ -493,6 +526,8 @@ export default function StoryCard({ story }: Props) {
               { icon: "📚", label: "Définir comme groupe", fn: () => adminAddGroup(ctxMenu.sel) },
               { icon: "✂️", label: "Séparer les mots",    fn: () => adminRemoveGroup(ctxMenu.sel) },
               { icon: "✏️", label: "Modifier la définition", fn: () => openDefModal(ctxMenu.sel) },
+              { icon: "🚫", label: "Rendre non cliquable", fn: () => adminDisableWord(ctxMenu.sel) },
+              ...(disabledWords.has(toKey(ctxMenu.sel)) ? [{ icon: "✅", label: "Rendre cliquable", fn: () => adminEnableWord(ctxMenu.sel) }] : []),
             ].map(({ icon, label, fn }) => (
               <button key={label} onClick={fn} style={{ display: "block", width: "100%", textAlign: "left", padding: "8px 14px", background: "none", border: "none", color: "var(--text)", cursor: "pointer", fontFamily: "inherit", fontSize: "0.85rem" }}
                 onMouseEnter={e => (e.currentTarget.style.background = "var(--surface2)")}
