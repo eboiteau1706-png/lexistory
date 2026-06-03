@@ -322,17 +322,24 @@ export default function AdminOverlay({ story, date, level, dayOffset, todayOffse
             ) : gameTab === "preview" ? (
               /* ── Onglet Prévisualisation ── */
               <div style={{ overflowY: "auto", flex: 1, paddingRight: "4px", display: "flex", flexDirection: "column", gap: "14px" }}>
-                {[
-                  { title: "📖 Mot du jour", word: game.word_of_day, def: game.word_of_day_def, etym: game.word_of_day_etym },
-                ].map(s => s.word ? (
-                  <div key={s.title} style={{ background: "var(--surface2)", borderRadius: "10px", padding: "12px 14px" }}>
-                    <div style={{ fontSize: "0.68rem", fontWeight: 700, color: "var(--text-dim)", textTransform: "uppercase", marginBottom: "6px" }}>{s.title}</div>
-                    <div style={{ fontSize: "1.3rem", fontWeight: 700, color: "var(--accent)" }}>{s.word}</div>
-                    {s.etym && <div style={{ fontSize: "0.72rem", color: "var(--text-dim)", fontStyle: "italic" }}>{s.etym}</div>}
-                    {s.def && <div style={{ fontSize: "0.85rem", color: "var(--text-muted)", marginTop: "4px" }}>{s.def}</div>}
+                {/* ── GRATUIT ── */}
+                <div style={{ fontSize: "0.62rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "1.2px", color: "var(--text-dim)", paddingBottom: "5px", borderBottom: "1px solid var(--border)" }}>GRATUIT</div>
+                {game.word_of_day && (
+                  <div style={{ background: "var(--surface2)", borderRadius: "10px", padding: "12px 14px" }}>
+                    <div style={{ fontSize: "0.68rem", fontWeight: 700, color: "var(--text-dim)", textTransform: "uppercase", marginBottom: "6px" }}>📖 Mot du jour</div>
+                    <div style={{ fontSize: "1.3rem", fontWeight: 700, color: "var(--accent)" }}>{game.word_of_day}</div>
+                    {game.word_of_day_etym && <div style={{ fontSize: "0.72rem", color: "var(--text-dim)", fontStyle: "italic" }}>{game.word_of_day_etym}</div>}
+                    {game.word_of_day_def && <div style={{ fontSize: "0.85rem", color: "var(--text-muted)", marginTop: "4px" }}>{game.word_of_day_def}</div>}
                   </div>
-                ) : null)}
-                {/* Définition mystère */}
+                )}
+                {game.anag_word && (
+                  <div style={{ background: "var(--surface2)", borderRadius: "10px", padding: "12px 14px" }}>
+                    <div style={{ fontSize: "0.68rem", fontWeight: 700, color: "var(--text-dim)", textTransform: "uppercase", marginBottom: "6px" }}>🔤 Anagramme</div>
+                    <div style={{ fontSize: "0.82rem", color: "var(--text-dim)", marginBottom: "4px" }}>{game.anag_word_def}</div>
+                    <div style={{ fontFamily: "monospace", fontSize: "1.1rem", letterSpacing: "4px", color: "var(--accent)" }}>{game.anag_word.split("").sort(()=>Math.random()-0.5).join(" ")}</div>
+                    <div style={{ fontSize: "0.72rem", color: "var(--text-dim)", marginTop: "4px" }}>→ réponse : <strong>{game.anag_word}</strong></div>
+                  </div>
+                )}
                 {game.def_word && (
                   <div style={{ background: "var(--surface2)", borderRadius: "10px", padding: "12px 14px" }}>
                     <div style={{ fontSize: "0.68rem", fontWeight: 700, color: "var(--text-dim)", textTransform: "uppercase", marginBottom: "6px" }}>🔍 Définition mystère</div>
@@ -344,16 +351,6 @@ export default function AdminOverlay({ story, date, level, dayOffset, todayOffse
                     </div>
                   </div>
                 )}
-                {/* Anagramme */}
-                {game.anag_word && (
-                  <div style={{ background: "var(--surface2)", borderRadius: "10px", padding: "12px 14px" }}>
-                    <div style={{ fontSize: "0.68rem", fontWeight: 700, color: "var(--text-dim)", textTransform: "uppercase", marginBottom: "6px" }}>🔤 Anagramme</div>
-                    <div style={{ fontSize: "0.82rem", color: "var(--text-dim)", marginBottom: "4px" }}>{game.anag_word_def}</div>
-                    <div style={{ fontFamily: "monospace", fontSize: "1.1rem", letterSpacing: "4px", color: "var(--accent)" }}>{game.anag_word.split("").sort(()=>Math.random()-0.5).join(" ")}</div>
-                    <div style={{ fontSize: "0.72rem", color: "var(--text-dim)", marginTop: "4px" }}>→ réponse : <strong>{game.anag_word}</strong></div>
-                  </div>
-                )}
-                {/* Citation */}
                 {game.cit_text && (
                   <div style={{ background: "var(--surface2)", borderRadius: "10px", padding: "12px 14px" }}>
                     <div style={{ fontSize: "0.68rem", fontWeight: 700, color: "var(--text-dim)", textTransform: "uppercase", marginBottom: "6px" }}>💬 Citation</div>
@@ -365,13 +362,22 @@ export default function AdminOverlay({ story, date, level, dayOffset, todayOffse
                     </div>
                   </div>
                 )}
-                {/* ── Sections Premium ── */}
+                {/* ── PREMIUM ── */}
+                <div style={{ fontSize: "0.62rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "1.2px", color: "rgba(212,168,67,0.65)", paddingBottom: "5px", borderBottom: "1px solid rgba(212,168,67,0.25)", marginTop: "4px" }}>PREMIUM ✨</div>
                 {game.p_word_of_day && (
                   <div style={{ background: "rgba(212,168,67,0.05)", border: "1px solid rgba(212,168,67,0.2)", borderRadius: "10px", padding: "12px 14px" }}>
                     <div style={{ fontSize: "0.68rem", fontWeight: 700, color: "rgba(212,168,67,0.7)", textTransform: "uppercase", marginBottom: "6px" }}>✨ Mot Premium</div>
                     <div style={{ fontSize: "1.3rem", fontWeight: 700, color: "var(--accent)" }}>{game.p_word_of_day}</div>
                     {game.p_word_of_day_etym && <div style={{ fontSize: "0.72rem", color: "var(--text-dim)", fontStyle: "italic" }}>{game.p_word_of_day_etym}</div>}
                     {game.p_word_of_day_def && <div style={{ fontSize: "0.85rem", color: "var(--text-muted)", marginTop: "4px" }}>{game.p_word_of_day_def}</div>}
+                  </div>
+                )}
+                {game.p_anag_word && (
+                  <div style={{ background: "rgba(212,168,67,0.05)", border: "1px solid rgba(212,168,67,0.2)", borderRadius: "10px", padding: "12px 14px" }}>
+                    <div style={{ fontSize: "0.68rem", fontWeight: 700, color: "rgba(212,168,67,0.7)", textTransform: "uppercase", marginBottom: "6px" }}>✨ Anagramme Premium</div>
+                    <div style={{ fontSize: "0.82rem", color: "var(--text-dim)", marginBottom: "4px" }}>{game.p_anag_word_def}</div>
+                    <div style={{ fontFamily: "monospace", fontSize: "1.1rem", letterSpacing: "4px", color: "var(--accent)" }}>{game.p_anag_word.split("").sort(()=>Math.random()-0.5).join(" ")}</div>
+                    <div style={{ fontSize: "0.72rem", color: "var(--text-dim)", marginTop: "4px" }}>→ réponse : <strong>{game.p_anag_word}</strong></div>
                   </div>
                 )}
                 {game.p_def_word && (
@@ -383,14 +389,6 @@ export default function AdminOverlay({ story, date, level, dayOffset, todayOffse
                         <span key={i} style={{ padding: "4px 10px", borderRadius: "6px", background: c===game.p_def_word?"rgba(34,197,94,0.15)":"var(--surface)", border: `1px solid ${c===game.p_def_word?"#22c55e":"var(--border)"}`, color: c===game.p_def_word?"#22c55e":"var(--text-muted)", fontSize: "0.82rem" }}>{c}{c===game.p_def_word?" ✓":""}</span>
                       ))}
                     </div>
-                  </div>
-                )}
-                {game.p_anag_word && (
-                  <div style={{ background: "rgba(212,168,67,0.05)", border: "1px solid rgba(212,168,67,0.2)", borderRadius: "10px", padding: "12px 14px" }}>
-                    <div style={{ fontSize: "0.68rem", fontWeight: 700, color: "rgba(212,168,67,0.7)", textTransform: "uppercase", marginBottom: "6px" }}>✨ Anagramme Premium</div>
-                    <div style={{ fontSize: "0.82rem", color: "var(--text-dim)", marginBottom: "4px" }}>{game.p_anag_word_def}</div>
-                    <div style={{ fontFamily: "monospace", fontSize: "1.1rem", letterSpacing: "4px", color: "var(--accent)" }}>{game.p_anag_word.split("").sort(()=>Math.random()-0.5).join(" ")}</div>
-                    <div style={{ fontSize: "0.72rem", color: "var(--text-dim)", marginTop: "4px" }}>→ réponse : <strong>{game.p_anag_word}</strong></div>
                   </div>
                 )}
                 {game.p_cit_text && (
@@ -408,10 +406,53 @@ export default function AdminOverlay({ story, date, level, dayOffset, todayOffse
             ) : (
               /* ── Onglet Édition ── */
               <div style={{ overflowY: "auto", flex: 1, paddingRight: "4px" }}>
-                {/* Helper to render simple field */}
+                {/* ── GRATUIT ── */}
+                <div style={{ fontSize: "0.62rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "1.2px", color: "var(--text-dim)", marginBottom: "10px", paddingBottom: "5px", borderBottom: "1px solid var(--border)" }}>GRATUIT</div>
                 {[
                   ["📖 Mot du jour", ["word_of_day:Mot", "word_of_day_def:Définition simple", "word_of_day_etym:Étymologie"]],
                   ["🔤 Anagramme", ["anag_word:Mot à anagrammer", "anag_word_def:Définition indice"]],
+                ].map(([section, fields]) => (
+                  <div key={section as string} style={{ marginBottom: "12px" }}>
+                    <div style={{ fontSize: "0.72rem", fontWeight: 700, color: "rgba(212,168,67,0.8)", marginBottom: "4px" }}>{section as string}</div>
+                    {(fields as string[]).map(f => {
+                      const [key, placeholder] = f.split(":");
+                      return <input key={key} style={inp} placeholder={placeholder} value={game[key]??""} onChange={e=>setGame(g=>({...g,[key]:e.target.value}))} />;
+                    })}
+                  </div>
+                ))}
+                {[
+                  { title: "🔍 Définition mystère", fields: ["def_word:Mot à trouver","def_word_def:Définition à afficher"], correct: "def_word", wrongs: ["def_wrong1","def_wrong2","def_wrong3"] },
+                  { title: "💬 Citation (*** = mot manquant)", fields: ["cit_text:Texte avec ***","cit_answer:✓ Réponse correcte"], correct: "cit_answer", wrongs: ["cit_wrong1","cit_wrong2","cit_wrong3"] },
+                ].map(sec => (
+                  <div key={sec.title} style={{ marginBottom: "14px", padding: "10px 12px", background: "rgba(0,0,0,0.15)", borderRadius: "8px" }}>
+                    <div style={{ fontSize: "0.72rem", fontWeight: 700, color: "rgba(212,168,67,0.8)", marginBottom: "6px" }}>{sec.title}</div>
+                    {sec.fields.map(f => {
+                      const [key, placeholder] = f.split(":");
+                      const isCorrectField = placeholder.startsWith("✓");
+                      if (isCorrectField) return (
+                        <div key={key}>
+                          <div style={{ fontSize: "0.72rem", fontWeight: 600, color: "#22c55e", marginBottom: "3px" }}>✓ Bonne réponse</div>
+                          <div style={{ position: "relative" }}>
+                            <input style={{ ...inp, background: "rgba(34,197,94,0.15)", border: "2px solid #22c55e", color: "#86efac", paddingRight: "32px" }}
+                              placeholder="La bonne réponse" value={game[key]??""} onChange={e=>setGame(g=>({...g,[key]:e.target.value}))} />
+                            <span style={{ position: "absolute", right: "10px", top: "50%", transform: "translateY(-50%)", color: "#22c55e", fontWeight: 700, fontSize: "0.9rem", pointerEvents: "none" }}>✓</span>
+                          </div>
+                        </div>
+                      );
+                      return (
+                        <input key={key} style={inp}
+                          placeholder={placeholder} value={game[key]??""} onChange={e=>setGame(g=>({...g,[key]:e.target.value}))} />
+                      );
+                    })}
+                    <div style={{ fontSize: "0.68rem", color: "var(--text-dim)", margin: "4px 0 2px" }}>Mauvais choix (seront mélangés avec la bonne réponse) :</div>
+                    {sec.wrongs.map((k,i) => (
+                      <input key={k} style={{ ...inp, marginBottom: i<2?"6px":undefined }} placeholder={`Mauvais choix ${i+1}`} value={game[k]??""} onChange={e=>setGame(g=>({...g,[k]:e.target.value}))} />
+                    ))}
+                  </div>
+                ))}
+                {/* ── PREMIUM ── */}
+                <div style={{ fontSize: "0.62rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "1.2px", color: "rgba(212,168,67,0.65)", margin: "6px 0 10px", paddingBottom: "5px", borderBottom: "1px solid rgba(212,168,67,0.25)" }}>PREMIUM ✨</div>
+                {[
                   ["✨ Mot Premium", ["p_word_of_day:Mot", "p_word_of_day_def:Définition simple", "p_word_of_day_etym:Étymologie"]],
                   ["✨ Anagramme Premium", ["p_anag_word:Mot", "p_anag_word_def:Définition indice"]],
                 ].map(([section, fields]) => (
@@ -423,14 +464,11 @@ export default function AdminOverlay({ story, date, level, dayOffset, todayOffse
                     })}
                   </div>
                 ))}
-                {/* Sections avec bonne réponse séparée */}
                 {[
-                  { title: "🔍 Définition mystère", fields: ["def_word:Mot à trouver","def_word_def:Définition à afficher"], correct: "def_word", wrongs: ["def_wrong1","def_wrong2","def_wrong3"] },
-                  { title: "💬 Citation (*** = mot manquant)", fields: ["cit_text:Texte avec ***","cit_answer:✓ Réponse correcte"], correct: "cit_answer", wrongs: ["cit_wrong1","cit_wrong2","cit_wrong3"] },
                   { title: "✨ Définition mystère Premium", fields: ["p_def_word:Mot à trouver","p_def_word_def:Définition à afficher"], correct: "p_def_word", wrongs: ["p_def_wrong1","p_def_wrong2","p_def_wrong3"] },
                   { title: "✨ Citation Premium", fields: ["p_cit_text:Texte avec ***","p_cit_answer:✓ Réponse correcte"], correct: "p_cit_answer", wrongs: ["p_cit_wrong1","p_cit_wrong2","p_cit_wrong3"] },
                 ].map(sec => (
-                  <div key={sec.title} style={{ marginBottom: "14px", padding: "10px 12px", background: "rgba(0,0,0,0.15)", borderRadius: "8px" }}>
+                  <div key={sec.title} style={{ marginBottom: "14px", padding: "10px 12px", background: "rgba(212,168,67,0.06)", border: "1px solid rgba(212,168,67,0.15)", borderRadius: "8px" }}>
                     <div style={{ fontSize: "0.72rem", fontWeight: 700, color: "rgba(212,168,67,0.8)", marginBottom: "6px" }}>{sec.title}</div>
                     {sec.fields.map(f => {
                       const [key, placeholder] = f.split(":");
