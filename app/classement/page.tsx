@@ -133,7 +133,6 @@ export default function ClassementPage() {
                 <strong>{list[myRankIndex]?.username ?? "Toi"}</strong>
                 {" · "}
                 <strong>#{myRank}</strong>
-                {!isInTop10 && <span style={{ color: "var(--text-dim)", fontWeight: 400 }}> sur {list.length} joueurs</span>}
               </div>
             )}
 
