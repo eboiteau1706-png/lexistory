@@ -69,19 +69,11 @@ export default function Rangs() {
           <h2 className={styles.sectionTitle}>XP gagnable par jour</h2>
           <div className={styles.xpRules}>
             <div className={styles.xpRule}>
-              <span className={styles.xpIcon}>🆓</span>
+              <span className={styles.xpIcon}>📅</span>
               <div>
-                <div className={styles.xpRuleName}>Gratuit (sans streak)</div>
+                <div className={styles.xpRuleName}>Sans streak</div>
                 <div className={styles.xpRuleVal}>~27 XP/jour max</div>
-                <div className={styles.xpRuleNote}>15 XP histoires + 12 XP jeux</div>
-              </div>
-            </div>
-            <div className={`${styles.xpRule} ${styles.xpRulePremium}`}>
-              <span className={styles.xpIcon}>✨</span>
-              <div>
-                <div className={styles.xpRuleName}>Premium (sans streak)</div>
-                <div className={styles.xpRuleVal}>~27 XP/jour max</div>
-                <div className={styles.xpRuleNote}>15 XP histoires + 12 XP jeux</div>
+                <div className={styles.xpRuleNote}>15 XP histoires + 6 à 12 XP jeux selon résultats</div>
               </div>
             </div>
           </div>
