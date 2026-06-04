@@ -84,7 +84,7 @@ export default async function Home({
             dayOffset={dayParam ?? diffDays}
             todayOffset={diffDays}
           />
-          <StoryCard story={story} />
+          <StoryCard story={story} isToday={dayParam === null || dayParam === diffDays} />
         </div>
         <Sidebar />
       </div>

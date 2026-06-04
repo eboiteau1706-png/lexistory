@@ -10,7 +10,7 @@ import CategoryModal from "./CategoryModal";
 import styles from "./StoryCard.module.css";
 import type { Story } from "@/lib/stories";
 
-interface Props { story: Story; }
+interface Props { story: Story; isToday?: boolean; }
 
 const ADMIN_ID = "0450c58e-35b2-47e6-9600-13db5626e96d";
 interface WGroup { id: string; story_id: string; group_text: string; words: string[]; }
@@ -24,7 +24,7 @@ function toParisDateStr(date: Date): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 }
 
-export default function StoryCard({ story }: Props) {
+export default function StoryCard({ story, isToday = true }: Props) {
   const [seenWords, setSeenWords]               = useState<Set<string>>(new Set());
   const [activeWord, setActiveWord]             = useState<string | null>(null);
   const [userId, setUserId]                     = useState<string | null>(null);
@@ -234,29 +234,33 @@ export default function StoryCard({ story }: Props) {
         : 0;
       const isFirstTodayRead = readsTodayCount <= 1;
 
-      const storyXp = getStoryXp();
-
-      function getStreakPalier(s: number) {
-        if (s >= 30) return 30;
-        if (s >= 10) return 10;
-        if (s >= 5) return 5;
-        if (s >= 3) return 3;
-        return 0;
-      }
-      const palierHier = getStreakPalier(streak - 1);
-      const palierAujourdhui = getStreakPalier(streak);
-      const nouveauPalier = palierAujourdhui > palierHier;
-      const bonusXp = (isFirstTodayRead && nouveauPalier) ? getStreakBonus(streak) : 0;
-      const totalXp = storyXp + bonusXp;
-
-      const { data: profile } = await supabase
-        .from("profiles").select("xp").eq("id", userId).single();
-      const currentXp = profile?.xp ?? 0;
-      await supabase.from("profiles").update({ xp: currentXp + totalXp }).eq("id", userId);
-
       setAlreadyCompleted(true);
-      setXpGained(totalXp);
-      setTimeout(() => setXpGained(null), 3000);
+
+      if (isToday) {
+        const storyXp = getStoryXp();
+
+        function getStreakPalier(s: number) {
+          if (s >= 30) return 30;
+          if (s >= 10) return 10;
+          if (s >= 5) return 5;
+          if (s >= 3) return 3;
+          return 0;
+        }
+        const palierHier = getStreakPalier(streak - 1);
+        const palierAujourdhui = getStreakPalier(streak);
+        const nouveauPalier = palierAujourdhui > palierHier;
+        const bonusXp = (isFirstTodayRead && nouveauPalier) ? getStreakBonus(streak) : 0;
+        const totalXp = storyXp + bonusXp;
+
+        const { data: profile } = await supabase
+          .from("profiles").select("xp").eq("id", userId).single();
+        const currentXp = profile?.xp ?? 0;
+        await supabase.from("profiles").update({ xp: currentXp + totalXp }).eq("id", userId);
+
+        setXpGained(totalXp);
+        setTimeout(() => setXpGained(null), 3000);
+      }
+
       window.dispatchEvent(new CustomEvent("lexistory:story-read"));
     };
 
