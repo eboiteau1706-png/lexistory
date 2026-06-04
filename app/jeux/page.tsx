@@ -689,7 +689,7 @@ if (data.p_anag_done === true) {
         <div className={styles.premiumCta} style={{ flexDirection: "column", alignItems: "center", textAlign: "center", padding: "32px 20px" }}>
           <div style={{ fontSize: "2.2rem", marginBottom: "8px" }}>🔒</div>
           <div style={{ fontSize: "1rem", fontWeight: 700, color: "var(--text)", marginBottom: "8px" }}>Disponible avec Premium</div>
-          <p style={{ margin: "0 0 16px" }}>4 jeux exclusifs · +12 XP par jour · accès illimité</p>
+          <p style={{ margin: "0 0 16px" }}>4 jeux exclusifs pour s&apos;entraîner · sans XP supplémentaire</p>
           <a href="/profile" className={styles.premiumCtaBtn}>Découvrir Premium →</a>
         </div>
       ) : (
