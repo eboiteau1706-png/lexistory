@@ -506,12 +506,7 @@ export default function ProfileClient({ user }: { user: User }) {
           </div>
         ) : isPremium && !stripeCustomerId ? (
           <div className={styles.portalInfo}>🎁 Tu bénéficies du Premium à vie — offert par LexiStory !</div>
-        ) : (
-          <div className={styles.plan}>
-            <span className={styles.planBadge}>Plan Gratuit</span>
-            <button className={styles.upgradeBtn} onClick={handlePremium}>Passer Premium — 1,99€/mois ✨</button>
-          </div>
-        )}
+        ) : null}
 
         <div className={styles.linksRow}>
           <a href="/classement" className={styles.linkBtn}>🏆 Classement →</a>
