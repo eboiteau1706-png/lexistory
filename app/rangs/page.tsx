@@ -22,24 +22,24 @@ export default function Rangs() {
               <span className={styles.xpIcon}>📖</span>
               <div>
                 <div className={styles.xpRuleName}>Lire une histoire</div>
-                <div className={styles.xpRuleVal}>+3 XP (gratuit et Premium)</div>
-                <div className={styles.xpRuleNote}>3 histoires disponibles par jour — jusqu&apos;à +9 XP/jour</div>
+                <div className={styles.xpRuleVal}>+5 XP (gratuit et Premium)</div>
+                <div className={styles.xpRuleNote}>3 histoires disponibles par jour — jusqu&apos;à +15 XP/jour</div>
               </div>
             </div>
             <div className={styles.xpRule}>
               <span className={styles.xpIcon}>🎮</span>
               <div>
                 <div className={styles.xpRuleName}>Mini-jeux du jour</div>
-                <div className={styles.xpRuleVal}>+3 XP par jeu réussi (gratuit et Premium)</div>
-                <div className={styles.xpRuleNote}>Définition mystère, anagramme, citation — jusqu&apos;à +9 XP/jour</div>
+                <div className={styles.xpRuleVal}>+4 XP par jeu réussi (gratuit et Premium)</div>
+                <div className={styles.xpRuleNote}>Définition mystère, anagramme, citation — jusqu&apos;à +12 XP/jour</div>
               </div>
             </div>
             <div className={styles.xpRule}>
               <span className={styles.xpIcon}>🎮✨</span>
               <div>
                 <div className={styles.xpRuleName}>Mini-jeux Premium exclusifs</div>
-                <div className={styles.xpRuleVal}><span className={styles.premium}>0 XP (Premium)</span></div>
-                <div className={styles.xpRuleNote}>4 jeux bonus pour s&apos;entraîner — aucun XP accordé</div>
+                <div className={styles.xpRuleVal}><span className={styles.premium}>+4 XP par jeu réussi (Premium)</span></div>
+                <div className={styles.xpRuleNote}>3 jeux exclusifs supplémentaires — jusqu&apos;à +12 XP/jour</div>
               </div>
             </div>
             <div className={styles.xpRule}>
@@ -80,16 +80,16 @@ export default function Rangs() {
               <span className={styles.xpIcon}>🆓</span>
               <div>
                 <div className={styles.xpRuleName}>Gratuit (sans streak)</div>
-                <div className={styles.xpRuleVal}>~18 XP/jour max</div>
-                <div className={styles.xpRuleNote}>9 XP histoires + 9 XP jeux</div>
+                <div className={styles.xpRuleVal}>~27 XP/jour max</div>
+                <div className={styles.xpRuleNote}>15 XP histoires + 12 XP jeux</div>
               </div>
             </div>
             <div className={`${styles.xpRule} ${styles.xpRulePremium}`}>
               <span className={styles.xpIcon}>✨</span>
               <div>
                 <div className={styles.xpRuleName}>Premium (sans streak)</div>
-                <div className={styles.xpRuleVal}>~18 XP/jour max</div>
-                <div className={styles.xpRuleNote}>9 XP histoires + 9 XP jeux (même que gratuit)</div>
+                <div className={styles.xpRuleVal}>~39 XP/jour max</div>
+                <div className={styles.xpRuleNote}>15 XP histoires + 12 XP jeux + 12 XP jeux Premium</div>
               </div>
             </div>
           </div>

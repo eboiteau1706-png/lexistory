@@ -11,11 +11,11 @@ function getParisDate(): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 }
 
-// Quota selon rang (seuils XP de lib/xp.ts)
+// Quota selon rang (seuils XP v3)
 function getQuotaByXp(xp: number): number {
   if (xp >= 2500) return 8; // Légende I–III
-  if (xp >= 1200) return 5; // Sage I → Maître III
-  if (xp >= 400)  return 4; // Lecteur I → Érudit III
+  if (xp >= 900)  return 5; // Sage I → Maître III
+  if (xp >= 250)  return 4; // Lecteur I → Érudit III
   return 3;                  // Novice I → Apprenti III
 }
 

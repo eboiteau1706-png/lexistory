@@ -258,7 +258,7 @@ export default function WordPopup({ word, seenCount, storyId, onDefUsed, onClose
                   Tu as atteint ta limite de <strong>{defQuota}</strong> définition{defQuota > 1 ? "s" : ""} pour cette histoire aujourd&apos;hui.<br /><br />
                   <span style={{ fontSize: "0.78rem", color: "var(--text-dim)" }}>
                     💡 Monte en rang pour en débloquer plus :<br />
-                    📖 Lecteur I → 4/jour · 🦉 Sage I → 5/jour · 👑 Légende → 8/jour
+                    📖 Lecteur I (250 XP) → 4/jour · 🦉 Sage I (900 XP) → 5/jour · 👑 Légende (2500 XP) → 8/jour
                   </span>
                 </div>
               </div>
