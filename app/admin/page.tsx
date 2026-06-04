@@ -71,6 +71,9 @@ export default function AdminPage() {
   const [postingAnn, setPostingAnn] = useState(false);
   const [showResetConfirm, setShowResetConfirm] = useState(false);
   const [showPremiumAll, setShowPremiumAll] = useState(false);
+  const [showResetStats, setShowResetStats] = useState(false);
+  const [showRemovePremiumAll, setShowRemovePremiumAll] = useState(false);
+  const [showResetPlayer, setShowResetPlayer] = useState(false);
   const [globalAction, setGlobalAction] = useState("");
 
   useEffect(() => {
@@ -300,6 +303,41 @@ export default function AdminPage() {
     setSaving(false);
   }
 
+  async function handleResetAllStats() {
+    setSaving(true);
+    const tables = ["stories_read","words_seen","word_favorites","definition_usage","game_completions","story_ratings"];
+    for (const t of tables) await supabase.from(t).delete().neq("user_id", ADMIN_ID);
+    await supabase.from("profiles").update({ xp: 0 }).neq("id", ADMIN_ID);
+    setProfiles(prev => prev.map(p => p.id !== ADMIN_ID ? { ...p, xp: 0 } : p));
+    setShowResetStats(false);
+    setGlobalAction("✅ Toutes les stats remises à zéro !");
+    setSaving(false);
+  }
+
+  async function handleRemovePremiumAll() {
+    setSaving(true);
+    await supabase.from("profiles").update({ is_premium: false }).neq("id", ADMIN_ID);
+    setProfiles(prev => prev.map(p => p.id !== ADMIN_ID ? { ...p, is_premium: false } : p));
+    setShowRemovePremiumAll(false);
+    setGlobalAction("✅ Premium retiré à tous les joueurs !");
+    setSaving(false);
+  }
+
+  async function handleResetPlayer() {
+    if (!selected) return;
+    setSaving(true);
+    const tables = ["stories_read","words_seen","word_favorites","definition_usage","game_completions","story_ratings"];
+    for (const t of tables) await supabase.from(t).delete().eq("user_id", selected.id);
+    await adminFetch(selected.id, { xp: 0, username: null, avatar_url: null, is_premium: false });
+    setProfiles(prev => prev.map(p => p.id === selected.id ? { ...p, xp: 0, username: null, is_premium: false } : p));
+    setSelected(prev => prev ? { ...prev, xp: 0, username: null, is_premium: false } : null);
+    setEditXp("0"); setEditUsername(""); setEditPremium(false);
+    setPlayerStories([]); setPlayerWords([]); setPlayerGames([]);
+    setShowResetPlayer(false);
+    setMsg("✅ Joueur réinitialisé — devra rechoisir pseudo et avatar !");
+    setSaving(false);
+  }
+
   async function handlePostAnnouncement() {
     if (!newMessage.trim()) return;
     setPostingAnn(true);
@@ -489,6 +527,7 @@ export default function AdminPage() {
                     <div className={styles.quickActions}>
                       <button className={styles.quickBtn} onClick={handleGivePremiumLifetime} disabled={saving}>🎁 Premium à vie</button>
                       <button className={styles.quickBtn} onClick={handleResetStreak} disabled={saving}>🔄 Reset streak</button>
+                      <button className={`${styles.quickBtn} ${styles.quickBtnDanger}`} onClick={() => setShowResetPlayer(true)} disabled={saving}>♻️ Reset complet</button>
                       <button className={`${styles.quickBtn} ${styles.quickBtnDanger}`} onClick={handleBan} disabled={saving}>🗑️ Supprimer</button>
                     </div>
                   </div>
@@ -623,7 +662,9 @@ export default function AdminPage() {
         <div className={styles.actionsGrid}>
           {globalAction && <div className={styles.globalMsg}>{globalAction}</div>}
           <div className={styles.actionCard}><div className={styles.actionIcon}>🔄</div><div className={styles.actionTitle}>Reset tous les XP</div><div className={styles.actionDesc}>Remet l'XP de tous les joueurs à 0. Irréversible.</div><button className={styles.actionBtnDanger} onClick={() => setShowResetConfirm(true)}>Exécuter</button></div>
+          <div className={styles.actionCard}><div className={styles.actionIcon}>🧹</div><div className={styles.actionTitle}>Reset toutes les stats</div><div className={styles.actionDesc}>Supprime histoires lues, mots vus, favoris, jeux, XP pour tous. Irréversible.</div><button className={styles.actionBtnDanger} onClick={() => setShowResetStats(true)}>Exécuter</button></div>
           <div className={styles.actionCard}><div className={styles.actionIcon}>✨</div><div className={styles.actionTitle}>Premium à tous</div><div className={styles.actionDesc}>Donne le statut Premium à tous les joueurs actuels.</div><button className={styles.actionBtn} onClick={() => setShowPremiumAll(true)}>Exécuter</button></div>
+          <div className={styles.actionCard}><div className={styles.actionIcon}>🚫</div><div className={styles.actionTitle}>Enlever Premium à tous</div><div className={styles.actionDesc}>Retire le statut Premium de tous les joueurs. Irréversible.</div><button className={styles.actionBtnDanger} onClick={() => setShowRemovePremiumAll(true)}>Exécuter</button></div>
           <div className={styles.actionCard}><div className={styles.actionIcon}>📥</div><div className={styles.actionTitle}>Exporter les joueurs</div><div className={styles.actionDesc}>Télécharge un fichier CSV avec tous les comptes.</div><button className={styles.actionBtn} onClick={handleExportCSV}>Télécharger CSV</button></div>
           <div className={styles.actionCard}><div className={styles.actionIcon}>🔃</div><div className={styles.actionTitle}>Actualiser les stats</div><div className={styles.actionDesc}>Recharge toutes les statistiques du dashboard.</div><button className={styles.actionBtn} onClick={() => { loadStats(); loadProfiles(); setGlobalAction("✅ Stats actualisées !"); }}>Actualiser</button></div>
         </div>
@@ -651,6 +692,45 @@ export default function AdminPage() {
             <div className={styles.modalBtns}>
               <button className={styles.cancelBtn} onClick={() => setShowPremiumAll(false)}>Annuler</button>
               <button className={styles.confirmBtn} onClick={handlePremiumAll} disabled={saving}>{saving ? "..." : "Confirmer"}</button>
+            </div>
+          </div>
+        </div>
+      )}
+      {showResetStats && (
+        <div className={styles.overlay} onClick={() => setShowResetStats(false)}>
+          <div className={styles.modal} onClick={e => e.stopPropagation()}>
+            <div style={{ fontSize: "2rem" }}>🧹</div>
+            <h3>Reset toutes les stats ?</h3>
+            <p>Histoires lues, mots vus, favoris, jeux joués et XP remis à zéro pour TOUS les joueurs. Irréversible.</p>
+            <div className={styles.modalBtns}>
+              <button className={styles.cancelBtn} onClick={() => setShowResetStats(false)}>Annuler</button>
+              <button className={styles.confirmBtn} onClick={handleResetAllStats} disabled={saving}>{saving ? "..." : "Confirmer"}</button>
+            </div>
+          </div>
+        </div>
+      )}
+      {showRemovePremiumAll && (
+        <div className={styles.overlay} onClick={() => setShowRemovePremiumAll(false)}>
+          <div className={styles.modal} onClick={e => e.stopPropagation()}>
+            <div style={{ fontSize: "2rem" }}>🚫</div>
+            <h3>Enlever Premium à tous ?</h3>
+            <p>Tous les joueurs reviendront au plan gratuit. Irréversible.</p>
+            <div className={styles.modalBtns}>
+              <button className={styles.cancelBtn} onClick={() => setShowRemovePremiumAll(false)}>Annuler</button>
+              <button className={styles.confirmBtn} onClick={handleRemovePremiumAll} disabled={saving}>{saving ? "..." : "Confirmer"}</button>
+            </div>
+          </div>
+        </div>
+      )}
+      {showResetPlayer && selected && (
+        <div className={styles.overlay} onClick={() => setShowResetPlayer(false)}>
+          <div className={styles.modal} onClick={e => e.stopPropagation()}>
+            <div style={{ fontSize: "2rem" }}>♻️</div>
+            <h3>Reset complet de {selected.username || "ce joueur"} ?</h3>
+            <p>Pseudo, avatar, XP, histoires, mots, favoris, jeux — tout sera effacé. Le joueur devra rechoisir pseudo et avatar à la prochaine connexion.</p>
+            <div className={styles.modalBtns}>
+              <button className={styles.cancelBtn} onClick={() => setShowResetPlayer(false)}>Annuler</button>
+              <button className={styles.confirmBtn} onClick={handleResetPlayer} disabled={saving}>{saving ? "..." : "Confirmer"}</button>
             </div>
           </div>
         </div>
