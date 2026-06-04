@@ -30,8 +30,8 @@ export default function Rangs() {
               <span className={styles.xpIcon}>🎮</span>
               <div>
                 <div className={styles.xpRuleName}>Mini-jeux du jour</div>
-                <div className={styles.xpRuleVal}>+4 XP par jeu réussi (gratuit et Premium)</div>
-                <div className={styles.xpRuleNote}>Définition mystère, anagramme, citation — jusqu&apos;à +12 XP/jour</div>
+                <div className={styles.xpRuleVal}>+4 XP si réussi · +2 XP si raté (gratuit et Premium)</div>
+                <div className={styles.xpRuleNote}>Définition mystère, anagramme, citation — entre +6 et +12 XP/jour</div>
               </div>
             </div>
             <div className={styles.xpRule}>

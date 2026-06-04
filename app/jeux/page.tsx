@@ -426,7 +426,7 @@ if (data.p_anag_done === true) {
     setDefAnswer(choice);
     if (userId) saveToSupabase({ def_answer: choice });
     else localStorage.setItem(getLocalKeys(todayStr).defKey, choice);
-    if (choice === defWord.word) addXp(4);
+    if (choice === defWord.word) addXp(4); else addXp(2);
   }
 
   function handleAnagClick(letter: Letter) {
@@ -446,13 +446,14 @@ if (data.p_anag_done === true) {
     setAnagResult(correct);
     if (userId) saveToSupabase({ anag_done: correct });
     else localStorage.setItem(getLocalKeys(todayStr).anagKey, correct.toString());
-    if (correct) addXp(4);
+    if (correct) addXp(4); else addXp(2);
   }
   function handleAnagSkip() {
     if (anagResult !== null) return;
     setAnagResult(false);
     if (userId) saveToSupabase({ anag_done: false });
     else localStorage.setItem(getLocalKeys(todayStr).anagKey, "false");
+    addXp(2);
   }
 
   function handleCitAnswer(choice: string) {
@@ -460,7 +461,7 @@ if (data.p_anag_done === true) {
     setCitAnswer(choice);
     if (userId) saveToSupabase({ cit_answer: choice });
     else localStorage.setItem(getLocalKeys(todayStr).citKey, choice);
-    if (choice === citation.answer) addXp(4);
+    if (choice === citation.answer) addXp(4); else addXp(2);
   }
 
   function handlePDefAnswer(choice: string) {
@@ -595,7 +596,7 @@ if (data.p_anag_done === true) {
           {defAnswer && (
             <>
               <div className={defAnswer === defWord.word ? styles.resultOk : styles.resultKo}>
-                {defAnswer === defWord.word ? "✅ Bravo ! +4 XP" : `❌ C'était : ${defWord.word}`}
+                {defAnswer === defWord.word ? "✅ Bravo ! +4 XP" : `❌ C'était : ${defWord.word} · +2 XP`}
               </div>
               <div style={{ fontSize: "0.72rem", color: "var(--text-dim)", marginTop: "6px", fontStyle: "italic" }}>
                 Clique sur un mot pour voir sa définition
@@ -636,8 +637,8 @@ if (data.p_anag_done === true) {
           ) : (
             <>
               {!anagResult && (
-                <div className={styles.resultOk} style={{ marginBottom: 8 }}>
-                  ✅ La réponse était : <strong>{anagWord.word}</strong>
+                <div className={styles.resultKo} style={{ marginBottom: 8 }}>
+                  ❌ La réponse était : <strong>{anagWord.word}</strong> · +2 XP
                 </div>
               )}
               {anagResult && <div className={styles.resultOk}>✅ Bravo ! +4 XP</div>}
@@ -672,7 +673,7 @@ if (data.p_anag_done === true) {
           </div>
           {citAnswer && (
             <div className={citAnswer === citation.answer ? styles.resultOk : styles.resultKo}>
-              {citAnswer === citation.answer ? "✅ Bravo ! +4 XP" : `❌ C'était : ${citation.answer}`}
+              {citAnswer === citation.answer ? "✅ Bravo ! +4 XP" : `❌ C'était : ${citation.answer} · +2 XP`}
             </div>
           )}
           {!userId && <div className={styles.loginHint}>Connecte-toi pour gagner des XP !</div>}
