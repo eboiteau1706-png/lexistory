@@ -62,21 +62,20 @@ export function getXpProgress(xp: number): { current: number; needed: number; pc
   return { current, needed, pct };
 }
 
-export function getStreakBonus(streak: number, isPremium: boolean): number {
-  let bonus = 0;
-  if (streak >= 30) bonus = 50;
-  else if (streak >= 10) bonus = 25;
-  else if (streak >= 5)  bonus = 15;
-  else if (streak >= 3)  bonus = 10;
-  return isPremium ? Math.round(bonus * 1.5) : bonus;
+export function getStreakBonus(streak: number): number {
+  if (streak >= 30) return 50;
+  if (streak >= 10) return 25;
+  if (streak >= 5)  return 15;
+  if (streak >= 3)  return 10;
+  return 0;
 }
 
-export function getStoryXp(isPremium: boolean): number {
-  return isPremium ? 4 : 3;
+export function getStoryXp(): number {
+  return 3;
 }
 
-export function getGameXp(isPremium: boolean): number {
-  return isPremium ? 4 : 3;
+export function getGameXp(): number {
+  return 3;
 }
 
 export function getPremiumGameXp(): number {

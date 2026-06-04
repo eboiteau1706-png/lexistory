@@ -234,7 +234,7 @@ export default function StoryCard({ story }: Props) {
         : 0;
       const isFirstTodayRead = readsTodayCount <= 1;
 
-      const storyXp = getStoryXp(isPremium);
+      const storyXp = getStoryXp();
 
       function getStreakPalier(s: number) {
         if (s >= 30) return 30;
@@ -246,7 +246,7 @@ export default function StoryCard({ story }: Props) {
       const palierHier = getStreakPalier(streak - 1);
       const palierAujourdhui = getStreakPalier(streak);
       const nouveauPalier = palierAujourdhui > palierHier;
-      const bonusXp = (isFirstTodayRead && nouveauPalier) ? getStreakBonus(streak, isPremium) : 0;
+      const bonusXp = (isFirstTodayRead && nouveauPalier) ? getStreakBonus(streak) : 0;
       const totalXp = storyXp + bonusXp;
 
       const { data: profile } = await supabase
@@ -561,7 +561,7 @@ export default function StoryCard({ story }: Props) {
 
       {xpGained !== null && (
         <div className={styles.xpPopup}>
-          +{xpGained} XP ✨{isPremium ? " (x1.5 Premium)" : ""}
+          +{xpGained} XP ✨
         </div>
       )}
 

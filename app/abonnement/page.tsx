@@ -22,7 +22,7 @@ export default function Abonnement() {
           <ul>
             <li>✅ <strong>Définitions illimitées</strong> — plus de limite de 3 définitions par histoire par jour</li>
             <li>✅ <strong>Histoires passées</strong> — accès à toutes les histoires publiées depuis le lancement</li>
-            <li>✅ <strong>Boost XP ×1,5</strong> — +4 XP par histoire lue au lieu de 3</li>
+            
             <li>✅ <strong>Statistiques avancées</strong> — rang, record de série, assiduité</li>
             <li>✅ <strong>Jeux exclusifs</strong> — 4 mini-jeux supplémentaires par jour (+12 XP)</li>
           </ul>

@@ -27,7 +27,7 @@ export default function CGV() {
           <p>LexiStory propose un abonnement <strong>Premium</strong> donnant accès à des fonctionnalités supplémentaires sur le site lexistory.fr, notamment :</p>
           <ul>
             <li>Accès aux histoires passées</li>
-            <li>Boost XP ×1,5 sur toutes les activités</li>
+            
             <li>Statistiques avancées (classement, record streak, assiduité)</li>
             <li>4 mini-jeux Premium exclusifs quotidiens</li>
           </ul>

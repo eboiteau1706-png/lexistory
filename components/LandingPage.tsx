@@ -167,7 +167,7 @@ export default function LandingPage() {
               <li>Tout le gratuit, plus…</li>
               <li>Définitions illimitées</li>
               <li>Accès à toutes les histoires passées</li>
-              <li>Boost XP ×1,5 sur toutes les activités</li>
+              <li>4 mini-jeux exclusifs supplémentaires (+9 XP/jour)</li>
               <li>4 mini-jeux exclusifs supplémentaires (+12 XP/jour)</li>
               <li>Stats avancées dans le profil</li>
             </ul>

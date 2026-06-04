@@ -35,7 +35,7 @@ export default function CGU() {
           <p>LexiStory propose deux niveaux d&apos;accès :</p>
           <ul>
             <li><strong>Gratuit :</strong> 1 histoire par jour, 3 définitions de mots par histoire par jour, statistiques de base, classement global, jeux quotidiens standards</li>
-            <li><strong>Premium :</strong> définitions illimitées, accès à toutes les histoires passées, boost XP ×1,5, statistiques avancées, jeux exclusifs supplémentaires — <strong>1,99€ TTC / mois</strong></li>
+            <li><strong>Premium :</strong> définitions illimitées, accès à toutes les histoires passées, statistiques avancées, jeux exclusifs supplémentaires — <strong>1,99€ TTC / mois</strong></li>
           </ul>
         </section>
 

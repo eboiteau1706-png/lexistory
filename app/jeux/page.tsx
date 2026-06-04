@@ -412,7 +412,7 @@ if (data.p_anag_done === true) {
 
   async function addXp(amount: number) {
     if (!userId) return;
-    const bonus = isPremium ? Math.round(amount * 1.5) : amount;
+    const bonus = amount;
     const { data } = await supabase.from("profiles").select("xp").eq("id", userId).single();
     await supabase.from("profiles").update({ xp: (data?.xp ?? 0) + bonus, last_active_at: new Date().toISOString() }).eq("id", userId);
     setXpGained(bonus);
