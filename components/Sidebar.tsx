@@ -176,23 +176,39 @@ export default function Sidebar() {
               {historyItems.map(({ dayNum, story: s }, i) => {
                 const isToday     = i === 0;
                 const isYesterday = i === 1;
-                const isFree      = isToday || isYesterday; // J-1 accessible à tous
+                const isFree      = isToday || isYesterday;
                 return (
-                  <button
-                    key={s.slug}
-                    className={`${styles.historyItem} ${isToday ? styles.historyItemActive : ""} ${!isPremium && !isFree ? styles.historyItemLocked : ""}`}
-                    onClick={() => {
-                      if (!isPremium && !isFree) { setShowPremiumPopup(true); return; }
-                      router.push(`/?level=${level}&day=${dayNum}`);
-                    }}
-                  >
-                    <span className={styles.historyDot} />
-                    <div className={styles.historyContent}>
-                      <span className={styles.historyDay}>{dayLabel(dayNum)}</span>
-                      <span className={styles.historyTitle}>{s.title}</span>
-                    </div>
-                    {!isPremium && !isFree && <span className={styles.lockIcon}>🔒</span>}
-                  </button>
+                  <div key={s.slug}>
+                    <button
+                      className={`${styles.historyItem} ${isToday ? styles.historyItemActive : ""} ${!isPremium && !isFree ? styles.historyItemLocked : ""}`}
+                      onClick={() => {
+                        if (!isPremium && !isFree) { setShowPremiumPopup(true); return; }
+                        router.push(`/?level=${level}&day=${dayNum}`);
+                      }}
+                    >
+                      <span className={styles.historyDot} />
+                      <div className={styles.historyContent}>
+                        <span className={styles.historyDay}>{dayLabel(dayNum)}</span>
+                        <span className={styles.historyTitle}>{s.title}</span>
+                      </div>
+                      {isYesterday && !isPremium && (
+                        <span style={{ fontSize: "0.6rem", padding: "2px 6px", borderRadius: "50px", background: "rgba(232,201,122,0.15)", border: "1px solid rgba(232,201,122,0.3)", color: "var(--accent)", whiteSpace: "nowrap", marginLeft: "auto", flexShrink: 0 }}>
+                          Accès gratuit
+                        </span>
+                      )}
+                      {!isPremium && !isFree && (
+                        <span style={{ fontSize: "0.62rem", color: "var(--text-dim)", marginLeft: "auto", flexShrink: 0, display: "flex", alignItems: "center", gap: "3px" }}>
+                          🔒 Premium
+                        </span>
+                      )}
+                    </button>
+                    {isYesterday && !isPremium && (
+                      <div style={{ fontSize: "0.64rem", color: "var(--text-dim)", fontStyle: "italic", padding: "2px 10px 4px", lineHeight: 1.5 }}>
+                        Hier est accessible gratuitement.{" "}
+                        <span style={{ color: "var(--accent)", fontStyle: "normal" }}>Premium</span> débloque tout l&apos;historique.
+                      </div>
+                    )}
+                  </div>
                 );
               })}
             </div>
