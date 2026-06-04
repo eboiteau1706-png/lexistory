@@ -45,11 +45,16 @@ export default function ApiDefStats() {
 
   const loadData = () => {
     Promise.all([
-      // Persistent counter — no month filter, never auto-resets
       supabase.from("api_usage").select("id, call_count").limit(1).maybeSingle(),
       supabase.from("definitions_cache").select("word_key", { count: "exact", head: true }),
     ]).then(([usage, cache]) => {
-      setData({ callCount: usage.data?.call_count ?? 0, cacheTotal: cache.count ?? 0 });
+      const realCount = cache.count ?? 0;
+      const storedCount = usage.data?.call_count ?? 0;
+      // Sync call_count avec le cache si décalage (le cache est la source de vérité)
+      if (usage.data && realCount > storedCount) {
+        supabase.from("api_usage").update({ call_count: realCount }).eq("id", usage.data.id);
+      }
+      setData({ callCount: realCount, cacheTotal: realCount });
       setLoading(false);
     });
   };
@@ -71,12 +76,13 @@ export default function ApiDefStats() {
     setResetting(false);
   }
 
-  const callCount      = data?.callCount  ?? 0;
-  const cacheTotal     = data?.cacheTotal ?? 0;
-  const costEur        = callCount * EUR_PER_CALL;
+  // cacheTotal est la source de vérité — chaque entrée cache = 1 appel API réel
+  const cacheTotal      = data?.cacheTotal ?? 0;
+  const callCount       = Math.max(data?.callCount ?? 0, cacheTotal); // prend le max pour affichage cohérent
+  const costEur         = cacheTotal * EUR_PER_CALL;
   const remainingBudget = Math.max(0, BUDGET_EUR - costEur);
-  const remainingCalls  = Math.max(0, CAP - callCount);
-  const pct             = Math.min(100, (callCount / CAP) * 100);
+  const remainingCalls  = Math.max(0, CAP - cacheTotal);
+  const pct             = Math.min(100, (cacheTotal / CAP) * 100);
   const barColor        = pct < 70 ? "#22c55e" : pct < 90 ? "#f97316" : "#ef4444";
 
 
