@@ -34,7 +34,7 @@ export default function LandingPage() {
             <div className={styles.howTitle}>Lis une histoire par jour</div>
             <p className={styles.howDesc}>
               Une nouvelle histoire renouvelée à minuit, en trois niveaux : Curieux, Lecteur et Érudit.
-              Chaque histoire lue rapporte <strong>+3 XP</strong>.
+              Chaque histoire lue rapporte <strong>+5 XP</strong>.
             </p>
           </div>
           <div className={styles.howCard}>
@@ -51,7 +51,7 @@ export default function LandingPage() {
             <div className={styles.howTitle}>4 jeux quotidiens</div>
             <p className={styles.howDesc}>
               Mot du jour, Anagramme, Définition mystère et Citation à compléter.
-              Jusqu&apos;à <strong>+9 XP / jour</strong>. Les abonnés Premium débloquent 4 jeux exclusifs supplémentaires.
+              Jusqu&apos;à <strong>+12 XP / jour</strong>. Les abonnés Premium débloquent 4 jeux exclusifs supplémentaires.
             </p>
           </div>
           <div className={styles.howCard}>
