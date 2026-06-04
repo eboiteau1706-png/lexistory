@@ -71,6 +71,7 @@ export default function WordPopup({ word, seenCount, storyId, onDefUsed, onClose
 
   const key = normalizeToKey(word) ?? word.toLowerCase().trim();
   const [defsRemaining, setDefsRemaining] = useState<number | null>(null);
+  const [defQuota, setDefQuota]           = useState<number>(3);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -109,6 +110,7 @@ export default function WordPopup({ word, seenCount, storyId, onDefUsed, onClose
           body: JSON.stringify({ story_id: storyId }),
         });
         const usage = await usageRes.json();
+        if (usage.quota > 0) setDefQuota(usage.quota);
         if (!usage.allowed) {
           setSource("limit_free");
           setLoading(false);
@@ -252,13 +254,16 @@ export default function WordPopup({ word, seenCount, storyId, onDefUsed, onClose
           ) : source === "limit_free" ? (
             <div className={styles.contentFadeIn}>
               <div className={styles.section}>
-                <div className={styles.defOrig} style={{ color: "var(--text-muted)", fontSize: "0.88rem", lineHeight: 1.6 }}>
-                  Tu as atteint ta limite de 3 définitions pour cette histoire aujourd&apos;hui.<br />
-                  Passe au Premium pour un accès illimité !
+                <div className={styles.defOrig} style={{ color: "var(--text-muted)", fontSize: "0.85rem", lineHeight: 1.7 }}>
+                  Tu as atteint ta limite de <strong>{defQuota}</strong> définition{defQuota > 1 ? "s" : ""} pour cette histoire aujourd&apos;hui.<br /><br />
+                  <span style={{ fontSize: "0.78rem", color: "var(--text-dim)" }}>
+                    💡 Monte en rang pour en débloquer plus :<br />
+                    📖 Lecteur I → 4/jour · 🦉 Sage I → 5/jour · 👑 Légende → 8/jour
+                  </span>
                 </div>
               </div>
-              <a href="/profile" style={{ display: "block", marginTop: "12px", padding: "10px 20px", borderRadius: "50px", background: "var(--accent)", color: "var(--bg)", fontFamily: "inherit", fontSize: "0.88rem", fontWeight: 700, textAlign: "center", textDecoration: "none", transition: "opacity 0.2s" }}>
-                ✨ Découvrir le Premium
+              <a href="/profile" style={{ display: "block", marginTop: "12px", padding: "10px 20px", borderRadius: "50px", background: "var(--accent)", color: "var(--bg)", fontFamily: "inherit", fontSize: "0.85rem", fontWeight: 700, textAlign: "center", textDecoration: "none", transition: "opacity 0.2s" }}>
+                ✨ Passer Premium — définitions illimitées
               </a>
             </div>
           ) : source === "limit" ? (

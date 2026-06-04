@@ -6,11 +6,17 @@ const supabaseAdmin = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
-const DAILY_LIMIT = 3;
-
 function getParisDate(): string {
   const d = new Date(new Date().toLocaleString("en-US", { timeZone: "Europe/Paris" }));
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+
+// Quota selon rang (seuils XP de lib/xp.ts)
+function getQuotaByXp(xp: number): number {
+  if (xp >= 2500) return 8; // Légende I–III
+  if (xp >= 1200) return 5; // Sage I → Maître III
+  if (xp >= 400)  return 4; // Lecteur I → Érudit III
+  return 3;                  // Novice I → Apprenti III
 }
 
 async function getUserId(token: string | null) {
@@ -19,9 +25,9 @@ async function getUserId(token: string | null) {
   return user?.id ?? null;
 }
 
-async function isPremiumUser(userId: string): Promise<boolean> {
-  const { data } = await supabaseAdmin.from("profiles").select("is_premium").eq("id", userId).single();
-  return data?.is_premium === true;
+async function getUserProfile(userId: string): Promise<{ isPremium: boolean; xp: number }> {
+  const { data } = await supabaseAdmin.from("profiles").select("is_premium, xp").eq("id", userId).single();
+  return { isPremium: data?.is_premium ?? false, xp: data?.xp ?? 0 };
 }
 
 // GET ?story_id=xxx — returns current count without modifying
@@ -30,9 +36,11 @@ export async function GET(request: NextRequest) {
   const token = request.headers.get("Authorization")?.replace("Bearer ", "") ?? null;
   const userId = await getUserId(token);
 
-  if (!userId || !story_id) return NextResponse.json({ count: 0, remaining: DAILY_LIMIT });
-  if (await isPremiumUser(userId)) return NextResponse.json({ count: 0, remaining: -1 }); // -1 = illimité
+  if (!userId || !story_id) return NextResponse.json({ count: 0, remaining: 3, quota: 3 });
+  const { isPremium, xp } = await getUserProfile(userId);
+  if (isPremium) return NextResponse.json({ count: 0, remaining: -1, quota: -1 });
 
+  const quota = getQuotaByXp(xp);
   const today = getParisDate();
   const { data } = await supabaseAdmin
     .from("definition_usage")
@@ -41,7 +49,7 @@ export async function GET(request: NextRequest) {
     .maybeSingle();
 
   const count = data?.count ?? 0;
-  return NextResponse.json({ count, remaining: Math.max(0, DAILY_LIMIT - count) });
+  return NextResponse.json({ count, remaining: Math.max(0, quota - count), quota });
 }
 
 // POST { story_id } — check + increment atomically
@@ -50,10 +58,11 @@ export async function POST(request: NextRequest) {
   const token = request.headers.get("Authorization")?.replace("Bearer ", "") ?? null;
   const userId = await getUserId(token);
 
-  // Non connecté ou pas de storyId → autorisé sans limite
-  if (!userId || !story_id) return NextResponse.json({ allowed: true, remaining: -1 });
-  if (await isPremiumUser(userId)) return NextResponse.json({ allowed: true, remaining: -1 });
+  if (!userId || !story_id) return NextResponse.json({ allowed: true, remaining: -1, quota: -1 });
+  const { isPremium, xp } = await getUserProfile(userId);
+  if (isPremium) return NextResponse.json({ allowed: true, remaining: -1, quota: -1 });
 
+  const quota = getQuotaByXp(xp);
   const today = getParisDate();
   const { data: existing } = await supabaseAdmin
     .from("definition_usage")
@@ -62,8 +71,8 @@ export async function POST(request: NextRequest) {
     .maybeSingle();
 
   const currentCount = existing?.count ?? 0;
-  if (currentCount >= DAILY_LIMIT) {
-    return NextResponse.json({ allowed: false, remaining: 0 });
+  if (currentCount >= quota) {
+    return NextResponse.json({ allowed: false, remaining: 0, quota });
   }
 
   const newCount = currentCount + 1;
@@ -73,5 +82,5 @@ export async function POST(request: NextRequest) {
     await supabaseAdmin.from("definition_usage").insert({ user_id: userId, story_id, date: today, count: 1 });
   }
 
-  return NextResponse.json({ allowed: true, remaining: Math.max(0, DAILY_LIMIT - newCount) });
+  return NextResponse.json({ allowed: true, remaining: Math.max(0, quota - newCount), quota });
 }

@@ -172,15 +172,17 @@ export default function Sidebar() {
           </button>
 
           {showHistory && (
-            <div className={`${styles.historyList} ${!isPremium ? styles.historyListBlurred : ""}`}>
+            <div className={styles.historyList}>
               {historyItems.map(({ dayNum, story: s }, i) => {
-                const isToday = i === 0;
+                const isToday     = i === 0;
+                const isYesterday = i === 1;
+                const isFree      = isToday || isYesterday; // J-1 accessible à tous
                 return (
                   <button
                     key={s.slug}
-                    className={`${styles.historyItem} ${isToday ? styles.historyItemActive : ""} ${!isPremium && !isToday ? styles.historyItemLocked : ""}`}
+                    className={`${styles.historyItem} ${isToday ? styles.historyItemActive : ""} ${!isPremium && !isFree ? styles.historyItemLocked : ""}`}
                     onClick={() => {
-                      if (!isPremium && !isToday) { setShowPremiumPopup(true); return; }
+                      if (!isPremium && !isFree) { setShowPremiumPopup(true); return; }
                       router.push(`/?level=${level}&day=${dayNum}`);
                     }}
                   >
@@ -189,7 +191,7 @@ export default function Sidebar() {
                       <span className={styles.historyDay}>{dayLabel(dayNum)}</span>
                       <span className={styles.historyTitle}>{s.title}</span>
                     </div>
-                    {!isPremium && !isToday && <span className={styles.lockIcon}>🔒</span>}
+                    {!isPremium && !isFree && <span className={styles.lockIcon}>🔒</span>}
                   </button>
                 );
               })}
