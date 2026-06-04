@@ -305,9 +305,13 @@ export default function AdminPage() {
 
   async function handleResetAllStats() {
     setSaving(true);
-    const tables = ["stories_read","words_seen","word_favorites","definition_usage","game_completions","story_ratings"];
-    for (const t of tables) await supabase.from(t).delete().neq("user_id", ADMIN_ID);
-    await supabase.from("profiles").update({ xp: 0 }).neq("id", ADMIN_ID);
+    const { data: { session } } = await supabase.auth.getSession();
+    const res = await fetch("/api/admin-reset-all-stats", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${session?.access_token}` },
+    });
+    const data = await res.json();
+    if (!data.success) { setGlobalAction("❌ Erreur"); setSaving(false); return; }
     setProfiles(prev => prev.map(p => p.id !== ADMIN_ID ? { ...p, xp: 0 } : p));
     setShowResetStats(false);
     setGlobalAction("✅ Toutes les stats remises à zéro !");
@@ -326,9 +330,14 @@ export default function AdminPage() {
   async function handleResetPlayer() {
     if (!selected) return;
     setSaving(true);
-    const tables = ["stories_read","words_seen","word_favorites","definition_usage","game_completions","story_ratings"];
-    for (const t of tables) await supabase.from(t).delete().eq("user_id", selected.id);
-    await adminFetch(selected.id, { xp: 0, username: null, avatar_url: null, is_premium: false });
+    const { data: { session } } = await supabase.auth.getSession();
+    const res = await fetch("/api/admin-reset-player", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${session?.access_token}` },
+      body: JSON.stringify({ userId: selected.id }),
+    });
+    const data = await res.json();
+    if (!data.success) { setMsg("❌ " + (data.error ?? "Erreur")); setSaving(false); return; }
     setProfiles(prev => prev.map(p => p.id === selected.id ? { ...p, xp: 0, username: null, is_premium: false } : p));
     setSelected(prev => prev ? { ...prev, xp: 0, username: null, is_premium: false } : null);
     setEditXp("0"); setEditUsername(""); setEditPremium(false);
