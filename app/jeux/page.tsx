@@ -420,14 +420,6 @@ if (data.p_anag_done === true) {
     window.dispatchEvent(new CustomEvent("lexistory:story-read"));
   }
 
-  async function addXpNoBoost(amount: number) {
-    if (!userId) return;
-    const { data } = await supabase.from("profiles").select("xp").eq("id", userId).single();
-    await supabase.from("profiles").update({ xp: (data?.xp ?? 0) + amount, last_active_at: new Date().toISOString() }).eq("id", userId);
-    setXpGained(amount);
-    setTimeout(() => setXpGained(null), 3000);
-    window.dispatchEvent(new CustomEvent("lexistory:story-read"));
-  }
 
   function handleDefAnswer(choice: string) {
     if (defAnswer) return;
@@ -476,7 +468,7 @@ if (data.p_anag_done === true) {
     setPDefAnswer(choice);
     if (userId) saveToSupabase({ p_def_answer: choice });
     else localStorage.setItem(getLocalKeys(todayStr).pDefKey, choice);
-    if (choice === pDefWord.word) addXpNoBoost(3);
+    // jeux premium : pas d'XP
   }
 
   function handlePAnagClick(letter: Letter) {
@@ -496,7 +488,7 @@ if (data.p_anag_done === true) {
     setPAnagResult(correct);
     if (userId) saveToSupabase({ p_anag_done: correct });
     else localStorage.setItem(getLocalKeys(todayStr).pAnagKey, correct.toString());
-    if (correct) addXpNoBoost(3);
+    // jeux premium : pas d'XP
   }
   function handlePAnagSkip() {
     if (!isPremium || pAnagResult !== null) return;
@@ -510,7 +502,7 @@ if (data.p_anag_done === true) {
     setPCitAnswer(choice);
     if (userId) saveToSupabase({ p_cit_answer: choice });
     else localStorage.setItem(getLocalKeys(todayStr).pCitKey, choice);
-    if (choice === pCitation.answer) addXpNoBoost(3);
+    // jeux premium : pas d'XP
   }
 
   function handleChoiceClick(choice: string, _wordList: typeof GAME_WORDS, answered: string | null, _correctWord: string, handler: (c: string) => void) {
@@ -731,7 +723,7 @@ if (data.p_anag_done === true) {
           {pDefAnswer && (
             <>
               <div className={pDefAnswer === pDefWord.word ? styles.resultOk : styles.resultKo}>
-                {pDefAnswer === pDefWord.word ? "✅ Bravo ! +3 XP" : `❌ C'était : ${pDefWord.word}`}
+                {pDefAnswer === pDefWord.word ? "✅ Bravo !" : `❌ C'était : ${pDefWord.word}`}
               </div>
               <div style={{ fontSize: "0.72rem", color: "var(--text-dim)", marginTop: "6px", fontStyle: "italic" }}>
                 Clique sur un mot pour voir sa définition
@@ -777,7 +769,7 @@ if (data.p_anag_done === true) {
                   ✅ La réponse était : <strong>{pAnagWord.word}</strong>
                 </div>
               )}
-              {pAnagResult && <div className={styles.resultOk}>✅ Bravo ! +3 XP</div>}
+              {pAnagResult && <div className={styles.resultOk}>✅ Bravo !</div>}
               {!pAnagResult && (
                 <div className={styles.anagramme} style={{ marginTop: 4 }}>
                   {pAnagSelected.map(l => <span key={l.id} className={styles.letter}>{l.char}</span>)}
@@ -808,7 +800,7 @@ if (data.p_anag_done === true) {
           </div>
           {pCitAnswer && (
             <div className={pCitAnswer === pCitation.answer ? styles.resultOk : styles.resultKo}>
-              {pCitAnswer === pCitation.answer ? "✅ Bravo ! +3 XP" : `❌ C'était : ${pCitation.answer}`}
+              {pCitAnswer === pCitation.answer ? "✅ Bravo !" : `❌ C'était : ${pCitation.answer}`}
             </div>
           )}
         </div>
