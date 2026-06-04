@@ -273,4 +273,9 @@
   }
   .premiumTitle { font-size: 0.95rem; }
   .premiumText { font-size: 0.8rem; margin-bottom: 10px; }
+
+  /* Histoires passées verrouillées : plus lisibles sur mobile */
+  .historyItemLocked { opacity: 0.75; }
+  .historyTitle { font-size: 0.82rem; color: var(--text-muted); }
+  .historyDay   { font-size: 0.68rem; color: var(--text-muted); }
 }

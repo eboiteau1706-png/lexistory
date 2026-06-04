@@ -371,6 +371,30 @@
 @media (max-width: 680px) {
   .premiumCta { flex-direction: column; text-align: center; }
   .premiumCtaBtn { width: 100%; text-align: center; }
+
+  /* Textes plus lisibles sur mobile */
+  .defBox      { color: var(--text); font-size: 1rem; }
+  .cardDesc    { color: var(--text-muted); font-size: 0.95rem; }
+  .motDef      { color: var(--text); font-size: 1rem; }
+  .motEtym     { color: var(--text-muted); }
+  .anagHint    { color: var(--text-muted); font-size: 0.9rem; }
+  .anagPlaceholder { color: var(--text-muted); }
+  .subtitle    { color: var(--text-muted); }
+
+  /* Boutons de choix : zone de tap plus grande */
+  .choiceBtn {
+    font-size: 1rem;
+    padding: 13px 14px;
+    min-height: 48px;
+    color: var(--text);
+  }
+
+  /* Lettres anagramme plus grandes */
+  .letter {
+    width: 44px;
+    height: 44px;
+    font-size: 1.3rem;
+  }
 }
 
 .letterClickable { cursor: pointer; transition: all 0.15s; }

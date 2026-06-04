@@ -347,4 +347,17 @@
     padding: 12px 0 24px;
     background: var(--surface);
   }
+
+  /* Améliorer lisibilité du texte des définitions */
+  .defOrig {
+    color: var(--text);
+    font-size: 0.95rem;
+  }
+  .defSimple {
+    font-size: 0.95rem;
+  }
+  .etym {
+    color: var(--text-muted);
+    font-size: 0.82rem;
+  }
 }
