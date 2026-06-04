@@ -23,7 +23,7 @@ export default function Support() {
           <div className={styles.faqTitle}>Questions fréquentes</div>
           {[
             { q: "Comment résilier mon abonnement Premium ?", a: "Tu peux résilier à tout moment depuis ton espace client Stripe. L'accès Premium reste actif jusqu'à la fin de la période payée." },
-            { q: "Je n'arrive pas à me connecter.", a: "Tu peux te connecter avec Google, un lien magique par email, ou un mot de passe. Si le problème persiste, vérifie tes spams ou contacte-nous." },
+            { q: "Je n'arrive pas à me connecter.", a: "Tu peux te connecter avec Google ou avec ton adresse email et ton mot de passe. Si le problème persiste, contacte-nous." },
             { q: "Puis-je changer mon pseudo ?", a: "Oui, depuis ta page profil, clique sur ✏️ à côté de ton pseudo. Le pseudo doit contenir uniquement des lettres, chiffres, tirets ou underscores." },
             { q: "Les histoires changent quand ?", a: "Une nouvelle histoire est disponible chaque jour à minuit (heure de Paris). Les Premium peuvent accéder à toutes les histoires passées." },
             { q: "Comment fonctionne le système d'XP ?", a: "Tu gagnes +3 XP par histoire lue. Les jeux du jour rapportent +3 XP par jeu réussi. Les séries donnent des bonus : +10 XP à 3 jours, +15 XP à 5 jours, +25 XP à 10 jours, +50 XP à 30 jours. Les abonnés Premium débloquent aussi 4 jeux exclusifs supplémentaires pour s'entraîner (sans XP supplémentaire)." },
