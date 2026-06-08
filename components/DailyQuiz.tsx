@@ -72,7 +72,8 @@ export default function DailyQuiz({ userId, todayStr, visible }: Props) {
   useEffect(() => {
     if (userId === undefined) return;
     if (userId) {
-      // Sync localStorage → DB une entrée à la fois (évite qu'un seul échec bloque tout)
+      // Sync localStorage → DB via route admin (bypass RLS)
+      const toSync: object[] = [];
       for (let i = 0; i < localStorage.length; i++) {
         const key = localStorage.key(i);
         if (!key?.startsWith("lx_quiz_") || key.startsWith("lx_quiz_prog_")) continue;
@@ -83,13 +84,20 @@ export default function DailyQuiz({ userId, todayStr, visible }: Props) {
         try {
           const parsed = JSON.parse(localStorage.getItem(key) ?? "");
           if (typeof parsed.score !== "number") continue;
-          supabase.from("quiz_completions").upsert(
-            { user_id: userId, quiz_date: date, level: lvl, score: parsed.score,
-              xp_earned: typeof parsed.xpEarned === "number" ? parsed.xpEarned : 0,
-              answers:   Array.isArray(parsed.answers) ? parsed.answers : [] },
-            { onConflict: "user_id,quiz_date,level", ignoreDuplicates: true }
-          );
+          toSync.push({ quiz_date: date, level: lvl, score: parsed.score,
+            xp_earned: typeof parsed.xpEarned === "number" ? parsed.xpEarned : 0,
+            answers:   Array.isArray(parsed.answers) ? parsed.answers : [] });
         } catch {}
+      }
+      if (toSync.length > 0) {
+        supabase.auth.getSession().then(({ data: { session } }) => {
+          if (!session?.access_token) return;
+          fetch("/api/sync-quiz", {
+            method: "POST",
+            headers: { "Content-Type": "application/json", Authorization: `Bearer ${session.access_token}` },
+            body: JSON.stringify({ entries: toSync }),
+          });
+        });
       }
 
       supabase

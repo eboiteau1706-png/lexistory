@@ -201,12 +201,16 @@ export default function ProfileClient({ user }: { user: User }) {
       } catch {}
     }
 
-    // Sync localStorage → DB une entrée à la fois
-    for (const e of localEntries) {
-      supabase.from("quiz_completions").upsert(
-        { user_id: user.id, quiz_date: e.date, level: e.level, score: e.score, xp_earned: e.xpEarned, answers: e.answers },
-        { onConflict: "user_id,quiz_date,level", ignoreDuplicates: true }
-      );
+    // Sync localStorage → DB via route admin (bypass RLS)
+    if (localEntries.length > 0) {
+      supabase.auth.getSession().then(({ data: { session } }) => {
+        if (!session?.access_token) return;
+        fetch("/api/sync-quiz", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Authorization: `Bearer ${session.access_token}` },
+          body: JSON.stringify({ entries: localEntries.map(e => ({ quiz_date: e.date, level: e.level, score: e.score, xp_earned: e.xpEarned, answers: e.answers })) }),
+        });
+      });
     }
     supabase.from("quiz_completions").select("level, score, quiz_date").eq("user_id", user.id)
       .then(({ data: dbRows }) => {
