@@ -6,6 +6,7 @@ import styles from "./jeux.module.css";
 import AdminJeuxOverlay from "@/components/AdminJeuxOverlay";
 import WordPopup from "@/components/WordPopup";
 import DailyQuiz from "@/components/DailyQuiz";
+import AdminQuizPanel from "@/components/AdminQuizPanel";
 
 const GAME_WORDS = [
   { word: "amygdale", def: "Petite partie du cerveau en forme d'amande qui gère nos émotions, surtout la peur.", etym: "Du grec amygdalê, amande" },
@@ -583,7 +584,10 @@ if (data.p_anag_done === true) {
       </div>
 
       {activeTab === "quiz" && (
-        <DailyQuiz userId={userId} todayStr={todayStr} />
+        <>
+          <AdminQuizPanel />
+          <DailyQuiz userId={userId} todayStr={todayStr} />
+        </>
       )}
 
       {activeTab === "jeux" && <>

@@ -4,17 +4,17 @@ import { createClient } from "@/lib/supabase";
 import styles from "@/app/jeux/jeux.module.css";
 
 interface QuizQuestion {
-  type: "comprehension" | "vocabulaire";
+  type: "histoire" | "vocabulaire";
   question: string;
   choices: string[];
-  answer: string;
+  correct_index: number;
   explanation: string;
 }
 
 interface QuizCompletion {
   score: number;
   xpEarned: number;
-  answers?: string[]; // stored locally only — not in DB
+  answers?: string[]; // stored in localStorage for guests, in-memory for DB users
 }
 
 const LEVELS = ["Curieux", "Lecteur", "Érudit"] as const;
@@ -42,7 +42,6 @@ export default function DailyQuiz({ userId, todayStr }: Props) {
   const [completions, setCompletions]     = useState<Record<string, QuizCompletion>>({});
   const [xpGained, setXpGained]           = useState<number | null>(null);
 
-  // Load existing completions on mount
   useEffect(() => {
     if (userId === undefined) return;
 
@@ -109,8 +108,9 @@ export default function DailyQuiz({ userId, todayStr }: Props) {
     if (!questions || !selectedLevel) return;
     if (answers[currentQ] != null) return;
 
-    const correct = choice === questions[currentQ].answer;
-    const xp      = correct ? 2 : 1;
+    const correctChoice = questions[currentQ].choices[questions[currentQ].correct_index];
+    const correct       = choice === correctChoice;
+    const xp            = correct ? 2 : 1;
 
     const newAnswers = [...answers];
     newAnswers[currentQ] = choice;
@@ -126,8 +126,8 @@ export default function DailyQuiz({ userId, todayStr }: Props) {
 
   async function saveCompletion(finalAnswers: string[], qs: QuizQuestion[]) {
     if (!selectedLevel) return;
-    const score    = finalAnswers.filter((a, i) => a === qs[i].answer).length;
-    const xpEarned = finalAnswers.reduce((t, a, i) => t + (a === qs[i].answer ? 2 : 1), 0);
+    const score    = finalAnswers.filter((a, i) => a === qs[i].choices[qs[i].correct_index]).length;
+    const xpEarned = finalAnswers.reduce((t, a, i) => t + (a === qs[i].choices[qs[i].correct_index] ? 2 : 1), 0);
     const completion: QuizCompletion = { score, xpEarned, answers: finalAnswers };
 
     if (userId) {
@@ -147,8 +147,8 @@ export default function DailyQuiz({ userId, todayStr }: Props) {
   }
 
   const isCompleted = selectedLevel ? !!completions[selectedLevel] : false;
-  const q = questions?.[currentQ];
-  const completion = selectedLevel ? completions[selectedLevel] : null;
+  const completion  = selectedLevel ? completions[selectedLevel] : null;
+  const q           = questions?.[currentQ];
 
   return (
     <div>
@@ -188,12 +188,10 @@ export default function DailyQuiz({ userId, todayStr }: Props) {
           <div className={styles.quizScoreXp}>+{completion.xpEarned} XP gagnés aujourd'hui</div>
           {completion.answers && questions && (
             <div className={styles.quizScoreDots}>
-              {completion.answers.map((a, i) => (
-                <div
-                  key={i}
-                  className={`${styles.quizScoreDot} ${a === questions[i]?.answer ? styles.quizScoreDotOk : styles.quizScoreDotKo}`}
-                />
-              ))}
+              {completion.answers.map((a, i) => {
+                const correct = questions[i] ? a === questions[i].choices[questions[i].correct_index] : false;
+                return <div key={i} className={`${styles.quizScoreDot} ${correct ? styles.quizScoreDotOk : styles.quizScoreDotKo}`} />;
+              })}
             </div>
           )}
           <div style={{ fontSize: "0.8rem", color: "var(--text-dim)", marginTop: "4px" }}>Reviens demain pour un nouveau quiz !</div>
@@ -225,8 +223,8 @@ export default function DailyQuiz({ userId, todayStr }: Props) {
           </div>
 
           <div className={styles.quizMeta}>
-            <span className={`${styles.quizTypeBadge} ${q.type === "comprehension" ? styles.quizTypeComp : styles.quizTypeVocab}`}>
-              {q.type === "comprehension" ? "📚 Compréhension" : "📝 Vocabulaire"}
+            <span className={`${styles.quizTypeBadge} ${q.type === "histoire" ? styles.quizTypeComp : styles.quizTypeVocab}`}>
+              {q.type === "histoire" ? "📖 Histoire" : "📝 Vocabulaire"}
             </span>
             <span className={styles.quizCounter}>{currentQ + 1}/6</span>
           </div>
@@ -234,9 +232,9 @@ export default function DailyQuiz({ userId, todayStr }: Props) {
           <div className={styles.quizQuestion}>{q.question}</div>
 
           <div className={styles.choices}>
-            {q.choices.map(choice => {
+            {q.choices.map((choice, idx) => {
               const answered  = answers[currentQ] != null;
-              const isCorrect = choice === q.answer;
+              const isCorrect = idx === q.correct_index;
               const isChosen  = choice === answers[currentQ];
               return (
                 <button
@@ -253,8 +251,10 @@ export default function DailyQuiz({ userId, todayStr }: Props) {
 
           {showExpl && answers[currentQ] != null && (
             <div className={styles.quizFeedback}>
-              <div className={answers[currentQ] === q.answer ? styles.resultOk : styles.resultKo}>
-                {answers[currentQ] === q.answer ? "✅ Bonne réponse ! +2 XP" : `❌ C'était : ${q.answer} · +1 XP`}
+              <div className={answers[currentQ] === q.choices[q.correct_index] ? styles.resultOk : styles.resultKo}>
+                {answers[currentQ] === q.choices[q.correct_index]
+                  ? "✅ Bonne réponse ! +2 XP"
+                  : `❌ C'était : ${q.choices[q.correct_index]} · +1 XP`}
               </div>
               {q.explanation && (
                 <div className={styles.quizExplanation}>{q.explanation}</div>
