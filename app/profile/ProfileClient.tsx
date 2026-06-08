@@ -201,14 +201,13 @@ export default function ProfileClient({ user }: { user: User }) {
       } catch {}
     }
 
-    // Sync localStorage → DB silencieusement (onConflict ignore si déjà présent)
-    if (localEntries.length > 0) {
+    // Sync localStorage → DB une entrée à la fois
+    for (const e of localEntries) {
       supabase.from("quiz_completions").upsert(
-        localEntries.map(e => ({ user_id: user.id, quiz_date: e.date, level: e.level, score: e.score, xp_earned: e.xpEarned, answers: e.answers })),
-        { onConflict: "user_id,quiz_date,level" }
+        { user_id: user.id, quiz_date: e.date, level: e.level, score: e.score, xp_earned: e.xpEarned, answers: e.answers },
+        { onConflict: "user_id,quiz_date,level", ignoreDuplicates: true }
       );
     }
-
     supabase.from("quiz_completions").select("level, score, quiz_date").eq("user_id", user.id)
       .then(({ data: dbRows }) => {
         const merged: Record<string, { level: string; score: number }> = { ...localQuizMap };
