@@ -37,7 +37,7 @@ export default function ProfileClient({ user }: { user: User }) {
   const [topWords, setTopWords]                 = useState<string[]>([]);
   const [levelBreakdown, setLevelBreakdown]     = useState<Record<string, number>>({});
   const [activityData, setActivityData]         = useState<{ date: string; xp: number }[]>([]);
-  const [totalDefs, setTotalDefs]               = useState(0);
+  const [gamesCount, setGamesCount]             = useState(0);
   const [bestDay, setBestDay]                   = useState<{ date: string; xp: number } | null>(null);
   const [quizLevelStats, setQuizLevelStats] = useState<Record<string, { count: number; totalScore: number }>>({});
   const [clickedWord, setClickedWord]           = useState<string | null>(null);
@@ -174,8 +174,8 @@ export default function ProfileClient({ user }: { user: User }) {
         setStatsLoading(false);
       });
 
-    supabase.from("definition_usage").select("count", { count: "exact", head: true }).eq("user_id", user.id)
-      .then(({ count }) => setTotalDefs(count ?? 0));
+    supabase.from("game_completions").select("id", { count: "exact", head: true }).eq("user_id", user.id)
+      .then(({ count }) => setGamesCount(count ?? 0));
 
     // ── Quiz stats : localStorage (pre-fix) + DB, merged ──────────────────────
     const localQuizMap: Record<string, { level: string; score: number }> = {};
@@ -464,7 +464,7 @@ export default function ProfileClient({ user }: { user: User }) {
             <div className={styles.statGridBox}><div className={styles.statGridNum}>{streakRecord}j</div><div className={styles.statGridLabel}>🔥 Record série</div></div>
             <div className={styles.statGridBox}><div className={styles.statGridNum}>+{xpThisWeek}</div><div className={styles.statGridLabel}>⚡ XP cette semaine</div></div>
             <div className={styles.statGridBox}><div className={styles.statGridNum}>{completionRate}%</div><div className={styles.statGridLabel}>✅ Assiduité</div></div>
-            <div className={styles.statGridBox}><div className={styles.statGridNum}>{totalDefs}</div><div className={styles.statGridLabel}>💡 Définitions</div></div>
+            <div className={styles.statGridBox}><div className={styles.statGridNum}>{gamesCount}</div><div className={styles.statGridLabel}>🎮 Jeux joués</div></div>
             <div className={styles.statGridBox}>
               <div className={styles.statGridNum} style={{ fontSize: "0.85rem" }}>{bestDay ? bestDay.date.slice(5) : "—"}</div>
               <div className={styles.statGridLabel}>📅 Meilleur jour</div>
