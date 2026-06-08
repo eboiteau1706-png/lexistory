@@ -193,9 +193,11 @@ export default function ProfileClient({ user }: { user: User }) {
         const parsed = JSON.parse(saved);
         if (typeof parsed.score !== "number") continue;
         localQuizMap[`${lvl}_${date}`] = { level: lvl, score: parsed.score };
-        if (Array.isArray(parsed.answers) && typeof parsed.xpEarned === "number") {
-          localEntries.push({ key, level: lvl, date, score: parsed.score, xpEarned: parsed.xpEarned, answers: parsed.answers });
-        }
+        localEntries.push({
+          key, level: lvl, date, score: parsed.score,
+          xpEarned: typeof parsed.xpEarned === "number" ? parsed.xpEarned : 0,
+          answers:   Array.isArray(parsed.answers)       ? parsed.answers  : [],
+        });
       } catch {}
     }
 
