@@ -81,7 +81,16 @@ export default function CategoryModal({ category: initialCategory, currentLevel,
 
   const todayISO = getTodayISO();
   const allStories = [...STORIES, ...customStories];
-  const allCategories = [...new Set(allStories.flatMap(s => s.category.split(" · ")))].sort();
+
+  const STORY_CATEGORIES = [
+    "Architecture","Art","Astronomie","Cinéma","Corps humain","Culture",
+    "Économie","Gastronomie","Géographie","Histoire","Insolite","Linguistique",
+    "Littérature","Musique","Nature","Neurosciences","Philosophie","Politique",
+    "Psychologie","Religion","Santé","Science","Société","Sport","Technologie",
+  ];
+  // Catégories fixes + toute catégorie présente dans les histoires mais absente de la liste
+  const extraCats = [...new Set(allStories.flatMap(s => s.category.split(" · ")))].filter(c => !STORY_CATEGORIES.includes(c));
+  const allCategories = [...STORY_CATEGORIES, ...extraCats].sort();
 
   function isToday(story: Story)  { return story.date === todayISO; }
   function isFuture(story: Story) { return story.date > todayISO; }
