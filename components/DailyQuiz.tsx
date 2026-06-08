@@ -76,15 +76,20 @@ export default function DailyQuiz({ userId, todayStr, visible }: Props) {
         .from("quiz_completions")
         .select("level, score, xp_earned")
         .eq("user_id", userId)
-        .eq("story_date", todayStr)
+        .eq("quiz_date", todayStr)
         .then(({ data }) => {
-          if (!data) return;
           const loaded: Record<string, QuizCompletion> = {};
-          for (const row of data) {
-            const saved = localStorage.getItem(localKey(todayStr, row.level));
-            let savedAnswers: string[] | undefined;
-            if (saved) { try { const p = JSON.parse(saved); savedAnswers = p.answers; } catch {} }
-            loaded[row.level] = { score: row.score, xpEarned: row.xp_earned, answers: savedAnswers };
+          // Always load localStorage first as fallback (handles DB failures gracefully)
+          for (const lvl of LEVELS) {
+            const saved = localStorage.getItem(localKey(todayStr, lvl));
+            if (saved) { try { loaded[lvl] = JSON.parse(saved); } catch {} }
+          }
+          // DB data overrides localStorage score/xpEarned (authoritative source)
+          if (data) {
+            for (const row of data) {
+              const savedAnswers = loaded[row.level]?.answers;
+              loaded[row.level] = { score: row.score, xpEarned: row.xp_earned, answers: savedAnswers };
+            }
           }
           setCompletions(loaded);
         });
@@ -207,8 +212,8 @@ export default function DailyQuiz({ userId, todayStr, visible }: Props) {
     localStorage.removeItem(progressKey(dateStr, level));
     if (uid) {
       supabase.from("quiz_completions").upsert(
-        { user_id: uid, story_date: dateStr, level, score, xp_earned: xpEarned },
-        { onConflict: "user_id,story_date,level" }
+        { user_id: uid, quiz_date: dateStr, level, score, xp_earned: xpEarned, answers: finalAnswers },
+        { onConflict: "user_id,quiz_date,level" }
       );
     }
     setCompletions(prev => ({ ...prev, [level]: completion }));
