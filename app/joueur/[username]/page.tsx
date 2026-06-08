@@ -72,19 +72,20 @@ export default function ProfilPublicPage() {
         setStreak(s);
       }
 
-      const { data: { session: s2 } } = await supabase.auth.getSession();
       const quizRes = await fetch(`/api/user-quiz-stats?userId=${target.id}`, {
-        headers: s2?.access_token ? { Authorization: `Bearer ${s2.access_token}` } : {},
+        headers: session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {},
       });
+      const quizJson = await quizRes.json();
       if (quizRes.ok) {
-        const { data: quizRows } = await quizRes.json();
         const stats: Record<string, { count: number; totalScore: number }> = {};
-        for (const row of (quizRows ?? [])) {
+        for (const row of (quizJson.data ?? [])) {
           if (!stats[row.level]) stats[row.level] = { count: 0, totalScore: 0 };
           stats[row.level].count++;
           stats[row.level].totalScore += row.score;
         }
         setQuizLevelStats(stats);
+      } else {
+        console.error("[quiz-stats]", quizRes.status, quizJson);
       }
 
       setLoading(false);

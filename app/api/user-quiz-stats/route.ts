@@ -10,26 +10,28 @@ export async function GET(req: NextRequest) {
   const targetId = req.nextUrl.searchParams.get("userId");
   if (!targetId) return NextResponse.json({ error: "Missing userId" }, { status: 400 });
 
-  // Vérifie que le demandeur est authentifié et ami avec la cible
   const token = req.headers.get("Authorization")?.replace("Bearer ", "");
   if (!token) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const { data: { user } } = await supabaseAdmin.auth.getUser(token);
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  // Soi-même ou ami
+  // Soi-même ou ami — utilise limit(1) au lieu de single() pour éviter l'erreur si 0 résultat
   if (user.id !== targetId) {
-    const { data: friendship } = await supabaseAdmin.from("friendships")
-      .select("id").eq("status", "accepted")
+    const { data: rows } = await supabaseAdmin
+      .from("friendships")
+      .select("id")
+      .eq("status", "accepted")
       .or(`and(user_id.eq.${user.id},friend_id.eq.${targetId}),and(user_id.eq.${targetId},friend_id.eq.${user.id})`)
-      .single();
-    if (!friendship) return NextResponse.json({ error: "Not friends" }, { status: 403 });
+      .limit(1);
+    if (!rows || rows.length === 0) return NextResponse.json({ error: "Not friends" }, { status: 403 });
   }
 
-  const { data } = await supabaseAdmin
+  const { data, error } = await supabaseAdmin
     .from("quiz_completions")
     .select("level, score, quiz_date")
     .eq("user_id", targetId);
 
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json({ data: data ?? [] });
 }
