@@ -60,7 +60,9 @@ export default function AdminOverlay({ story, date, level, dayOffset, todayOffse
     p_cit_wrong1: "", p_cit_wrong2: "", p_cit_wrong3: "",
   });
   const [game, setGame] = useState<Record<string, string>>(emptyGame());
-  const [gameTab, setGameTab] = useState<"edit" | "preview">("edit");
+  const [gameTab, setGameTab]           = useState<"edit" | "preview">("edit");
+  const [republishing, setRepublishing] = useState(false);
+  const [republishMsg, setRepublishMsg] = useState("");
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -74,9 +76,10 @@ export default function AdminOverlay({ story, date, level, dayOffset, todayOffse
   if (!isAdmin) return null;
 
   const STORY_CATEGORIES = [
-    "Sport","Histoire","Science","Art","Gastronomie","Cinéma","Musique",
-    "Géographie","Économie","Littérature","Philosophie","Nature","Technologie","Société",
-    "Insolite","Psychologie","Architecture",
+    "Architecture","Art","Astronomie","Cinéma","Corps humain","Culture",
+    "Économie","Gastronomie","Géographie","Histoire","Insolite","Linguistique",
+    "Littérature","Musique","Nature","Neurosciences","Philosophie","Politique",
+    "Psychologie","Religion","Santé","Science","Société","Sport","Technologie",
   ];
 
   function getTodayDate(): string {
@@ -126,6 +129,26 @@ export default function AdminOverlay({ story, date, level, dayOffset, todayOffse
     setSaving(false);
     if (d.error) { setMsg("❌ " + d.error); return; }
     setMsg("✅ Sauvegardé !"); setEditing(false); router.refresh();
+  }
+
+  async function republishForTomorrow() {
+    setRepublishing(true); setRepublishMsg("");
+    try {
+      const res = await fetch(`/api/effective-story?date=${date}&level=${encodeURIComponent(level)}`);
+      const data = await res.json();
+      if (!data.story) { setRepublishMsg("❌ Histoire introuvable"); setRepublishing(false); return; }
+      const paris = new Date(new Date().toLocaleString("en-US", { timeZone: "Europe/Paris" }));
+      paris.setDate(paris.getDate() + 1);
+      const tomorrow = `${paris.getFullYear()}-${String(paris.getMonth()+1).padStart(2,"0")}-${String(paris.getDate()).padStart(2,"0")}`;
+      const saveRes = await fetch("/api/admin-story", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ date: tomorrow, level, title: data.story.title, category: data.story.category, source: data.story.source, readTime: data.story.readTime, paragraphs: data.story.paragraphs }),
+      });
+      const saved = await saveRes.json();
+      setRepublishMsg(saved.error ? "❌ " + saved.error : `✅ Programmée pour le ${tomorrow}`);
+    } catch { setRepublishMsg("❌ Erreur"); }
+    setRepublishing(false);
   }
 
   // Même logique que getParisDateStr() dans app/jeux/page.tsx — date heure Paris
@@ -250,6 +273,15 @@ export default function AdminOverlay({ story, date, level, dayOffset, todayOffse
           <button style={{ ...navBtn, marginLeft: "4px", fontSize: "0.7rem" }} onClick={() => router.push(`/?level=${level}`)}>↩ Revenir</button>
         )}
         <div style={{ flex: 1 }} />
+        {dayOffset < todayOffset && (
+          <>
+            <button style={{ ...navBtn, borderColor: "rgba(212,168,67,0.5)", color: "rgba(212,168,67,0.9)" }}
+              onClick={republishForTomorrow} disabled={republishing}>
+              {republishing ? "…" : "📅 Pour demain"}
+            </button>
+            {republishMsg && <span style={{ fontSize: "0.7rem", color: republishMsg.startsWith("✅") ? "var(--green)" : "#e07070" }}>{republishMsg}</span>}
+          </>
+        )}
         <button style={editBtn} onClick={() => { if (editing) { setEditing(false); setMsg(""); } else { handleOpenEdit(); } }}>
           {editing ? "✕ Fermer" : "✏️ Éditer histoire"}
         </button>

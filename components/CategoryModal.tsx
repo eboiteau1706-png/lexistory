@@ -25,6 +25,8 @@ const CATEGORY_EMOJI: Record<string, string> = {
   Technologie: "💻", Société: "👥", Psychologie: "🧠", Astronomie: "🔭",
   Biologie: "🧬", Médecine: "🏥", Architecture: "🏛️", Religion: "✨",
   Mathématiques: "📐", Politique: "🗳️",
+  "Corps humain": "🫀", Culture: "🎭", Linguistique: "💬",
+  Neurosciences: "🧬", Santé: "💊", Insolite: "🤯",
 };
 const getCatEmoji = (cat: string) => CATEGORY_EMOJI[cat] ?? "📖";
 
@@ -85,13 +87,19 @@ export default function CategoryModal({ category: initialCategory, currentLevel,
   function isFuture(story: Story) { return story.date > todayISO; }
 
   function getStoriesForCategory(cat: string) {
-    return allStories
+    // Déduplique par titre — si une histoire est republiquée, on garde la plus ancienne date
+    const byTitle: Record<string, Story> = {};
+    allStories
       .filter(s => s.category === cat || s.category.split(" · ").includes(cat))
       .filter(s => !isFuture(s))
-      .sort((a, b) => {
-        const rDiff = (b.avg_rating ?? 0) - (a.avg_rating ?? 0);
-        return rDiff !== 0 ? rDiff : new Date(b.date).getTime() - new Date(a.date).getTime();
+      .forEach(s => {
+        const key = s.title.trim().toLowerCase();
+        if (!byTitle[key] || s.date < byTitle[key].date) byTitle[key] = s;
       });
+    return Object.values(byTitle).sort((a, b) => {
+      const rDiff = (b.avg_rating ?? 0) - (a.avg_rating ?? 0);
+      return rDiff !== 0 ? rDiff : new Date(b.date).getTime() - new Date(a.date).getTime();
+    });
   }
 
   function handleStoryClick(story: Story) {
