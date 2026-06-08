@@ -12,9 +12,9 @@ interface QuizQuestion {
 }
 
 interface QuizCompletion {
-  answers: string[];
   score: number;
   xpEarned: number;
+  answers?: string[]; // stored locally only — not in DB
 }
 
 const LEVELS = ["Curieux", "Lecteur", "Érudit"] as const;
@@ -49,14 +49,14 @@ export default function DailyQuiz({ userId, todayStr }: Props) {
     if (userId) {
       supabase
         .from("quiz_completions")
-        .select("level, answers, score, xp_earned")
+        .select("level, score, xp_earned")
         .eq("user_id", userId)
-        .eq("quiz_date", todayStr)
+        .eq("story_date", todayStr)
         .then(({ data }) => {
           if (!data) return;
           const loaded: Record<string, QuizCompletion> = {};
           for (const row of data) {
-            loaded[row.level] = { answers: row.answers, score: row.score, xpEarned: row.xp_earned };
+            loaded[row.level] = { score: row.score, xpEarned: row.xp_earned };
           }
           setCompletions(loaded);
         });
@@ -88,7 +88,6 @@ export default function DailyQuiz({ userId, todayStr }: Props) {
     setShowExpl(false);
     setError(null);
 
-    // If already completed today, just show the score
     if (completions[level]) return;
 
     setLoading(true);
@@ -110,8 +109,8 @@ export default function DailyQuiz({ userId, todayStr }: Props) {
     if (!questions || !selectedLevel) return;
     if (answers[currentQ] != null) return;
 
-    const correct  = choice === questions[currentQ].answer;
-    const xp       = correct ? 2 : 1;
+    const correct = choice === questions[currentQ].answer;
+    const xp      = correct ? 2 : 1;
 
     const newAnswers = [...answers];
     newAnswers[currentQ] = choice;
@@ -120,7 +119,6 @@ export default function DailyQuiz({ userId, todayStr }: Props) {
 
     await addXp(xp);
 
-    // On last question save completion immediately
     if (currentQ === questions.length - 1) {
       await saveCompletion(newAnswers as string[], questions);
     }
@@ -130,12 +128,12 @@ export default function DailyQuiz({ userId, todayStr }: Props) {
     if (!selectedLevel) return;
     const score    = finalAnswers.filter((a, i) => a === qs[i].answer).length;
     const xpEarned = finalAnswers.reduce((t, a, i) => t + (a === qs[i].answer ? 2 : 1), 0);
-    const completion: QuizCompletion = { answers: finalAnswers, score, xpEarned };
+    const completion: QuizCompletion = { score, xpEarned, answers: finalAnswers };
 
     if (userId) {
       await supabase.from("quiz_completions").upsert(
-        { user_id: userId, quiz_date: todayStr, level: selectedLevel, answers: finalAnswers, score, xp_earned: xpEarned },
-        { onConflict: "user_id,quiz_date,level" }
+        { user_id: userId, story_date: todayStr, level: selectedLevel, score, xp_earned: xpEarned },
+        { onConflict: "user_id,story_date,level" }
       );
     } else {
       localStorage.setItem(localKey(todayStr, selectedLevel), JSON.stringify(completion));
@@ -150,6 +148,7 @@ export default function DailyQuiz({ userId, todayStr }: Props) {
 
   const isCompleted = selectedLevel ? !!completions[selectedLevel] : false;
   const q = questions?.[currentQ];
+  const completion = selectedLevel ? completions[selectedLevel] : null;
 
   return (
     <div>
@@ -180,17 +179,23 @@ export default function DailyQuiz({ userId, todayStr }: Props) {
       )}
 
       {/* Score view after completion */}
-      {selectedLevel && isCompleted && (
+      {selectedLevel && isCompleted && completion && (
         <div className={styles.quizScore}>
           <div className={styles.quizScoreLevel}>{LEVEL_EMOJI[selectedLevel]} Quiz {selectedLevel}</div>
-          <div className={styles.quizScoreNum}>{completions[selectedLevel].score}<span style={{ fontSize: "1.2rem", color: "var(--text-dim)" }}>/6</span></div>
-          <div className={styles.quizScoreXp}>+{completions[selectedLevel].xpEarned} XP gagnés aujourd'hui</div>
-          <div className={styles.quizScoreDots}>
-            {completions[selectedLevel].answers.map((a, i) => {
-              const isOk = questions ? a === questions[i]?.answer : false;
-              return <div key={i} className={`${styles.quizScoreDot} ${isOk ? styles.quizScoreDotOk : styles.quizScoreDotKo}`} />;
-            })}
+          <div className={styles.quizScoreNum}>
+            {completion.score}<span style={{ fontSize: "1.2rem", color: "var(--text-dim)" }}>/6</span>
           </div>
+          <div className={styles.quizScoreXp}>+{completion.xpEarned} XP gagnés aujourd'hui</div>
+          {completion.answers && questions && (
+            <div className={styles.quizScoreDots}>
+              {completion.answers.map((a, i) => (
+                <div
+                  key={i}
+                  className={`${styles.quizScoreDot} ${a === questions[i]?.answer ? styles.quizScoreDotOk : styles.quizScoreDotKo}`}
+                />
+              ))}
+            </div>
+          )}
           <div style={{ fontSize: "0.8rem", color: "var(--text-dim)", marginTop: "4px" }}>Reviens demain pour un nouveau quiz !</div>
         </div>
       )}
@@ -215,7 +220,6 @@ export default function DailyQuiz({ userId, todayStr }: Props) {
       {/* Question card */}
       {selectedLevel && !isCompleted && !loading && !error && questions && q && (
         <div className={styles.quizCard}>
-          {/* Progress bar */}
           <div className={styles.quizProgressTrack}>
             <div className={styles.quizProgressFill} style={{ width: `${(currentQ / questions.length) * 100}%` }} />
           </div>
