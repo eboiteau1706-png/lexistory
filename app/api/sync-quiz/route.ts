@@ -26,9 +26,9 @@ export async function POST(req: NextRequest) {
   const existingKeys = new Set((existing ?? []).map((r: any) => `${r.level}_${r.quiz_date}`));
 
   let inserted = 0;
+  const errors: string[] = [];
   for (const e of entries) {
     if (typeof e.score !== "number" || !e.quiz_date || !e.level) continue;
-    // Saute si déjà en DB
     if (existingKeys.has(`${e.level}_${e.quiz_date}`)) continue;
     const { error } = await supabaseAdmin.from("quiz_completions").insert({
       user_id:   user.id,
@@ -38,8 +38,9 @@ export async function POST(req: NextRequest) {
       xp_earned: e.xp_earned ?? 0,
       answers:   Array.isArray(e.answers) ? e.answers : [],
     });
-    if (!error) inserted++;
+    if (error) errors.push(`${e.level}/${e.quiz_date}: ${error.message}`);
+    else inserted++;
   }
 
-  return NextResponse.json({ inserted });
+  return NextResponse.json({ inserted, errors: errors.length > 0 ? errors : undefined });
 }

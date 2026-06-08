@@ -239,10 +239,14 @@ export default function DailyQuiz({ userId, todayStr, visible }: Props) {
     localStorage.setItem(localKey(dateStr, level), JSON.stringify(completion));
     localStorage.removeItem(progressKey(dateStr, level));
     if (uid) {
-      supabase.from("quiz_completions").upsert(
-        { user_id: uid, quiz_date: dateStr, level, score, xp_earned: xpEarned, answers: finalAnswers },
-        { onConflict: "user_id,quiz_date,level" }
-      );
+      supabase.auth.getSession().then(({ data: { session } }) => {
+        if (!session?.access_token) return;
+        fetch("/api/sync-quiz", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Authorization: `Bearer ${session.access_token}` },
+          body: JSON.stringify({ entries: [{ quiz_date: dateStr, level, score, xp_earned: xpEarned, answers: finalAnswers }] }),
+        });
+      });
     }
     setCompletions(prev => ({ ...prev, [level]: completion }));
   }

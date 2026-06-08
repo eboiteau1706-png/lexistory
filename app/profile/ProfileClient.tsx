@@ -209,7 +209,10 @@ export default function ProfileClient({ user }: { user: User }) {
           method: "POST",
           headers: { "Content-Type": "application/json", Authorization: `Bearer ${session.access_token}` },
           body: JSON.stringify({ entries: localEntries.map(e => ({ quiz_date: e.date, level: e.level, score: e.score, xp_earned: e.xpEarned, answers: e.answers })) }),
-        });
+        }).then(r => r.json()).then(d => {
+          if (d.errors) console.error("[sync-quiz] errors:", d.errors);
+          else console.log("[sync-quiz] inserted:", d.inserted);
+        }).catch(err => console.error("[sync-quiz] fetch error:", err));
       });
     }
     supabase.from("quiz_completions").select("level, score, quiz_date").eq("user_id", user.id)
