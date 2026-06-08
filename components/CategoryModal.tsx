@@ -94,7 +94,14 @@ export default function CategoryModal({ category: initialCategory, currentLevel,
       .filter(s => !isFuture(s))
       .forEach(s => {
         const key = s.title.trim().toLowerCase();
-        if (!byTitle[key] || s.date > byTitle[key].date) byTitle[key] = s;
+        if (!byTitle[key]) { byTitle[key] = s; return; }
+        const existing = byTitle[key];
+        const sameContent = JSON.stringify(s.paragraphs) === JSON.stringify(existing.paragraphs);
+        if (sameContent) {
+          if (s.date < existing.date) byTitle[key] = s; // même contenu → garder la plus ancienne
+        } else {
+          if (s.date > existing.date) byTitle[key] = s; // contenu modifié → garder la plus récente
+        }
       });
     return Object.values(byTitle).sort((a, b) => {
       const rDiff = (b.avg_rating ?? 0) - (a.avg_rating ?? 0);
