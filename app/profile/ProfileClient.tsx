@@ -39,6 +39,8 @@ export default function ProfileClient({ user }: { user: User }) {
   const [activityData, setActivityData]         = useState<{ date: string; xp: number }[]>([]);
   const [totalDefs, setTotalDefs]               = useState(0);
   const [bestDay, setBestDay]                   = useState<{ date: string; xp: number } | null>(null);
+  const [quizCount, setQuizCount]               = useState(0);
+  const [quizTotalScore, setQuizTotalScore]     = useState(0);
   const [clickedWord, setClickedWord]           = useState<string | null>(null);
   const [statsLoading, setStatsLoading]         = useState(true);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -175,6 +177,12 @@ export default function ProfileClient({ user }: { user: User }) {
 
     supabase.from("definition_usage").select("count", { count: "exact", head: true }).eq("user_id", user.id)
       .then(({ count }) => setTotalDefs(count ?? 0));
+
+    supabase.from("quiz_completions").select("score", { count: "exact" }).eq("user_id", user.id)
+      .then(({ count, data }) => {
+        setQuizCount(count ?? 0);
+        if (data) setQuizTotalScore(data.reduce((s: number, d: any) => s + (d.score ?? 0), 0));
+      });
   }, []);
 
   async function removeFav(word: string) {
@@ -387,6 +395,7 @@ export default function ProfileClient({ user }: { user: User }) {
           <div className={styles.statBox}><div className={styles.statNum}>{streak}</div><div className={styles.statLabel}>🔥 Série</div></div>
           <div className={styles.statBox}><div className={styles.statNum}>{storiesCount}</div><div className={styles.statLabel}>📖 Histoires</div></div>
           <div className={styles.statBox}><div className={styles.statNum}>{wordsCount}</div><div className={styles.statLabel}>✨ Mots</div></div>
+          <div className={styles.statBox}><div className={styles.statNum}>{quizCount}</div><div className={styles.statLabel}>🧠 Quiz</div></div>
         </div>
 
         {!isPremium ? (
@@ -412,6 +421,16 @@ export default function ProfileClient({ user }: { user: User }) {
             <div className={styles.statGridBox}>
               <div className={styles.statGridNum} style={{ fontSize: "0.85rem" }}>{bestDay ? bestDay.date.slice(5) : "—"}</div>
               <div className={styles.statGridLabel}>📅 Meilleur jour</div>
+            </div>
+            <div className={styles.statGridBox}>
+              <div className={styles.statGridNum} style={{ fontSize: quizCount > 0 ? "1.1rem" : undefined }}>
+                {quizCount > 0 ? `${(quizTotalScore / quizCount).toFixed(1)}/6` : "—"}
+              </div>
+              <div className={styles.statGridLabel}>🎯 Score moyen quiz</div>
+            </div>
+            <div className={styles.statGridBox}>
+              <div className={styles.statGridNum}>{quizCount > 0 ? quizTotalScore : "—"}</div>
+              <div className={styles.statGridLabel}>⭐ Bonnes réponses</div>
             </div>
           </div>
 
