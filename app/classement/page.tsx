@@ -95,7 +95,7 @@ export default function ClassementPage() {
     setFriends((profiles as Player[]) ?? []);
   }
 
-  async function sendFriendRequest(targetId: string, targetUsername: string) {
+  async function sendFriendRequest(targetId: string, _targetUsername: string) {
     if (!myId) return;
     setAddingId(targetId);
     const { error } = await supabase.from("friendships").insert({ user_id: myId, friend_id: targetId, status: "pending" });
@@ -166,8 +166,8 @@ export default function ClassementPage() {
 
         <div className={styles.tabs}>
           <button className={`${styles.tab} ${tab === "global"  ? styles.tabActive : ""}`} onClick={() => setTab("global")}>🌍 Global</button>
-          <button className={`${styles.tab} ${tab === "amis"    ? styles.tabActive : ""}`} onClick={() => setTab("amis")}>👥 Amis</button>
           <button className={`${styles.tab} ${tab === "semaine" ? styles.tabActive : ""}`} onClick={() => setTab("semaine")}>⚡ Semaine</button>
+          <button className={`${styles.tab} ${tab === "amis"    ? styles.tabActive : ""}`} onClick={() => setTab("amis")}>👥 Amis</button>
         </div>
 
         {tab === "semaine" && mondayDate && (
