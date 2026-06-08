@@ -94,7 +94,7 @@ export default function CategoryModal({ category: initialCategory, currentLevel,
       .filter(s => !isFuture(s))
       .forEach(s => {
         const key = s.title.trim().toLowerCase();
-        if (!byTitle[key] || s.date < byTitle[key].date) byTitle[key] = s;
+        if (!byTitle[key] || s.date > byTitle[key].date) byTitle[key] = s;
       });
     return Object.values(byTitle).sort((a, b) => {
       const rDiff = (b.avg_rating ?? 0) - (a.avg_rating ?? 0);
