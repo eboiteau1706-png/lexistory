@@ -5,6 +5,7 @@ import styles from "./jeux.module.css";
 
 import AdminJeuxOverlay from "@/components/AdminJeuxOverlay";
 import WordPopup from "@/components/WordPopup";
+import DailyQuiz from "@/components/DailyQuiz";
 
 const GAME_WORDS = [
   { word: "amygdale", def: "Petite partie du cerveau en forme d'amande qui gère nos émotions, surtout la peur.", etym: "Du grec amygdalê, amande" },
@@ -195,6 +196,7 @@ const ADMIN_DAY_KEY = "lx_admin_dayOverride";
 export default function JeuxPage() {
   const supabase = createClient();
 
+  const [activeTab, setActiveTab]        = useState<"jeux" | "quiz">("jeux");
   const [userId, setUserId]             = useState<string | null | undefined>(undefined);
   const [isPremium, setIsPremium]       = useState(false);
   const [isAdmin, setIsAdmin]           = useState(false);
@@ -568,6 +570,24 @@ if (data.p_anag_done === true) {
         </p>
       </div>
 
+      {/* Tab navigation */}
+      <div className={styles.tabs}>
+        <button
+          className={`${styles.tab} ${activeTab === "jeux" ? styles.tabActive : ""}`}
+          onClick={() => setActiveTab("jeux")}
+        >🎮 Jeux</button>
+        <button
+          className={`${styles.tab} ${activeTab === "quiz" ? styles.tabActive : ""}`}
+          onClick={() => setActiveTab("quiz")}
+        >🧠 Quiz du jour</button>
+      </div>
+
+      {activeTab === "quiz" && (
+        <DailyQuiz userId={userId} todayStr={todayStr} />
+      )}
+
+      {activeTab === "jeux" && <>
+
       <div className={styles.sectionTitle}>📚 Jeux du jour</div>
       <div className={styles.grid}>
 
@@ -813,6 +833,8 @@ if (data.p_anag_done === true) {
       {defPopupWord && (
         <WordPopup word={defPopupWord} seenCount={0} onClose={() => setDefPopupWord(null)} />
       )}
+      </>}
+
     </div>
   );
 }
