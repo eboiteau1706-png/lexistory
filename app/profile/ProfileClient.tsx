@@ -340,12 +340,12 @@ export default function ProfileClient({ user }: { user: User }) {
         <div className={styles.emailSection}>
           <div className={styles.emailRow}>
             <span className={styles.emailLabel}>📧 {currentEmail}</span>
-            {!editingEmail && user.app_metadata?.provider !== "google" && (
+            {!editingEmail && !(user.app_metadata?.provider === "google" || (user.app_metadata?.providers as string[] | undefined)?.includes("google") || user.identities?.some((i: any) => i.provider === "google")) && (
               <button className={styles.editBtn} onClick={() => { setEditingEmail(true); setEmailSent(false); setEmailError(""); setEmailUpdated(false); }}>Changer</button>
             )}
           </div>
-          {user.app_metadata?.provider === "google" && (
-            <p style={{ fontSize: "0.78rem", color: "var(--text-dim)", fontStyle: "italic", marginTop: "4px" }}>🔗 Connecté via Google — email non modifiable</p>
+          {(user.app_metadata?.provider === "google" || (user.app_metadata?.providers as string[] | undefined)?.includes("google") || user.identities?.some((i: any) => i.provider === "google")) && (
+            <p style={{ fontSize: "0.78rem", color: "var(--text-dim)", fontStyle: "italic", marginTop: "4px" }}>🔗 Connecté via Google — impossible de modifier l&apos;adresse email</p>
           )}
           {emailUpdated && <p style={{ fontSize: "0.8rem", color: "var(--green)", margin: "4px 0 0" }}>✅ Adresse email mise à jour avec succès !</p>}
           {emailSent && !emailUpdated && <p style={{ fontSize: "0.8rem", color: "var(--accent)", margin: "4px 0 0" }}>📬 Un lien de confirmation a été envoyé à ta nouvelle adresse.</p>}

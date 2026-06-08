@@ -161,6 +161,17 @@ export default function Sidebar() {
           </div>
         )}
 
+        {/* Jeux du jour */}
+        <div className={styles.card}>
+          <p className={styles.cardTitle}>🎮 Jeux du jour</p>
+          <p style={{ fontSize: "0.8rem", color: "var(--text-muted)", marginBottom: "10px", lineHeight: 1.5 }}>
+            Mini-jeux quotidiens + quiz du jour sur l&apos;histoire.
+          </p>
+          <button className={styles.historyBtn} onClick={() => router.push("/jeux")}>
+            Jouer maintenant →
+          </button>
+        </div>
+
         {/* Histoires passées */}
         <div className={styles.card}>
           <div className={styles.cardTitleRow}>

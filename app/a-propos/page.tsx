@@ -25,6 +25,9 @@ export default function APropos() {
             Chaque jour, trois nouvelles histoires sont disponibles — une pour chaque niveau. On clique sur un mot qu&apos;on ne connaît pas, et on obtient sa définition. Pas de mémorisation forcée, juste de la lecture.
           </p>
           <p>
+            Après chaque histoire, un quiz du jour te permet de tester ta compréhension en 3 niveaux de difficulté. Les mini-jeux quotidiens — anagramme, définition mystère, mot du jour et citation — complètent l&apos;expérience.
+          </p>
+          <p>
             Avec le système de niveaux et de streaks, chaque lecture compte. Monte en rang, défie tes amis dans le classement, et suis ta progression jour après jour.
           </p>
         </div>

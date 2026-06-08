@@ -48,10 +48,11 @@ export default function LandingPage() {
           </div>
           <div className={styles.howCard}>
             <div className={styles.howIcon}>🎮</div>
-            <div className={styles.howTitle}>4 jeux quotidiens</div>
+            <div className={styles.howTitle}>Jeux &amp; quiz quotidiens</div>
             <p className={styles.howDesc}>
               Mot du jour, Anagramme, Définition mystère et Citation à compléter.
-              Jusqu&apos;à <strong>+12 XP / jour</strong>. Les abonnés Premium débloquent 4 jeux exclusifs supplémentaires.
+              Plus un <strong>quiz du jour</strong> sur l&apos;histoire en 3 niveaux.
+              Jusqu&apos;à <strong>+30 XP / jour</strong>. Les abonnés Premium débloquent 4 jeux exclusifs supplémentaires.
             </p>
           </div>
           <div className={styles.howCard}>
@@ -154,6 +155,7 @@ export default function LandingPage() {
             <ul className={styles.premiumList}>
               <li>1 histoire par jour par niveau</li>
               <li>4 mini-jeux quotidiens</li>
+              <li>Quiz du jour (3 niveaux)</li>
               <li>3 définitions / histoire / jour</li>
               <li>Classement et 21 rangs XP</li>
               <li>Profil avec 40 avatars</li>

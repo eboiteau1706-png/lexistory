@@ -144,6 +144,14 @@ export default function DailyQuiz({ userId, todayStr, visible }: Props) {
     return () => { if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; } };
   }, [currentQ, selectedLevel, isCompleted, currentAnswered, loading, visible]);
 
+  // ── Save progress (with active question) so restore can auto-skip it ─────────
+  useEffect(() => {
+    if (!selectedLevel || !questions || isCompleted) return;
+    const firstNull = answers.findIndex(a => a === null);
+    if (firstNull === -1) return;
+    localStorage.setItem(progressKey(todayStr, selectedLevel), JSON.stringify({ answers, currentQ }));
+  }, [currentQ, answers, selectedLevel, questions, isCompleted, todayStr]);
+
   // ── Timer expiry → show feedback with "Temps écoulé" ─────────────────────────
   useEffect(() => {
     if (timeLeft !== 0) return;
@@ -249,10 +257,19 @@ export default function DailyQuiz({ userId, todayStr, visible }: Props) {
           try {
             const prog = JSON.parse(saved);
             if (Array.isArray(prog.answers)) {
-              const firstNull = prog.answers.findIndex((a: unknown) => a === null);
+              const restoredAnswers = [...prog.answers] as (string | null)[];
+              const savedCurrentQ: number | undefined = prog.currentQ;
+              // Auto-skip the question that was active when the user left
+              if (savedCurrentQ !== undefined && restoredAnswers[savedCurrentQ] === null) {
+                restoredAnswers[savedCurrentQ] = AUTO_SKIP;
+              }
+              const firstNull = restoredAnswers.findIndex(a => a === null);
               if (firstNull !== -1) {
-                setAnswers(prog.answers);
+                setAnswers(restoredAnswers);
                 setCurrentQ(firstNull);
+              } else {
+                // All answered/skipped after auto-skip — save as completion
+                saveCompletionInline(restoredAnswers as string[], data.questions, level, userId, todayStr);
               }
             }
           } catch {}
