@@ -39,8 +39,7 @@ export default function ProfileClient({ user }: { user: User }) {
   const [activityData, setActivityData]         = useState<{ date: string; xp: number }[]>([]);
   const [totalDefs, setTotalDefs]               = useState(0);
   const [bestDay, setBestDay]                   = useState<{ date: string; xp: number } | null>(null);
-  const [quizCount, setQuizCount]               = useState(0);
-  const [quizTotalScore, setQuizTotalScore]     = useState(0);
+  const [quizLevelStats, setQuizLevelStats] = useState<Record<string, { count: number; totalScore: number }>>({});
   const [clickedWord, setClickedWord]           = useState<string | null>(null);
   const [statsLoading, setStatsLoading]         = useState(true);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -178,10 +177,35 @@ export default function ProfileClient({ user }: { user: User }) {
     supabase.from("definition_usage").select("count", { count: "exact", head: true }).eq("user_id", user.id)
       .then(({ count }) => setTotalDefs(count ?? 0));
 
-    supabase.from("quiz_completions").select("score", { count: "exact" }).eq("user_id", user.id)
-      .then(({ count, data }) => {
-        setQuizCount(count ?? 0);
-        if (data) setQuizTotalScore(data.reduce((s: number, d: any) => s + (d.score ?? 0), 0));
+    // ── Quiz stats : localStorage (pre-fix) + DB, merged ──────────────────────
+    const localQuizMap: Record<string, { level: string; score: number }> = {};
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (!key?.startsWith("lx_quiz_") || key.startsWith("lx_quiz_prog_")) continue;
+      const m = key.match(/^lx_quiz_(.+)_(\d{4}-\d{2}-\d{2})$/);
+      if (!m) continue;
+      const [, lvl, date] = m;
+      if (!["Curieux", "Lecteur", "Érudit"].includes(lvl)) continue;
+      try {
+        const saved = localStorage.getItem(key);
+        if (!saved) continue;
+        const parsed = JSON.parse(saved);
+        if (typeof parsed.score === "number") localQuizMap[`${lvl}_${date}`] = { level: lvl, score: parsed.score };
+      } catch {}
+    }
+    supabase.from("quiz_completions").select("level, score, quiz_date").eq("user_id", user.id)
+      .then(({ data: dbRows }) => {
+        const merged: Record<string, { level: string; score: number }> = { ...localQuizMap };
+        if (dbRows) {
+          for (const row of dbRows) merged[`${row.level}_${row.quiz_date}`] = { level: row.level, score: row.score };
+        }
+        const stats: Record<string, { count: number; totalScore: number }> = {};
+        for (const { level: lvl, score } of Object.values(merged)) {
+          if (!stats[lvl]) stats[lvl] = { count: 0, totalScore: 0 };
+          stats[lvl].count++;
+          stats[lvl].totalScore += score;
+        }
+        setQuizLevelStats(stats);
       });
   }, []);
 
@@ -268,6 +292,8 @@ export default function ProfileClient({ user }: { user: User }) {
   const { current, needed, pct } = getXpProgress(xp);
   const nextLevel  = LEVELS.find(l => l.level === level.level + 1);
   const levelEmoji: Record<string, string> = { "Curieux": "🌱", "Lecteur": "📖", "Érudit": "🎓" };
+  const quizCount      = Object.values(quizLevelStats).reduce((s, v) => s + v.count, 0);
+  const quizTotalScore = Object.values(quizLevelStats).reduce((s, v) => s + v.totalScore, 0);
   const maxStories = Math.max(...Object.values(levelBreakdown), 1);
   const isLifetime = isPremium && !stripeCustomerId;
   const isCancelled = cancelAtPeriodEnd || cancelDone;
@@ -396,6 +422,27 @@ export default function ProfileClient({ user }: { user: User }) {
           <div className={styles.statBox}><div className={styles.statNum}>{storiesCount}</div><div className={styles.statLabel}>📖 Histoires</div></div>
           <div className={styles.statBox}><div className={styles.statNum}>{wordsCount}</div><div className={styles.statLabel}>✨ Mots</div></div>
           <div className={styles.statBox}><div className={styles.statNum}>{quizCount}</div><div className={styles.statLabel}>🧠 Quiz</div></div>
+        </div>
+
+        {/* ── Quiz du jour — stats par niveau (visible à tous) ── */}
+        <div style={{ margin: "8px 0", padding: "14px 16px", background: "var(--surface2)", border: "1px solid var(--border)", borderRadius: "14px" }}>
+          <div style={{ fontSize: "0.7rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.8px", color: "var(--text-dim)", marginBottom: "10px" }}>
+            🧠 Quiz du jour — par niveau
+          </div>
+          {(["Curieux", "Lecteur", "Érudit"] as const).map((lvl, i) => {
+            const stats = quizLevelStats[lvl] ?? { count: 0, totalScore: 0 };
+            const avg   = stats.count > 0 ? (stats.totalScore / stats.count).toFixed(1) : null;
+            return (
+              <div key={lvl} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "7px 0", borderBottom: i < 2 ? "1px solid var(--border)" : "none" }}>
+                <span style={{ fontSize: "0.82rem", color: "var(--text-muted)" }}>{levelEmoji[lvl]} {lvl}</span>
+                <span>
+                  {avg
+                    ? <><strong style={{ fontFamily: "var(--font-playfair), serif", fontSize: "0.95rem", color: "var(--accent)" }}>{avg}/6</strong><span style={{ fontSize: "0.72rem", color: "var(--text-dim)", marginLeft: "6px" }}>moy. · {stats.count} quiz</span></>
+                    : <span style={{ fontSize: "0.78rem", color: "var(--text-dim)" }}>—</span>}
+                </span>
+              </div>
+            );
+          })}
         </div>
 
         {!isPremium ? (
