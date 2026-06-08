@@ -154,27 +154,28 @@
 .hamburger {
   display: none;
   flex-direction: column;
-  gap: 5px;
-  background: none;
-  border: none;
+  align-items: center;
+  gap: 5.5px;
+  background: var(--surface);
+  border: 1.5px solid var(--border);
   cursor: pointer;
-  padding: 8px;
-  border-radius: 10px;
-  transition: background 0.2s;
+  padding: 10px 13px;
+  border-radius: 12px;
+  transition: all 0.2s;
 }
-.hamburger:hover { background: var(--surface2); }
+.hamburger:hover { background: var(--surface2); border-color: var(--text-muted); }
 
 .bar {
   display: block;
-  width: 22px;
-  height: 2px;
+  width: 24px;
+  height: 2.5px;
   background: var(--text);
   border-radius: 2px;
   transition: all 0.25s;
 }
-.barOpen1 { transform: translateY(7px) rotate(45deg); }
+.barOpen1 { transform: translateY(8px) rotate(45deg); }
 .barOpen2 { opacity: 0; }
-.barOpen3 { transform: translateY(-7px) rotate(-45deg); }
+.barOpen3 { transform: translateY(-8px) rotate(-45deg); }
 
 /* ── MOBILE MENU ── */
 .mobileMenu {

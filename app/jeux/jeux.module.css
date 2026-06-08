@@ -433,34 +433,37 @@
 /* ── Tabs ────────────────────────────────────────────────── */
 .tabs {
   display: flex;
-  gap: 8px;
-  margin-bottom: 24px;
-  border-bottom: 1px solid var(--border);
-  padding-bottom: 0;
+  gap: 6px;
+  margin-bottom: 28px;
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: 16px;
+  padding: 5px;
 }
 
 .tab {
-  padding: 10px 20px;
-  border-radius: 10px 10px 0 0;
-  border: 1px solid transparent;
-  border-bottom: none;
+  flex: 1;
+  padding: 12px 16px;
+  border-radius: 12px;
+  border: none;
   background: none;
-  color: var(--text-dim);
+  color: var(--text-muted);
   font-family: inherit;
-  font-size: 0.88rem;
+  font-size: 0.95rem;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s;
-  position: relative;
-  bottom: -1px;
+  text-align: center;
+  line-height: 1.2;
 }
-.tab:hover { color: var(--text-muted); }
+.tab:hover { color: var(--text); background: var(--surface2); }
 .tabActive {
-  background: var(--surface);
-  border-color: var(--border);
-  color: var(--accent);
-  border-bottom-color: var(--surface);
+  background: var(--accent);
+  color: var(--bg);
+  font-weight: 700;
+  box-shadow: 0 2px 10px rgba(232,201,122,0.3);
 }
+.tabActive:hover { background: var(--accent2); color: var(--bg); }
 
 /* ── Quiz: level selector ────────────────────────────────── */
 .quizLevels {
@@ -710,8 +713,8 @@
 }
 
 @media (max-width: 680px) {
-  .tabs { gap: 4px; }
-  .tab  { padding: 9px 14px; font-size: 0.82rem; }
+  .tabs { gap: 4px; padding: 4px; }
+  .tab  { padding: 11px 10px; font-size: 0.88rem; }
   .quizLevels { gap: 8px; }
   .levelBtn { font-size: 0.82rem; padding: 8px 14px; }
   .quizQuestion { font-size: 0.95rem; }

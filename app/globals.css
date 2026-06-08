@@ -2,13 +2,13 @@
 :root {
   --bg:           #0e0d0b;
   --surface:      #1a1814;
-  --surface2:     #242018;
-  --border:       #2e2a22;
+  --surface2:     #272320;
+  --border:       #3c3830;
   --accent:       #e8c97a;
   --accent2:      #d4a853;
   --text:         #f0ebe0;
-  --text-muted:   #8a8270;
-  --text-dim:     #5a5448;
+  --text-muted:   #a09884;
+  --text-dim:     #706a5c;
   --green:        #6dba8a;
   --radius:       16px;
   --font-playfair: var(--font-playfair);
