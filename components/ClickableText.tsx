@@ -30,7 +30,7 @@ export function toPhrase(raw: string): string {
 
 // Non-cliquable : pas de lettre (ni tiret inter-mots) dans le token
 function isInert(token: string): boolean {
-  return !/[a-zA-ZÀ-ÿ\-]/.test(token);
+  return !/[a-zA-ZÀ-ÿœŒæÆ\-]/.test(token);
 }
 
 export default function ClickableText({ text, seenWords, onWordClick, groupWords, disabledWords }: Props) {
@@ -40,7 +40,7 @@ export default function ClickableText({ text, seenWords, onWordClick, groupWords
     // Sépare les séquences "mot" (lettres+chiffres+apostrophe+tiret) des séquences ponctuation
     // Le tiret entre des lettres (grand-mère) reste dans le mot — il est inclus dans les word-chars
     return token.split(
-      /(?<=[A-Za-zÀ-ÿ0-9'\-])(?=[^A-Za-zÀ-ÿ0-9'\-\s])|(?<=[^A-Za-zÀ-ÿ0-9'\-\s])(?=[A-Za-zÀ-ÿ0-9'\-])/
+      /(?<=[A-Za-zÀ-ÿœŒæÆ0-9'\-])(?=[^A-Za-zÀ-ÿœŒæÆ0-9'\-\s])|(?<=[^A-Za-zÀ-ÿœŒæÆ0-9'\-\s])(?=[A-Za-zÀ-ÿœŒæÆ0-9'\-])/
     );
   });
 
