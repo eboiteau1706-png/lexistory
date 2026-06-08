@@ -72,10 +72,14 @@ export default function ProfilPublicPage() {
         setStreak(s);
       }
 
-      const { data: quizRows } = await supabase.from("quiz_completions").select("level, score").eq("user_id", target.id);
-      if (quizRows) {
+      const { data: { session: s2 } } = await supabase.auth.getSession();
+      const quizRes = await fetch(`/api/user-quiz-stats?userId=${target.id}`, {
+        headers: s2?.access_token ? { Authorization: `Bearer ${s2.access_token}` } : {},
+      });
+      if (quizRes.ok) {
+        const { data: quizRows } = await quizRes.json();
         const stats: Record<string, { count: number; totalScore: number }> = {};
-        for (const row of quizRows) {
+        for (const row of (quizRows ?? [])) {
           if (!stats[row.level]) stats[row.level] = { count: 0, totalScore: 0 };
           stats[row.level].count++;
           stats[row.level].totalScore += row.score;
