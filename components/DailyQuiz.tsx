@@ -17,13 +17,13 @@ interface QuizCompletion {
   answers?: string[];
 }
 
-const LEVELS = ["Curieux", "Lecteur", "Érudit"] as const;
+const LEVELS        = ["Curieux", "Lecteur", "Érudit"] as const;
 const LEVEL_EMOJI: Record<string, string> = { Curieux: "🌱", Lecteur: "📖", Érudit: "🎓" };
-const AUTO_SKIP = "__skip__";
+const AUTO_SKIP     = "__skip__";
+const QUESTION_TIME = 30;
 
-function localKey(date: string, level: string) {
-  return `lx_quiz_${level}_${date}`;
-}
+function localKey(date: string, level: string)    { return `lx_quiz_${level}_${date}`; }
+function progressKey(date: string, level: string) { return `lx_quiz_prog_${level}_${date}`; }
 
 interface Props {
   userId: string | null | undefined;
@@ -44,16 +44,19 @@ export default function DailyQuiz({ userId, todayStr, visible }: Props) {
   const [completions, setCompletions]     = useState<Record<string, QuizCompletion>>({});
   const [xpGained, setXpGained]           = useState<number | null>(null);
   const [showReview, setShowReview]       = useState(false);
+  const [timeLeft, setTimeLeft]           = useState(QUESTION_TIME);
 
-  // stateRef — updated every render so effects can read current values without stale closures
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  // stateRef updated every render — lets effects/callbacks read current values without stale closures
   const stateRef = useRef({
-    questions,
-    selectedLevel,
-    isCompleted: false as boolean,
-    answers,
-    currentQ,
-    userId,
-    todayStr,
+    questions:     null as QuizQuestion[] | null,
+    selectedLevel: null as string | null,
+    isCompleted:   false,
+    answers:       Array(6).fill(null) as (string | null)[],
+    currentQ:      0,
+    userId:        undefined as string | null | undefined,
+    todayStr:      "",
   });
   stateRef.current = {
     questions,
@@ -65,7 +68,7 @@ export default function DailyQuiz({ userId, todayStr, visible }: Props) {
     todayStr,
   };
 
-  // Load completions on mount
+  // ── Load completions on mount ─────────────────────────────────────────────────
   useEffect(() => {
     if (userId === undefined) return;
     if (userId) {
@@ -95,42 +98,105 @@ export default function DailyQuiz({ userId, todayStr, visible }: Props) {
     }
   }, [userId, todayStr]);
 
-  // Auto-skip when tab becomes hidden
+  // ── Save progress on full page navigation (unmount) ───────────────────────────
+  // Only localStorage — no setState allowed in cleanup
+  useEffect(() => {
+    return () => {
+      const s = stateRef.current;
+      if (!s.questions || !s.selectedLevel || s.isCompleted) return;
+      if (s.answers[s.currentQ] !== null) return; // already answered
+
+      const newAnswers = [...s.answers] as (string | null)[];
+      newAnswers[s.currentQ] = AUTO_SKIP;
+      const firstNull = newAnswers.findIndex(a => a === null);
+
+      if (firstNull === -1) {
+        const score    = (newAnswers as string[]).filter((a, i) => a !== AUTO_SKIP && a === s.questions![i].choices[s.questions![i].correct_index]).length;
+        const xpEarned = (newAnswers as string[]).reduce((t, a, i) =>
+          a !== AUTO_SKIP && a === s.questions![i].choices[s.questions![i].correct_index] ? t + 1 : t, 0);
+        localStorage.setItem(localKey(s.todayStr, s.selectedLevel), JSON.stringify({ score, xpEarned, answers: newAnswers }));
+        localStorage.removeItem(progressKey(s.todayStr, s.selectedLevel));
+      } else {
+        localStorage.setItem(progressKey(s.todayStr, s.selectedLevel), JSON.stringify({ answers: newAnswers }));
+      }
+    };
+  }, []); // only on unmount
+
+  // ── Timer: start/reset when question or visibility changes ────────────────────
+  const isCompleted     = selectedLevel ? !!completions[selectedLevel] : false;
+  const currentAnswered = answers[currentQ] !== null;
+
+  useEffect(() => {
+    if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
+    if (!selectedLevel || isCompleted || !questions || currentAnswered || loading || !visible) return;
+
+    setTimeLeft(QUESTION_TIME);
+    timerRef.current = setInterval(() => {
+      setTimeLeft(prev => {
+        if (prev <= 1) {
+          if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => { if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; } };
+  }, [currentQ, selectedLevel, isCompleted, currentAnswered, loading, visible]);
+
+  // ── Timer expiry → show feedback with "Temps écoulé" ─────────────────────────
+  useEffect(() => {
+    if (timeLeft !== 0) return;
+    const s = stateRef.current;
+    if (!s.questions || !s.selectedLevel || s.isCompleted || s.answers[s.currentQ] !== null) return;
+
+    const newAnswers = [...s.answers] as (string | null)[];
+    newAnswers[s.currentQ] = AUTO_SKIP;
+    setAnswers(newAnswers);
+    setShowExpl(true);
+
+    const firstNull = newAnswers.findIndex(a => a === null);
+    if (firstNull === -1) {
+      saveCompletionInline(newAnswers as string[], s.questions, s.selectedLevel, s.userId, s.todayStr);
+    } else {
+      localStorage.setItem(progressKey(s.todayStr, s.selectedLevel), JSON.stringify({ answers: newAnswers }));
+      // User clicks "Question suivante →" to advance (not auto-advanced here)
+    }
+  }, [timeLeft]);
+
+  // ── Tab switch → silent auto-skip + advance ───────────────────────────────────
   useEffect(() => {
     if (visible) return;
-    const s = stateRef.current;
-    if (!s.questions || !s.selectedLevel || s.isCompleted) return;
-    if (s.answers[s.currentQ] !== null) return; // already answered
+    if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
 
-    const newAnswers = [...s.answers];
+    const s = stateRef.current;
+    if (!s.questions || !s.selectedLevel || s.isCompleted || s.answers[s.currentQ] !== null) return;
+
+    const newAnswers = [...s.answers] as (string | null)[];
     newAnswers[s.currentQ] = AUTO_SKIP;
     setAnswers(newAnswers);
     setShowExpl(false);
 
-    // 0 XP for auto-skip — no DB call needed
-
-    const isLastQ = s.currentQ === s.questions.length - 1;
-    if (isLastQ) {
+    const firstNull = newAnswers.findIndex(a => a === null);
+    if (firstNull === -1) {
       saveCompletionInline(newAnswers as string[], s.questions, s.selectedLevel, s.userId, s.todayStr);
     } else {
-      setCurrentQ(s.currentQ + 1);
+      localStorage.setItem(progressKey(s.todayStr, s.selectedLevel), JSON.stringify({ answers: newAnswers }));
+      setCurrentQ(firstNull);
     }
   }, [visible]);
 
+  // ── Helpers ───────────────────────────────────────────────────────────────────
   function saveCompletionInline(
-    finalAnswers: string[],
-    qs: QuizQuestion[],
-    level: string,
-    uid: string | null | undefined,
-    dateStr: string,
+    finalAnswers: string[], qs: QuizQuestion[], level: string,
+    uid: string | null | undefined, dateStr: string,
   ) {
     const score    = finalAnswers.filter((a, i) => a !== AUTO_SKIP && a === qs[i].choices[qs[i].correct_index]).length;
-    const xpEarned = finalAnswers.reduce((t, a, i) => {
-      if (a === AUTO_SKIP) return t; // 0 XP for skipped questions
-      return t + (a === qs[i].choices[qs[i].correct_index] ? 1 : 0);
-    }, 0);
+    const xpEarned = finalAnswers.reduce((t, a, i) =>
+      a !== AUTO_SKIP && a === qs[i].choices[qs[i].correct_index] ? t + 1 : t, 0);
     const completion: QuizCompletion = { score, xpEarned, answers: finalAnswers };
     localStorage.setItem(localKey(dateStr, level), JSON.stringify(completion));
+    localStorage.removeItem(progressKey(dateStr, level));
     if (uid) {
       supabase.from("quiz_completions").upsert(
         { user_id: uid, story_date: dateStr, level, score, xp_earned: xpEarned },
@@ -151,7 +217,10 @@ export default function DailyQuiz({ userId, todayStr, visible }: Props) {
     window.dispatchEvent(new CustomEvent("lexistory:story-read"));
   }
 
+  // ── Select level ──────────────────────────────────────────────────────────────
   async function handleSelectLevel(level: string) {
+    if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
+
     const alreadyDone = !!completions[level];
     setSelectedLevel(level);
     setCurrentQ(0);
@@ -159,6 +228,7 @@ export default function DailyQuiz({ userId, todayStr, visible }: Props) {
     setShowExpl(false);
     setError(null);
     setShowReview(false);
+    setTimeLeft(QUESTION_TIME);
 
     if (!alreadyDone) setLoading(true);
     setQuestions(null);
@@ -168,8 +238,25 @@ export default function DailyQuiz({ userId, todayStr, visible }: Props) {
       const data = await res.json();
       if (!data.questions) throw new Error(data.error ?? "Réponse invalide");
       setQuestions(data.questions);
+
       if (alreadyDone && completions[level]?.answers) {
+        // Restore completed answers for review
         setAnswers([...completions[level].answers!]);
+      } else if (!alreadyDone) {
+        // Restore in-progress quiz if user navigated away mid-quiz
+        const saved = localStorage.getItem(progressKey(todayStr, level));
+        if (saved) {
+          try {
+            const prog = JSON.parse(saved);
+            if (Array.isArray(prog.answers)) {
+              const firstNull = prog.answers.findIndex((a: unknown) => a === null);
+              if (firstNull !== -1) {
+                setAnswers(prog.answers);
+                setCurrentQ(firstNull);
+              }
+            }
+          } catch {}
+        }
       }
     } catch (e) {
       if (!alreadyDone) setError(e instanceof Error ? e.message : "Erreur inconnue");
@@ -178,33 +265,43 @@ export default function DailyQuiz({ userId, todayStr, visible }: Props) {
     }
   }
 
+  // ── Answer ────────────────────────────────────────────────────────────────────
   async function handleAnswer(choice: string) {
     if (!questions || !selectedLevel) return;
     if (answers[currentQ] != null) return;
 
+    // Stop timer immediately
+    if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
+
     const correctChoice = questions[currentQ].choices[questions[currentQ].correct_index];
     const correct       = choice === correctChoice;
 
-    const newAnswers = [...answers];
+    const newAnswers = [...answers] as (string | null)[];
     newAnswers[currentQ] = choice;
     setAnswers(newAnswers);
     setShowExpl(true);
 
-    if (correct) await addXp(1); // wrong = 0 XP, no DB call
+    if (correct) await addXp(1);
 
-    if (currentQ === questions.length - 1) {
+    const firstNull = newAnswers.findIndex(a => a === null);
+    if (firstNull === -1) {
       saveCompletionInline(newAnswers as string[], questions, selectedLevel, userId, todayStr);
+    } else {
+      localStorage.setItem(progressKey(todayStr, selectedLevel), JSON.stringify({ answers: newAnswers }));
     }
   }
 
   function handleNext() {
     setCurrentQ(prev => prev + 1);
     setShowExpl(false);
+    setTimeLeft(QUESTION_TIME);
   }
 
-  const isCompleted = selectedLevel ? !!completions[selectedLevel] : false;
-  const completion  = selectedLevel ? completions[selectedLevel] : null;
-  const q           = questions?.[currentQ];
+  const completion    = selectedLevel ? completions[selectedLevel] : null;
+  const q             = questions?.[currentQ];
+  const timerColor    = timeLeft > 15 ? "var(--green)" : timeLeft > 8 ? "#f97316" : "#ef4444";
+  const timerPct      = (timeLeft / QUESTION_TIME) * 100;
+  const circumference = 2 * Math.PI * 13;
 
   return (
     <div>
@@ -281,18 +378,13 @@ export default function DailyQuiz({ userId, todayStr, visible }: Props) {
                 </div>
                 <div className={styles.quizReviewAnswers}>
                   {wasSkipped ? (
-                    <div className={styles.quizReviewSkipped}>⏭ Question passée automatiquement · +1 XP</div>
+                    <div className={styles.quizReviewSkipped}>⏱ Passé (tab quitté ou temps écoulé) · +0 XP</div>
                   ) : (
                     <div className={isCorrect ? styles.quizReviewRight : styles.quizReviewWrong}>
                       {isCorrect ? "✅" : "❌"} Ta réponse : <strong>{userAnswer}</strong>
                     </div>
                   )}
-                  {!isCorrect && !wasSkipped && (
-                    <div className={styles.quizReviewCorrect}>
-                      ✓ Bonne réponse : <strong>{correctChoice}</strong>
-                    </div>
-                  )}
-                  {wasSkipped && (
+                  {!isCorrect && (
                     <div className={styles.quizReviewCorrect}>
                       ✓ Bonne réponse : <strong>{correctChoice}</strong>
                     </div>
@@ -338,7 +430,25 @@ export default function DailyQuiz({ userId, todayStr, visible }: Props) {
             <span className={`${styles.quizTypeBadge} ${q.type === "histoire" ? styles.quizTypeComp : styles.quizTypeVocab}`}>
               {q.type === "histoire" ? "📖 Histoire" : "📝 Vocabulaire"}
             </span>
-            <span className={styles.quizCounter}>{currentQ + 1}/6</span>
+            <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+              {/* Countdown timer — only shown for unanswered questions */}
+              {!currentAnswered && (
+                <div className={styles.quizTimer}>
+                  <svg viewBox="0 0 32 32" width="32" height="32" style={{ position: "absolute", inset: 0, transform: "rotate(-90deg)" }}>
+                    <circle cx="16" cy="16" r="13" fill="none" stroke="var(--border)" strokeWidth="2.5" />
+                    <circle cx="16" cy="16" r="13" fill="none" stroke={timerColor} strokeWidth="2.5"
+                      strokeDasharray={circumference}
+                      strokeDashoffset={circumference * (1 - timerPct / 100)}
+                      style={{ transition: "stroke-dashoffset 0.85s linear, stroke 0.3s" }}
+                    />
+                  </svg>
+                  <span style={{ fontSize: "0.7rem", fontWeight: 700, color: timerColor, lineHeight: 1, position: "relative" }}>
+                    {timeLeft}
+                  </span>
+                </div>
+              )}
+              <span className={styles.quizCounter}>{currentQ + 1}/6</span>
+            </div>
           </div>
 
           <div className={styles.quizQuestion}>{q.question}</div>
@@ -364,9 +474,11 @@ export default function DailyQuiz({ userId, todayStr, visible }: Props) {
           {showExpl && answers[currentQ] != null && (
             <div className={styles.quizFeedback}>
               <div className={answers[currentQ] === q.choices[q.correct_index] ? styles.resultOk : styles.resultKo}>
-                {answers[currentQ] === q.choices[q.correct_index]
-                  ? "✅ Bonne réponse ! +1 XP"
-                  : `❌ C'était : ${q.choices[q.correct_index]}`}
+                {answers[currentQ] === AUTO_SKIP
+                  ? `⏱ Temps écoulé · La réponse était : ${q.choices[q.correct_index]}`
+                  : answers[currentQ] === q.choices[q.correct_index]
+                    ? "✅ Bonne réponse ! +1 XP"
+                    : `❌ C'était : ${q.choices[q.correct_index]}`}
               </div>
               {q.explanation && (
                 <div className={styles.quizExplanation}>{q.explanation}</div>

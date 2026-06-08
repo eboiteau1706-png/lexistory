@@ -607,6 +607,17 @@
 }
 .quizNextBtn:hover { background: var(--accent2); }
 
+/* ── Quiz: timer circle ─────────────────────────────────── */
+.quizTimer {
+  position: relative;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
 /* ── Quiz: review button ─────────────────────────────────── */
 .quizReviewBtn {
   padding: 9px 18px;
