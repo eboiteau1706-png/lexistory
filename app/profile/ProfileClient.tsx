@@ -177,7 +177,8 @@ export default function ProfileClient({ user }: { user: User }) {
     supabase.from("game_completions").select("id", { count: "exact", head: true }).eq("user_id", user.id)
       .then(({ count }) => setGamesCount(count ?? 0));
 
-    // ── Quiz stats : localStorage (pre-fix) + DB, merged ──────────────────────
+    // ── Quiz stats : localStorage + DB merged, + sync localStorage → DB ─────
+    const localEntries: Array<{ key: string; level: string; date: string; score: number; xpEarned: number; answers: string[] }> = [];
     const localQuizMap: Record<string, { level: string; score: number }> = {};
     for (let i = 0; i < localStorage.length; i++) {
       const key = localStorage.key(i);
@@ -190,9 +191,22 @@ export default function ProfileClient({ user }: { user: User }) {
         const saved = localStorage.getItem(key);
         if (!saved) continue;
         const parsed = JSON.parse(saved);
-        if (typeof parsed.score === "number") localQuizMap[`${lvl}_${date}`] = { level: lvl, score: parsed.score };
+        if (typeof parsed.score !== "number") continue;
+        localQuizMap[`${lvl}_${date}`] = { level: lvl, score: parsed.score };
+        if (Array.isArray(parsed.answers) && typeof parsed.xpEarned === "number") {
+          localEntries.push({ key, level: lvl, date, score: parsed.score, xpEarned: parsed.xpEarned, answers: parsed.answers });
+        }
       } catch {}
     }
+
+    // Sync localStorage → DB silencieusement (onConflict ignore si déjà présent)
+    if (localEntries.length > 0) {
+      supabase.from("quiz_completions").upsert(
+        localEntries.map(e => ({ user_id: user.id, quiz_date: e.date, level: e.level, score: e.score, xp_earned: e.xpEarned, answers: e.answers })),
+        { onConflict: "user_id,quiz_date,level" }
+      );
+    }
+
     supabase.from("quiz_completions").select("level, score, quiz_date").eq("user_id", user.id)
       .then(({ data: dbRows }) => {
         const merged: Record<string, { level: string; score: number }> = { ...localQuizMap };
