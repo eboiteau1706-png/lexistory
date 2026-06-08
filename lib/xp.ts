@@ -72,5 +72,5 @@ export function getStreakBonus(streak: number): number {
 export function getStoryXp(): number   { return 5; }
 export function getGameXp(): number    { return 4; }
 export function getPremiumGameXp(): number { return 0; }
-export function getQuizXpCorrect(): number { return 2; }
-export function getQuizXpWrong(): number   { return 1; }
+export function getQuizXpCorrect(): number { return 1; }
+export function getQuizXpWrong(): number   { return 0; }

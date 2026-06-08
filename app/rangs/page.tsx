@@ -38,8 +38,8 @@ export default function Rangs() {
               <span className={styles.xpIcon}>🧠</span>
               <div>
                 <div className={styles.xpRuleName}>Quiz du jour</div>
-                <div className={styles.xpRuleVal}>+2 XP si réussi · +1 XP si raté</div>
-                <div className={styles.xpRuleNote}>6 questions par niveau (histoire + vocabulaire) — jusqu&apos;à +12 XP/niveau</div>
+                <div className={styles.xpRuleVal}>+1 XP si réussi · +0 XP si raté</div>
+                <div className={styles.xpRuleNote}>6 questions par niveau — jusqu&apos;à +6 XP/niveau, +18 XP sur les 3 niveaux</div>
               </div>
             </div>
             <div className={styles.xpRule}>
@@ -80,8 +80,8 @@ export default function Rangs() {
               <span className={styles.xpIcon}>📅</span>
               <div>
                 <div className={styles.xpRuleName}>Sans streak</div>
-                <div className={styles.xpRuleVal}>~39 XP/jour max</div>
-                <div className={styles.xpRuleNote}>15 XP histoires + 6–12 XP jeux + 12 XP quiz (1 niveau, tout réussi)</div>
+                <div className={styles.xpRuleVal}>~45 XP/jour max</div>
+                <div className={styles.xpRuleNote}>15 XP histoires + 6–12 XP jeux + 18 XP quiz (3 niveaux, tout réussi)</div>
               </div>
             </div>
           </div>

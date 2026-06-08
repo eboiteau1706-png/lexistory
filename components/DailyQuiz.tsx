@@ -107,16 +107,7 @@ export default function DailyQuiz({ userId, todayStr, visible }: Props) {
     setAnswers(newAnswers);
     setShowExpl(false);
 
-    // Award +1 XP
-    if (s.userId) {
-      supabase.from("profiles").select("xp").eq("id", s.userId).single()
-        .then(({ data }) => {
-          supabase.from("profiles")
-            .update({ xp: (data?.xp ?? 0) + 1, last_active_at: new Date().toISOString() })
-            .eq("id", s.userId!);
-          window.dispatchEvent(new CustomEvent("lexistory:story-read"));
-        });
-    }
+    // 0 XP for auto-skip — no DB call needed
 
     const isLastQ = s.currentQ === s.questions.length - 1;
     if (isLastQ) {
@@ -135,8 +126,8 @@ export default function DailyQuiz({ userId, todayStr, visible }: Props) {
   ) {
     const score    = finalAnswers.filter((a, i) => a !== AUTO_SKIP && a === qs[i].choices[qs[i].correct_index]).length;
     const xpEarned = finalAnswers.reduce((t, a, i) => {
-      if (a === AUTO_SKIP) return t + 1;
-      return t + (a === qs[i].choices[qs[i].correct_index] ? 2 : 1);
+      if (a === AUTO_SKIP) return t; // 0 XP for skipped questions
+      return t + (a === qs[i].choices[qs[i].correct_index] ? 1 : 0);
     }, 0);
     const completion: QuizCompletion = { score, xpEarned, answers: finalAnswers };
     localStorage.setItem(localKey(dateStr, level), JSON.stringify(completion));
@@ -193,14 +184,13 @@ export default function DailyQuiz({ userId, todayStr, visible }: Props) {
 
     const correctChoice = questions[currentQ].choices[questions[currentQ].correct_index];
     const correct       = choice === correctChoice;
-    const xp            = correct ? 2 : 1;
 
     const newAnswers = [...answers];
     newAnswers[currentQ] = choice;
     setAnswers(newAnswers);
     setShowExpl(true);
 
-    await addXp(xp);
+    if (correct) await addXp(1); // wrong = 0 XP, no DB call
 
     if (currentQ === questions.length - 1) {
       saveCompletionInline(newAnswers as string[], questions, selectedLevel, userId, todayStr);
@@ -375,8 +365,8 @@ export default function DailyQuiz({ userId, todayStr, visible }: Props) {
             <div className={styles.quizFeedback}>
               <div className={answers[currentQ] === q.choices[q.correct_index] ? styles.resultOk : styles.resultKo}>
                 {answers[currentQ] === q.choices[q.correct_index]
-                  ? "✅ Bonne réponse ! +2 XP"
-                  : `❌ C'était : ${q.choices[q.correct_index]} · +1 XP`}
+                  ? "✅ Bonne réponse ! +1 XP"
+                  : `❌ C'était : ${q.choices[q.correct_index]}`}
               </div>
               {q.explanation && (
                 <div className={styles.quizExplanation}>{q.explanation}</div>
