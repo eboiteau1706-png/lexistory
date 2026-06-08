@@ -110,6 +110,73 @@ correct_index est l'index 0-3 de la bonne réponse dans choices.`;
   }
 }
 
+// ── PATCH: admin only — generate with custom prompt ──────────────────────────
+export async function PATCH(request: NextRequest) {
+  const isAdmin = await verifyAdmin(request);
+  if (!isAdmin) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+
+  let body: { date: string; level: string; customPrompt: string };
+  try { body = await request.json(); }
+  catch { return NextResponse.json({ error: "Invalid JSON" }, { status: 400 }); }
+
+  const { date, level, customPrompt } = body;
+  if (!date || !level || !customPrompt) {
+    return NextResponse.json({ error: "date, level and customPrompt required" }, { status: 400 });
+  }
+
+  // Delete existing cache first
+  await supabaseAdmin.from("daily_quiz").delete().eq("story_date", date).eq("level", level);
+
+  try {
+    const message = await anthropic.messages.create({
+      model: "claude-sonnet-4-5",
+      max_tokens: 2000,
+      messages: [{ role: "user", content: customPrompt }],
+    });
+
+    const textBlock = message.content.find(b => b.type === "text");
+    if (!textBlock || textBlock.type !== "text") {
+      return NextResponse.json({ error: "No response from AI" }, { status: 500 });
+    }
+
+    const cleaned   = textBlock.text.replace(/```json|```/g, "").trim();
+    const parsed    = JSON.parse(cleaned);
+    const questions = parsed.questions;
+
+    await supabaseAdmin.from("daily_quiz").insert({ story_date: date, level, questions });
+
+    return NextResponse.json({ questions, source: "custom" });
+  } catch (error) {
+    console.error("DAILY QUIZ PATCH ERROR:", error);
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : String(error) },
+      { status: 500 }
+    );
+  }
+}
+
+// ── PUT: admin only — save raw questions JSON directly to cache ───────────────
+export async function PUT(request: NextRequest) {
+  const isAdmin = await verifyAdmin(request);
+  if (!isAdmin) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+
+  let body: { date: string; level: string; questions: unknown[] };
+  try { body = await request.json(); }
+  catch { return NextResponse.json({ error: "Invalid JSON" }, { status: 400 }); }
+
+  const { date, level, questions } = body;
+  if (!date || !level || !questions) {
+    return NextResponse.json({ error: "date, level and questions required" }, { status: 400 });
+  }
+
+  await supabaseAdmin.from("daily_quiz").delete().eq("story_date", date).eq("level", level);
+
+  const { error } = await supabaseAdmin.from("daily_quiz").insert({ story_date: date, level, questions });
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+
+  return NextResponse.json({ success: true, questions });
+}
+
 // ── DELETE: admin only — remove a quiz from cache ─────────────────────────────
 export async function DELETE(request: NextRequest) {
   const { searchParams } = new URL(request.url);

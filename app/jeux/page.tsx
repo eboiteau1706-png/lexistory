@@ -583,12 +583,11 @@ if (data.p_anag_done === true) {
         >🧠 Quiz du jour</button>
       </div>
 
-      {activeTab === "quiz" && (
-        <>
-          <AdminQuizPanel />
-          <DailyQuiz userId={userId} todayStr={todayStr} />
-        </>
-      )}
+      {/* Quiz tab — always mounted so DailyQuiz preserves state for auto-skip */}
+      <div style={{ display: activeTab === "quiz" ? "block" : "none" }}>
+        <AdminQuizPanel />
+        <DailyQuiz userId={userId} todayStr={todayStr} visible={activeTab === "quiz"} />
+      </div>
 
       {activeTab === "jeux" && <>
 

@@ -53,11 +53,24 @@ export default function AdminJeuxOverlay() {
   const [gameTab, setGameTab]         = useState<"edit"|"preview">("edit");
   const [game, setGame]               = useState<Record<string, string>>(emptyGame());
 
+  const [defCost, setDefCost]     = useState<number | null>(null);
+  const [quizCost, setQuizCost]   = useState<number | null>(null);
+
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session?.user?.id === ADMIN_ID) { setIsAdmin(true); setToken(session.access_token); }
     });
   }, []);
+
+  useEffect(() => {
+    if (!isAdmin) return;
+    // Définitions: call_count × 0.010€
+    supabase.from("api_usage").select("call_count").limit(1).maybeSingle()
+      .then(({ data }) => setDefCost((data?.call_count ?? 0) * 0.010));
+    // Quiz: nombre d'entrées × 0.015€
+    supabase.from("daily_quiz").select("id", { count: "exact", head: true })
+      .then(({ count }) => setQuizCost((count ?? 0) * 0.015));
+  }, [isAdmin]);
 
   if (!isAdmin) return null;
 
@@ -142,6 +155,27 @@ export default function AdminJeuxOverlay() {
           ✏️ Éditer ce jeu
         </button>
       </div>
+
+      {/* ── Section coût API ── */}
+      {(defCost !== null || quizCost !== null) && (() => {
+        const total  = (defCost ?? 0) + (quizCost ?? 0);
+        const pct    = Math.min(100, (total / 5) * 100);
+        const barCol = total > 4 ? "#e88080" : total > 3 ? "#f59e0b" : "rgba(212,168,67,0.7)";
+        return (
+          <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "10px", flexWrap: "wrap", opacity: 0.9 }}>
+            <span style={{ fontSize: "0.65rem", fontWeight: 700, color: "rgba(212,168,67,0.55)", textTransform: "uppercase", letterSpacing: "1px" }}>💰 Coût API</span>
+            <span style={{ fontSize: "0.7rem", color: "rgba(212,168,67,0.65)" }}>Défs : {(defCost??0).toFixed(3)}€</span>
+            <span style={{ fontSize: "0.7rem", color: "rgba(212,168,67,0.65)" }}>Quiz : {(quizCost??0).toFixed(3)}€</span>
+            <span style={{ fontSize: "0.7rem", fontWeight: 700, color: barCol }}>Total : {total.toFixed(3)}€</span>
+            <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+              <div style={{ width: "80px", height: "5px", background: "rgba(212,168,67,0.15)", borderRadius: "3px", overflow: "hidden" }}>
+                <div style={{ width: `${pct}%`, height: "100%", background: barCol, borderRadius: "3px", transition: "width 0.4s" }} />
+              </div>
+              <span style={{ fontSize: "0.65rem", color: "rgba(212,168,67,0.45)" }}>{pct.toFixed(0)}% / 5€</span>
+            </div>
+          </div>
+        );
+      })()}
 
       {/* ── Modale édition jeu (identique AdminOverlay) ── */}
       {gameModal && (

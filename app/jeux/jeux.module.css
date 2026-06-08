@@ -607,10 +607,102 @@
 }
 .quizNextBtn:hover { background: var(--accent2); }
 
+/* ── Quiz: review button ─────────────────────────────────── */
+.quizReviewBtn {
+  padding: 9px 18px;
+  border-radius: 10px;
+  background: rgba(232,201,122,0.08);
+  border: 1px solid rgba(232,201,122,0.3);
+  color: var(--accent);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.2s;
+}
+.quizReviewBtn:hover { background: rgba(232,201,122,0.15); }
+
+/* ── Quiz: review mode ───────────────────────────────────── */
+.quizReview {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.quizReviewHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border);
+}
+
+.quizReviewClose {
+  padding: 5px 12px;
+  border-radius: 8px;
+  background: none;
+  border: 1px solid var(--border);
+  color: var(--text-dim);
+  font-size: 0.78rem;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.2s;
+}
+.quizReviewClose:hover { color: var(--text-muted); border-color: var(--text-muted); }
+
+.quizReviewItem {
+  background: var(--surface);
+  border-radius: 12px;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  border-left: 3px solid transparent;
+}
+.quizReviewOk { border-left-color: var(--green); background: rgba(109,186,138,0.05); }
+.quizReviewKo { border-left-color: #e88080; background: rgba(232,128,128,0.05); }
+
+.quizReviewQ {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 0.9rem;
+  color: var(--text);
+  font-weight: 600;
+  line-height: 1.5;
+}
+
+.quizReviewAnswers {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 0.82rem;
+}
+
+.quizReviewRight  { color: var(--green); }
+.quizReviewWrong  { color: #e88080; }
+.quizReviewSkipped { color: var(--text-dim); font-style: italic; }
+.quizReviewCorrect { color: var(--text-muted); padding-left: 4px; }
+
+.quizReviewExpl {
+  font-size: 0.78rem;
+  color: var(--text-dim);
+  font-style: italic;
+  line-height: 1.5;
+  padding: 6px 10px;
+  background: var(--surface2);
+  border-radius: 6px;
+  border-left: 2px solid var(--accent);
+}
+
 @media (max-width: 680px) {
   .tabs { gap: 4px; }
   .tab  { padding: 9px 14px; font-size: 0.82rem; }
   .quizLevels { gap: 8px; }
   .levelBtn { font-size: 0.82rem; padding: 8px 14px; }
   .quizQuestion { font-size: 0.95rem; }
+  .quizReviewQ { font-size: 0.85rem; }
 }

@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { createClient } from "@/lib/supabase";
 import styles from "@/app/jeux/jeux.module.css";
 
@@ -14,11 +14,12 @@ interface QuizQuestion {
 interface QuizCompletion {
   score: number;
   xpEarned: number;
-  answers?: string[]; // stored in localStorage for guests, in-memory for DB users
+  answers?: string[];
 }
 
 const LEVELS = ["Curieux", "Lecteur", "Érudit"] as const;
 const LEVEL_EMOJI: Record<string, string> = { Curieux: "🌱", Lecteur: "📖", Érudit: "🎓" };
+const AUTO_SKIP = "__skip__";
 
 function localKey(date: string, level: string) {
   return `lx_quiz_${level}_${date}`;
@@ -27,9 +28,10 @@ function localKey(date: string, level: string) {
 interface Props {
   userId: string | null | undefined;
   todayStr: string;
+  visible: boolean;
 }
 
-export default function DailyQuiz({ userId, todayStr }: Props) {
+export default function DailyQuiz({ userId, todayStr, visible }: Props) {
   const supabase = createClient();
 
   const [selectedLevel, setSelectedLevel] = useState<string | null>(null);
@@ -41,10 +43,31 @@ export default function DailyQuiz({ userId, todayStr }: Props) {
   const [showExpl, setShowExpl]           = useState(false);
   const [completions, setCompletions]     = useState<Record<string, QuizCompletion>>({});
   const [xpGained, setXpGained]           = useState<number | null>(null);
+  const [showReview, setShowReview]       = useState(false);
 
+  // stateRef — updated every render so effects can read current values without stale closures
+  const stateRef = useRef({
+    questions,
+    selectedLevel,
+    isCompleted: false as boolean,
+    answers,
+    currentQ,
+    userId,
+    todayStr,
+  });
+  stateRef.current = {
+    questions,
+    selectedLevel,
+    isCompleted: selectedLevel ? !!completions[selectedLevel] : false,
+    answers,
+    currentQ,
+    userId,
+    todayStr,
+  };
+
+  // Load completions on mount
   useEffect(() => {
     if (userId === undefined) return;
-
     if (userId) {
       supabase
         .from("quiz_completions")
@@ -55,7 +78,10 @@ export default function DailyQuiz({ userId, todayStr }: Props) {
           if (!data) return;
           const loaded: Record<string, QuizCompletion> = {};
           for (const row of data) {
-            loaded[row.level] = { score: row.score, xpEarned: row.xp_earned };
+            const saved = localStorage.getItem(localKey(todayStr, row.level));
+            let savedAnswers: string[] | undefined;
+            if (saved) { try { const p = JSON.parse(saved); savedAnswers = p.answers; } catch {} }
+            loaded[row.level] = { score: row.score, xpEarned: row.xp_earned, answers: savedAnswers };
           }
           setCompletions(loaded);
         });
@@ -69,6 +95,60 @@ export default function DailyQuiz({ userId, todayStr }: Props) {
     }
   }, [userId, todayStr]);
 
+  // Auto-skip when tab becomes hidden
+  useEffect(() => {
+    if (visible) return;
+    const s = stateRef.current;
+    if (!s.questions || !s.selectedLevel || s.isCompleted) return;
+    if (s.answers[s.currentQ] !== null) return; // already answered
+
+    const newAnswers = [...s.answers];
+    newAnswers[s.currentQ] = AUTO_SKIP;
+    setAnswers(newAnswers);
+    setShowExpl(false);
+
+    // Award +1 XP
+    if (s.userId) {
+      supabase.from("profiles").select("xp").eq("id", s.userId).single()
+        .then(({ data }) => {
+          supabase.from("profiles")
+            .update({ xp: (data?.xp ?? 0) + 1, last_active_at: new Date().toISOString() })
+            .eq("id", s.userId!);
+          window.dispatchEvent(new CustomEvent("lexistory:story-read"));
+        });
+    }
+
+    const isLastQ = s.currentQ === s.questions.length - 1;
+    if (isLastQ) {
+      saveCompletionInline(newAnswers as string[], s.questions, s.selectedLevel, s.userId, s.todayStr);
+    } else {
+      setCurrentQ(s.currentQ + 1);
+    }
+  }, [visible]);
+
+  function saveCompletionInline(
+    finalAnswers: string[],
+    qs: QuizQuestion[],
+    level: string,
+    uid: string | null | undefined,
+    dateStr: string,
+  ) {
+    const score    = finalAnswers.filter((a, i) => a !== AUTO_SKIP && a === qs[i].choices[qs[i].correct_index]).length;
+    const xpEarned = finalAnswers.reduce((t, a, i) => {
+      if (a === AUTO_SKIP) return t + 1;
+      return t + (a === qs[i].choices[qs[i].correct_index] ? 2 : 1);
+    }, 0);
+    const completion: QuizCompletion = { score, xpEarned, answers: finalAnswers };
+    localStorage.setItem(localKey(dateStr, level), JSON.stringify(completion));
+    if (uid) {
+      supabase.from("quiz_completions").upsert(
+        { user_id: uid, story_date: dateStr, level, score, xp_earned: xpEarned },
+        { onConflict: "user_id,story_date,level" }
+      );
+    }
+    setCompletions(prev => ({ ...prev, [level]: completion }));
+  }
+
   async function addXp(amount: number) {
     if (!userId) return;
     const { data } = await supabase.from("profiles").select("xp").eq("id", userId).single();
@@ -81,15 +161,15 @@ export default function DailyQuiz({ userId, todayStr }: Props) {
   }
 
   async function handleSelectLevel(level: string) {
+    const alreadyDone = !!completions[level];
     setSelectedLevel(level);
     setCurrentQ(0);
     setAnswers(Array(6).fill(null));
     setShowExpl(false);
     setError(null);
+    setShowReview(false);
 
-    if (completions[level]) return;
-
-    setLoading(true);
+    if (!alreadyDone) setLoading(true);
     setQuestions(null);
     try {
       const res = await fetch(`/api/daily-quiz?date=${todayStr}&level=${encodeURIComponent(level)}`);
@@ -97,8 +177,11 @@ export default function DailyQuiz({ userId, todayStr }: Props) {
       const data = await res.json();
       if (!data.questions) throw new Error(data.error ?? "Réponse invalide");
       setQuestions(data.questions);
+      if (alreadyDone && completions[level]?.answers) {
+        setAnswers([...completions[level].answers!]);
+      }
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Erreur inconnue");
+      if (!alreadyDone) setError(e instanceof Error ? e.message : "Erreur inconnue");
     } finally {
       setLoading(false);
     }
@@ -120,25 +203,8 @@ export default function DailyQuiz({ userId, todayStr }: Props) {
     await addXp(xp);
 
     if (currentQ === questions.length - 1) {
-      await saveCompletion(newAnswers as string[], questions);
+      saveCompletionInline(newAnswers as string[], questions, selectedLevel, userId, todayStr);
     }
-  }
-
-  async function saveCompletion(finalAnswers: string[], qs: QuizQuestion[]) {
-    if (!selectedLevel) return;
-    const score    = finalAnswers.filter((a, i) => a === qs[i].choices[qs[i].correct_index]).length;
-    const xpEarned = finalAnswers.reduce((t, a, i) => t + (a === qs[i].choices[qs[i].correct_index] ? 2 : 1), 0);
-    const completion: QuizCompletion = { score, xpEarned, answers: finalAnswers };
-
-    if (userId) {
-      await supabase.from("quiz_completions").upsert(
-        { user_id: userId, story_date: todayStr, level: selectedLevel, score, xp_earned: xpEarned },
-        { onConflict: "user_id,story_date,level" }
-      );
-    } else {
-      localStorage.setItem(localKey(todayStr, selectedLevel), JSON.stringify(completion));
-    }
-    setCompletions(prev => ({ ...prev, [selectedLevel!]: completion }));
   }
 
   function handleNext() {
@@ -178,8 +244,8 @@ export default function DailyQuiz({ userId, todayStr }: Props) {
         </div>
       )}
 
-      {/* Score view after completion */}
-      {selectedLevel && isCompleted && completion && (
+      {/* Score view */}
+      {selectedLevel && isCompleted && completion && !showReview && (
         <div className={styles.quizScore}>
           <div className={styles.quizScoreLevel}>{LEVEL_EMOJI[selectedLevel]} Quiz {selectedLevel}</div>
           <div className={styles.quizScoreNum}>
@@ -189,12 +255,68 @@ export default function DailyQuiz({ userId, todayStr }: Props) {
           {completion.answers && questions && (
             <div className={styles.quizScoreDots}>
               {completion.answers.map((a, i) => {
-                const correct = questions[i] ? a === questions[i].choices[questions[i].correct_index] : false;
+                const correct = !!questions[i] && a !== AUTO_SKIP && a === questions[i].choices[questions[i].correct_index];
                 return <div key={i} className={`${styles.quizScoreDot} ${correct ? styles.quizScoreDotOk : styles.quizScoreDotKo}`} />;
               })}
             </div>
           )}
+          {completion.answers && questions && (
+            <button className={styles.quizReviewBtn} onClick={() => setShowReview(true)}>
+              📋 Voir mes réponses
+            </button>
+          )}
           <div style={{ fontSize: "0.8rem", color: "var(--text-dim)", marginTop: "4px" }}>Reviens demain pour un nouveau quiz !</div>
+        </div>
+      )}
+
+      {/* Review mode */}
+      {selectedLevel && isCompleted && showReview && questions && completion?.answers && (
+        <div className={styles.quizReview}>
+          <div className={styles.quizReviewHeader}>
+            <span>{LEVEL_EMOJI[selectedLevel]} Quiz {selectedLevel} — Correction</span>
+            <button className={styles.quizReviewClose} onClick={() => setShowReview(false)}>← Score</button>
+          </div>
+          {questions.map((question, i) => {
+            const userAnswer    = completion.answers![i];
+            const correctChoice = question.choices[question.correct_index];
+            const isCorrect     = userAnswer !== AUTO_SKIP && userAnswer === correctChoice;
+            const wasSkipped    = userAnswer === AUTO_SKIP;
+            return (
+              <div key={i} className={`${styles.quizReviewItem} ${isCorrect ? styles.quizReviewOk : styles.quizReviewKo}`}>
+                <div className={styles.quizReviewQ}>
+                  <span className={`${styles.quizTypeBadge} ${question.type === "histoire" ? styles.quizTypeComp : styles.quizTypeVocab}`}>
+                    {question.type === "histoire" ? "📖" : "📝"}
+                  </span>
+                  <span>{i + 1}. {question.question}</span>
+                </div>
+                <div className={styles.quizReviewAnswers}>
+                  {wasSkipped ? (
+                    <div className={styles.quizReviewSkipped}>⏭ Question passée automatiquement · +1 XP</div>
+                  ) : (
+                    <div className={isCorrect ? styles.quizReviewRight : styles.quizReviewWrong}>
+                      {isCorrect ? "✅" : "❌"} Ta réponse : <strong>{userAnswer}</strong>
+                    </div>
+                  )}
+                  {!isCorrect && !wasSkipped && (
+                    <div className={styles.quizReviewCorrect}>
+                      ✓ Bonne réponse : <strong>{correctChoice}</strong>
+                    </div>
+                  )}
+                  {wasSkipped && (
+                    <div className={styles.quizReviewCorrect}>
+                      ✓ Bonne réponse : <strong>{correctChoice}</strong>
+                    </div>
+                  )}
+                </div>
+                {question.explanation && (
+                  <div className={styles.quizReviewExpl}>{question.explanation}</div>
+                )}
+              </div>
+            );
+          })}
+          <button className={styles.quizNextBtn} style={{ alignSelf: "flex-start", marginTop: "4px" }} onClick={() => setShowReview(false)}>
+            ← Retour au score
+          </button>
         </div>
       )}
 
