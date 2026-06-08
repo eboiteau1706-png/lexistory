@@ -17,15 +17,27 @@ export async function POST(req: NextRequest) {
   if (!Array.isArray(entries) || entries.length === 0)
     return NextResponse.json({ inserted: 0 });
 
+  // Récupère toutes les lignes existantes pour cet utilisateur
+  const { data: existing } = await supabaseAdmin
+    .from("quiz_completions")
+    .select("quiz_date, level")
+    .eq("user_id", user.id);
+
+  const existingKeys = new Set((existing ?? []).map((r: any) => `${r.level}_${r.quiz_date}`));
+
   let inserted = 0;
   for (const e of entries) {
     if (typeof e.score !== "number" || !e.quiz_date || !e.level) continue;
-    const { error } = await supabaseAdmin.from("quiz_completions").upsert(
-      { user_id: user.id, quiz_date: e.quiz_date, level: e.level,
-        score: e.score, xp_earned: e.xp_earned ?? 0,
-        answers: Array.isArray(e.answers) ? e.answers : [] },
-      { onConflict: "user_id,quiz_date,level", ignoreDuplicates: true }
-    );
+    // Saute si déjà en DB
+    if (existingKeys.has(`${e.level}_${e.quiz_date}`)) continue;
+    const { error } = await supabaseAdmin.from("quiz_completions").insert({
+      user_id:   user.id,
+      quiz_date: e.quiz_date,
+      level:     e.level,
+      score:     e.score,
+      xp_earned: e.xp_earned ?? 0,
+      answers:   Array.isArray(e.answers) ? e.answers : [],
+    });
     if (!error) inserted++;
   }
 
