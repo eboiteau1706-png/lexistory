@@ -137,7 +137,7 @@ export default function ProfileClient({ user }: { user: User }) {
         setStreakRecord(Math.max(maxStreak, s));
         const oneWeekAgo = new Date(Date.now() - 7 * 86400000);
         const recentStories = data.filter((d: any) => new Date(d.read_at) > oneWeekAgo);
-        setXpThisWeek(recentStories.length * 3);
+        setXpThisWeek(recentStories.length * 5);
         if (data.length > 0 && s > 0) setCompletionRate(Math.min(100, Math.round((data.length / Math.max(s, 1)) * 100)));
       });
 
@@ -162,7 +162,7 @@ export default function ProfileClient({ user }: { user: User }) {
         const byDate: Record<string, number> = {};
         reads.forEach((r: any) => {
           const d = r.read_at.slice(0, 10);
-          byDate[d] = (byDate[d] ?? 0) + 3; // 3 XP par histoire
+          byDate[d] = (byDate[d] ?? 0) + 5;
         });
         const sorted = Object.entries(byDate).map(([date, xp]) => ({ date, xp })).sort((a, b) => a.date.localeCompare(b.date));
         setActivityData(sorted);
