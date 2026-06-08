@@ -72,6 +72,28 @@ export default function DailyQuiz({ userId, todayStr, visible }: Props) {
   useEffect(() => {
     if (userId === undefined) return;
     if (userId) {
+      // Sync tout le localStorage quiz → DB (idempotent, rattrape l'historique cassé)
+      const toSync: object[] = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (!key?.startsWith("lx_quiz_") || key.startsWith("lx_quiz_prog_")) continue;
+        const m = key.match(/^lx_quiz_(.+)_(\d{4}-\d{2}-\d{2})$/);
+        if (!m) continue;
+        const [, lvl, date] = m;
+        if (!(LEVELS as readonly string[]).includes(lvl)) continue;
+        try {
+          const parsed = JSON.parse(localStorage.getItem(key) ?? "");
+          if (typeof parsed.score === "number") {
+            toSync.push({ user_id: userId, quiz_date: date, level: lvl, score: parsed.score,
+              xp_earned: typeof parsed.xpEarned === "number" ? parsed.xpEarned : 0,
+              answers:   Array.isArray(parsed.answers) ? parsed.answers : [] });
+          }
+        } catch {}
+      }
+      if (toSync.length > 0) {
+        supabase.from("quiz_completions").upsert(toSync, { onConflict: "user_id,quiz_date,level", ignoreDuplicates: true });
+      }
+
       supabase
         .from("quiz_completions")
         .select("level, score, xp_earned")
