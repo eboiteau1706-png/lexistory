@@ -3,6 +3,7 @@ import { useState, useEffect, useRef } from "react";
 import { createClient } from "@/lib/supabase";
 import { useRouter, usePathname } from "next/navigation";
 import { getLevel, getXpProgress } from "@/lib/xp";
+import { getActiveDates, computeStreak } from "@/lib/streak";
 import styles from "./Nav.module.css";
 
 export default function Nav() {
@@ -46,28 +47,8 @@ export default function Nav() {
     // ✅ FIX last_active_at : on utilise now() côté Supabase pour éviter les décalages de fuseau horaire
     await supabase.from("profiles").update({ last_active_at: new Date().toISOString() }).eq("id", userId);
 
-    const { data: reads } = await supabase
-      .from("stories_read").select("read_at")
-      .eq("user_id", userId).order("read_at", { ascending: false });
-    if (!reads || reads.length === 0) { setStreak(0); }
-    else {
-      const toParisDateISO = (d: Date) => {
-        const p = new Date(d.toLocaleString("en-US", { timeZone: "Europe/Paris" }));
-        return `${p.getFullYear()}-${String(p.getMonth()+1).padStart(2,"0")}-${String(p.getDate()).padStart(2,"0")}`;
-      };
-      const dates = [...new Set(reads.map((d: any) => toParisDateISO(new Date(d.read_at))))];
-      const today = toParisDateISO(new Date());
-      const yesterday = toParisDateISO(new Date(Date.now() - 86400000));
-      if (dates[0] !== today && dates[0] !== yesterday) { setStreak(0); }
-      else {
-        let s = 1;
-        for (let i = 1; i < dates.length; i++) {
-          const diff = (new Date(dates[i-1]).getTime() - new Date(dates[i]).getTime()) / 86400000;
-          if (Math.round(diff) === 1) s++; else break;
-        }
-        setStreak(s);
-      }
-    }
+    const activeDates = await getActiveDates(supabase, userId);
+    setStreak(computeStreak(activeDates));
 
     const { count } = await supabase.from("friendships")
       .select("id", { count: "exact" })

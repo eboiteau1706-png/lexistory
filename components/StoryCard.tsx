@@ -283,7 +283,7 @@ export default function StoryCard({ story, isToday = true }: Props) {
     setActiveWord(effectiveWord);
     if (userId) {
       await supabase.from("words_seen").upsert(
-        { user_id: userId, word: effectiveWord },
+        { user_id: userId, word: effectiveWord, seen_at: new Date().toISOString() },
         { onConflict: "user_id,word" }
       );
       window.dispatchEvent(new CustomEvent("lexistory:word-seen"));

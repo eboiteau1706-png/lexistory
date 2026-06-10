@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import { createClient } from "@/lib/supabase";
 import { getLevel, getXpProgress } from "@/lib/xp";
+import { getActiveDates, computeStreak } from "@/lib/streak";
 import styles from "../../profile/profile.module.css";
 
 export default function ProfilPublicPage() {
@@ -61,16 +62,8 @@ export default function ProfilPublicPage() {
       const { count: sc } = await supabase.from("stories_read").select("story_slug", { count: "exact" }).eq("user_id", target.id);
       setStoriesCount(sc ?? 0);
 
-      const { data: reads } = await supabase.from("stories_read").select("read_at").eq("user_id", target.id).order("read_at", { ascending: false });
-      if (reads && reads.length > 0) {
-        let s = 1;
-        const dates = [...new Set(reads.map((d: any) => new Date(d.read_at).toDateString()))];
-        for (let i = 1; i < dates.length; i++) {
-          const diff = (new Date(dates[i-1]).getTime() - new Date(dates[i]).getTime()) / 86400000;
-          if (diff === 1) s++; else break;
-        }
-        setStreak(s);
-      }
+      const activeDates = await getActiveDates(supabase, target.id);
+      setStreak(computeStreak(activeDates));
 
       const quizRes = await fetch(`/api/user-quiz-stats?userId=${target.id}`, {
         headers: session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {},

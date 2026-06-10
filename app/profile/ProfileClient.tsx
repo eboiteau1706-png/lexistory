@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
 import { getLevel, getXpProgress, LEVELS } from "@/lib/xp";
+import { getActiveDates, computeStreak, computeStreakRecord } from "@/lib/streak";
 import { lookup } from "@/lib/dictionary";
 import type { User } from "@supabase/supabase-js";
 import styles from "./profile.module.css";
@@ -119,28 +120,19 @@ export default function ProfileClient({ user }: { user: User }) {
         }
       });
 
-    supabase.from("stories_read").select("read_at").eq("user_id", user.id).order("read_at", { ascending: false })
-      .then(({ data }) => {
-        if (!data || data.length === 0) return;
-        const dates = [...new Set(data.map((d: any) => new Date(d.read_at).toDateString()))];
-        let s = 1;
-        for (let i = 1; i < dates.length; i++) {
-          const diff = (new Date(dates[i-1]).getTime() - new Date(dates[i]).getTime()) / 86400000;
-          if (diff === 1) s++; else break;
-        }
-        setStreak(s);
-        let maxStreak = 1, currentStreak = 1;
-        for (let i = 1; i < dates.length; i++) {
-          const diff = (new Date(dates[i-1]).getTime() - new Date(dates[i]).getTime()) / 86400000;
-          if (diff === 1) { currentStreak++; if (currentStreak > maxStreak) maxStreak = currentStreak; }
-          else { currentStreak = 1; }
-        }
-        setStreakRecord(Math.max(maxStreak, s));
-        const oneWeekAgo = new Date(Date.now() - 7 * 86400000);
-        const recentStories = data.filter((d: any) => new Date(d.read_at) > oneWeekAgo);
-        setXpThisWeek(recentStories.length * 5);
-        if (data.length > 0 && s > 0) setCompletionRate(Math.min(100, Math.round((data.length / Math.max(s, 1)) * 100)));
-      });
+    Promise.all([
+      supabase.from("stories_read").select("read_at").eq("user_id", user.id).order("read_at", { ascending: false }),
+      getActiveDates(supabase, user.id),
+    ]).then(([{ data }, activeDates]) => {
+      const s = computeStreak(activeDates);
+      setStreak(s);
+      setStreakRecord(Math.max(computeStreakRecord(activeDates), s));
+      if (!data || data.length === 0) return;
+      const oneWeekAgo = new Date(Date.now() - 7 * 86400000);
+      const recentStories = data.filter((d: any) => new Date(d.read_at) > oneWeekAgo);
+      setXpThisWeek(recentStories.length * 5);
+      if (data.length > 0 && s > 0) setCompletionRate(Math.min(100, Math.round((data.length / Math.max(s, 1)) * 100)));
+    });
 
     supabase.from("profiles").select("id", { count: "exact" }).gt("xp", 0).then(async ({ count }) => {
       if (!count) return;
