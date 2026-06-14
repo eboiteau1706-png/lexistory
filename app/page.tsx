@@ -14,6 +14,11 @@ const supabaseAdmin = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
+function getExcerpt(text: string, sentenceCount: number): string {
+  const sentences = text.match(/[^.!?]+[.!?]+/g) ?? [text];
+  return sentences.slice(0, sentenceCount).join(" ").trim();
+}
+
 export default async function Home({
   searchParams,
 }: {
@@ -22,7 +27,23 @@ export default async function Home({
   // Show landing page for unauthenticated visitors
   const serverClient = await createServerSupabaseClient();
   const { data: { session } } = await serverClient.auth.getSession();
-  if (!session) return <LandingPage />;
+  if (!session) {
+    // Histoire "Curieux" du jour, pour l'aperçu sans connexion
+    const curieuxStories = STORIES.filter(s => s.level === "Curieux");
+    const reference  = new Date("2026-05-17T00:00:00");
+    const parisNow   = new Date(new Date().toLocaleString("en-US", { timeZone: "Europe/Paris" }));
+    const diffDays   = Math.floor((parisNow.getTime() - reference.getTime()) / (1000 * 60 * 60 * 24));
+    const todayStory = curieuxStories[((diffDays % curieuxStories.length) + curieuxStories.length) % curieuxStories.length];
+
+    const previewStory = todayStory ? {
+      title:    todayStory.title,
+      category: todayStory.category,
+      readTime: todayStory.readTime,
+      excerpt:  getExcerpt(todayStory.paragraphs[0] ?? "", 2),
+    } : undefined;
+
+    return <LandingPage previewStory={previewStory} />;
+  }
 
   const params = await searchParams;
   const level  = (params.level as Story["level"]) ?? "Lecteur";

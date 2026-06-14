@@ -1,6 +1,13 @@
 import styles from "./LandingPage.module.css";
 
-export default function LandingPage() {
+interface PreviewStory {
+  title:    string;
+  category: string;
+  readTime: string;
+  excerpt:  string;
+}
+
+export default function LandingPage({ previewStory }: { previewStory?: PreviewStory }) {
   return (
     <div className={styles.page}>
 
@@ -24,9 +31,101 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ── Comment ça marche ── */}
+      {/* ── Comment ça marche (3 étapes) ── */}
       <section id="comment-ca-marche" className={styles.section}>
         <p className={styles.sectionLabel}>Comment ça marche</p>
+        <h2 className={styles.sectionTitle}>Apprends en 3 étapes simples</h2>
+        <div className={styles.stepsGrid}>
+          <div className={styles.stepCard}>
+            <div className={styles.stepNumber}>1</div>
+            <div className={styles.howIcon}>📖</div>
+            <div className={styles.howTitle}>Lis une histoire</div>
+            <p className={styles.howDesc}>
+              Chaque jour, découvre une nouvelle histoire vraie et fascinante — science, histoire,
+              psychologie, nature... — adaptée à ton niveau de lecture.
+            </p>
+          </div>
+          <div className={styles.stepCard}>
+            <div className={styles.stepNumber}>2</div>
+            <div className={styles.howIcon}>💡</div>
+            <div className={styles.howTitle}>Apprends le vocabulaire</div>
+            <p className={styles.howDesc}>
+              Clique sur n&apos;importe quel mot pour voir sa définition complète, directement
+              dans le contexte de l&apos;histoire — sans interrompre ta lecture.
+            </p>
+          </div>
+          <div className={styles.stepCard}>
+            <div className={styles.stepNumber}>3</div>
+            <div className={styles.howIcon}>🧠</div>
+            <div className={styles.howTitle}>Teste tes connaissances</div>
+            <p className={styles.howDesc}>
+              Réponds au quiz du jour et joue aux mini-jeux quotidiens pour ancrer durablement
+              ce que tu viens d&apos;apprendre, tout en gagnant des XP.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <div className={styles.divider} />
+
+      {/* ── Pourquoi LexiStory ── */}
+      <section className={styles.section}>
+        <p className={styles.sectionLabel}>Pourquoi LexiStory</p>
+        <h2 className={styles.sectionTitle}>Une méthode pensée pour durer</h2>
+        <div className={styles.whyGrid}>
+          <div className={styles.whyCard}>
+            <div className={styles.howIcon}>📚</div>
+            <div className={styles.howTitle}>Des histoires vraies</div>
+            <p className={styles.howDesc}>
+              Chaque histoire est basée sur des faits réels, des découvertes scientifiques ou des
+              événements marquants. Apprendre du vocabulaire devient aussi intéressant qu&apos;utile.
+            </p>
+          </div>
+          <div className={styles.whyCard}>
+            <div className={styles.howIcon}>🔍</div>
+            <div className={styles.howTitle}>Vocabulaire en contexte</div>
+            <p className={styles.howDesc}>
+              Les mots nouveaux sont rencontrés dans une vraie phrase, avec un vrai sens — la
+              façon la plus efficace de les retenir, bien plus qu&apos;une liste à apprendre par cœur.
+            </p>
+          </div>
+          <div className={styles.whyCard}>
+            <div className={styles.howIcon}>🏆</div>
+            <div className={styles.howTitle}>Progression gamifiée</div>
+            <p className={styles.howDesc}>
+              XP, rangs, séries quotidiennes et classement entre amis : la motivation est
+              intégrée pour que la régularité devienne un plaisir plutôt qu&apos;une contrainte.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <div className={styles.divider} />
+
+      {/* ── Aperçu du jour ── */}
+      {previewStory && (
+        <>
+          <section className={styles.section}>
+            <p className={styles.sectionLabel}>Aperçu du jour</p>
+            <h2 className={styles.sectionTitle}>L&apos;histoire d&apos;aujourd&apos;hui</h2>
+            <div className={styles.previewCard}>
+              <div className={styles.previewMeta}>
+                <span className={styles.previewCategory}>{previewStory.category}</span>
+                <span className={styles.previewReadTime}>{previewStory.readTime}</span>
+              </div>
+              <h3 className={styles.previewTitle}>{previewStory.title}</h3>
+              <p className={styles.previewExcerpt}>{previewStory.excerpt}</p>
+              <a href="/login" className={styles.btnPrimary}>Lire la suite →</a>
+            </div>
+          </section>
+
+          <div className={styles.divider} />
+        </>
+      )}
+
+      {/* ── Fonctionnalités ── */}
+      <section className={styles.section}>
+        <p className={styles.sectionLabel}>Fonctionnalités</p>
         <h2 className={styles.sectionTitle}>Tout ce qu&apos;il faut pour progresser</h2>
         <div className={styles.howGrid}>
           <div className={styles.howCard}>

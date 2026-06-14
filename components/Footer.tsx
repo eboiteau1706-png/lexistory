@@ -20,6 +20,7 @@ export default function Footer() {
       </div>
       <div className={styles.links}>
         <a href="/a-propos">À propos</a>
+        <a href="/blog">Blog</a>
         <a href="/support">Support</a>
         <a href="/mentions-legales">Mentions légales</a>
         <a href="/confidentialite">Confidentialité</a>

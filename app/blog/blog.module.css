@@ -1,0 +1,126 @@
+.page {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 100px 24px 60px;
+  background: var(--bg);
+}
+
+.header {
+  max-width: 720px;
+  width: 100%;
+  text-align: center;
+  margin-bottom: 40px;
+}
+
+.logo {
+  font-family: var(--font-playfair), serif;
+  font-size: 1.6rem;
+  font-weight: 900;
+  color: var(--accent);
+  margin-bottom: 16px;
+}
+.logo span { color: var(--text); font-weight: 400; font-style: italic; }
+
+.title {
+  font-family: var(--font-playfair), serif;
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 12px;
+}
+
+.subtitle {
+  font-size: 0.95rem;
+  color: var(--text-muted);
+  line-height: 1.7;
+}
+
+.articles {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  max-width: 720px;
+  width: 100%;
+}
+
+.article {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 40px;
+}
+
+.articleLabel {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1.8px;
+  color: var(--accent);
+  margin-bottom: 10px;
+}
+
+.articleTitle {
+  font-family: var(--font-playfair), serif;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 20px;
+  line-height: 1.3;
+}
+
+.articleBody {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.articleBody p {
+  font-size: 0.95rem;
+  line-height: 1.8;
+  color: var(--text-muted);
+  margin: 0;
+}
+
+.articleBody strong { color: var(--text); }
+
+.articleBody h3 {
+  font-family: var(--font-playfair), serif;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--text);
+  margin: 4px 0 0;
+}
+
+.cta {
+  margin-top: 28px;
+  text-align: center;
+}
+
+.ctaBtn {
+  display: inline-block;
+  padding: 12px 28px;
+  border-radius: 50px;
+  background: var(--accent);
+  color: var(--bg);
+  font-weight: 700;
+  font-size: 0.9rem;
+  text-decoration: none;
+  transition: opacity 0.2s, transform 0.15s;
+}
+.ctaBtn:hover { opacity: 0.88; transform: translateY(-1px); }
+
+.back {
+  margin-top: 40px;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  text-decoration: none;
+  transition: color 0.2s;
+}
+.back:hover { color: var(--text); }
+
+@media (max-width: 680px) {
+  .article { padding: 28px 22px; }
+  .title { font-size: 1.6rem; }
+}

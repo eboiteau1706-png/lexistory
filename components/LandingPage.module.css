@@ -182,6 +182,121 @@
   font-style: italic;
 }
 
+/* ── Steps (Comment ça marche, 3 étapes) ── */
+.stepsGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+}
+
+.stepCard {
+  position: relative;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 32px 22px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  transition: border-color 0.2s, transform 0.2s;
+}
+
+.stepCard:hover {
+  border-color: rgba(232,201,122,0.3);
+  transform: translateY(-2px);
+}
+
+.stepNumber {
+  position: absolute;
+  top: -16px;
+  left: 22px;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: var(--bg);
+  font-family: var(--font-playfair), serif;
+  font-weight: 900;
+  font-size: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ── Pourquoi LexiStory ── */
+.whyGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+}
+
+.whyCard {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 24px 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  transition: border-color 0.2s, transform 0.2s;
+}
+
+.whyCard:hover {
+  border-color: rgba(232,201,122,0.3);
+  transform: translateY(-2px);
+}
+
+/* ── Aperçu du jour ── */
+.previewCard {
+  max-width: 640px;
+  margin: 0 auto;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 32px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 14px;
+  text-align: left;
+}
+
+.previewMeta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.previewCategory {
+  color: var(--accent);
+}
+
+.previewReadTime {
+  color: var(--text-dim);
+  font-weight: 500;
+  text-transform: none;
+  letter-spacing: normal;
+}
+
+.previewTitle {
+  font-family: var(--font-playfair), serif;
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--text);
+  margin: 0;
+}
+
+.previewExcerpt {
+  font-size: 0.92rem;
+  color: var(--text-muted);
+  line-height: 1.75;
+  margin: 0;
+}
+
 /* ── Ranks row ── */
 .ranksRow {
   display: flex;
@@ -435,14 +550,19 @@
   .heroTitle { font-size: 1.85rem; }
   .howGrid { grid-template-columns: 1fr; }
   .grid3 { grid-template-columns: 1fr; }
+  .stepsGrid { grid-template-columns: 1fr; }
+  .whyGrid { grid-template-columns: 1fr; }
   .levelsGrid { grid-template-columns: 1fr; }
   .premiumGrid { grid-template-columns: 1fr; }
   .section { padding: 60px 20px; }
   .heroCtas { flex-direction: column; align-items: center; }
   .ranksRow { gap: 8px; }
+  .previewCard { padding: 24px 20px; }
 }
 
 @media (min-width: 769px) and (max-width: 1024px) {
   .howGrid { grid-template-columns: repeat(2, 1fr); }
   .grid3 { grid-template-columns: repeat(2, 1fr); }
+  .stepsGrid { grid-template-columns: repeat(2, 1fr); }
+  .whyGrid { grid-template-columns: repeat(2, 1fr); }
 }
